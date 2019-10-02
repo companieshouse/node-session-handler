@@ -1,0 +1,24 @@
+{
+  "name": "poc-node-session-handler",
+  "version": "0.0.1",
+  "description": "PoC for session handler in Node",
+  "main": "app.js",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/companieshouse/poc-node-session-handler.git"
+  },
+  "author": "drosser@companieshouse.gov.uk",
+  "license": "MIT",
+  "bugs": {
+    "url": "https://github.com/companieshouse/poc-node-session-handler/issues"
+  },
+  "homepage": "https://github.com/companieshouse/poc-node-session-handler#readme",
+  "dependencies": {
+    "crypto-js": "^3.1.9-1",
+    "ioredis": "^4.14.1",
+    "msgpack": "^1.0.3"
+  }
+}
