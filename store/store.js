@@ -49,7 +49,7 @@ module.exports = class Store {
     try {
       //If session id is empty, we're storing a new session rather than updating an existing one
       if (session.getId() == "") {
-        session.setId(await generateId());
+        session.setId(await encoding.generateRandomBytesBase64(idOctets));
         session.setExpires(await generateExpiry());
       }
 
@@ -103,11 +103,6 @@ module.exports = class Store {
   async #encodeSession(sessionData) {
     const msgpackEncoded = await encoding.encodeMsgpack(sessionData);
     return encoding.encodeBase64(msgpackEncoded);
-  };
-
-  async #generateId() {
-    const id = await encoding.generateRandomBytes(idOctets);
-    return encoding.encodeBase64(id);
   };
 
   #generateExpiry() {

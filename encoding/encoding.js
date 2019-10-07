@@ -22,7 +22,7 @@ module.exports = {
     return crypto.createHash('sha1').update(base).digest('base64');
   },
 
-  generateRandomBytes: function(numBytes) {
-    return crypto.randomBytes(numBytes);
+  generateRandomBytesBase64: function(numBytes) {
+    return crypto.randomBytes(numBytes).toString('base64');
   }
 };
