@@ -3,11 +3,10 @@ const Session = require('../session/session');
 
 module.exports = class Store {
 
-  //TODO : Create session object that is loaded from Cache via Store
   #cache;
-  #session;
   #secret;
 
+  static #idOctets = 21;
   static #signatureStart = 28;
   static #signatureLength = 27;
   static #valueLength = signatureStart + signatureLength;
@@ -20,19 +19,18 @@ module.exports = class Store {
       db: 0
     });
 
-    session = new Session();
-
     //TODO : Load secret from config - Should this be done here? Probably not.
     secret = "";
   };
 
   async load(encryptedSessionToken) {
+    const session;
     try {
       //Validate encrypted session token
-      const validatedSession = await validateEncryptedSessionToken(encryptedSessionToken);
+      session = await getSessionIdFromTokenAndValidate(encryptedSessionToken);
 
       //Get session from cache
-      const encodedData = await getSessionFromCache();
+      const encodedData = await cache.get(session.getId());
 
       //Decode session
       session.setData(await decodeSession(encodedData));
@@ -44,36 +42,51 @@ module.exports = class Store {
     }
 
     //Return session
-    return session.getData();
+    return session;
   };
 
-  store() {
-    //if session data is empty
+  async store(session) {
+    try {
+      //If session id is empty, we're storing a new session rather than updating an existing one
+      if (session.getId() == "") {
+        session.setId(await generateId());
+        session.setExpires(await generateExpiry());
+      }
+
+      const encodedSessionData = await encodeSession(session.getData());
+
+      cache.set(session.getId(), encodedSessionData);
+    } catch (err) {
+      //TODO : Throw error
+    }
+
+    return session;
   };
 
-  #validateEncryptedSessionToken(encryptedSessionToken) {
+  #getSessionIdFromTokenAndValidate(encryptedSessionToken) {
     //Compare length  of the encrypted session token to that of expected length
     if (encryptedSessionToken.length < valueLength) {
       //TODO : Clear session
       //TODO : Throw error
+
     }
 
-    //Get the session id from the encrypted session token
-    session.setID(encryptedSessionToken.substring(0, signatureStart));
+    const session = new Session();
+    session.setId(encryptedSessionToken.substring(0, signatureStart));
 
     //Strip the signature from the encrypted session token
     const sig = encryptedSessionToken.substring(signatureStart, encryptedSessionToken.length);
 
     //Validate that the signature is the same as what is expected
-    if (sig !== generateSignature()) {
+    if (sig !== await encoding.generateSha1SumBase64(session.getId() + secret)) {
       //TODO : Clear session
       //TODO : Throw error
+    } else {
+      return encryptedSessionToken.substring(0, signatureStart);
     }
-  };
 
-  #getSessionFromCache() {
-    return cache.get(sessionID);
-  }
+    return session;
+  };
 
   #validateExpiration() {
     if (sessionData.expires <= Date.now()) {
@@ -81,20 +94,25 @@ module.exports = class Store {
     }
   };
 
-  #decodeSession(encodedData) {
+  async #decodeSession(encodedData) {
     //decodeBase64
-    const base64Decoded = encoding.decodeBase64(encodedData);
+    const base64Decoded = await encoding.decodeBase64(encodedData);
 
     //decode msgpack
     return encoding.decodeMsgpack(base64Decoded);
   };
 
-  #encodeSession() {
-
+  async #encodeSession(sessionData) {
+    const msgpackEncoded = await encoding.encodeMsgpack(sessionData);
+    return encoding.encodeBase64(msgpackEncoded);
   };
 
-  #generateSignature() {
-    const sum = encoding.generateSha1Sum(session.getId() + secret);
-    return encoding.encodeBase64(Buffer.from(sum));
-  }
+  async #generateId() {
+    const id = await encoding.generateRandomBytes(idOctets);
+    return encoding.encodeBase64(id);
+  };
+
+  #generateExpiry() {
+    //TODO : Implement expiry
+  };
 };

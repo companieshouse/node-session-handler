@@ -1,7 +1,5 @@
 const msgpack = require('msgpack');
-const sha1 = require('crypto-js/sha1')
-
-//Returns an object
+const crypto = require('crypto')
 
 module.exports = {
   decodeMsgpack: function(base) {
@@ -20,7 +18,11 @@ module.exports = {
     return Buffer.from(base).toString('base64');
   },
 
-  generateSha1Sum: function(base) {
-    return sha1(base);
+  generateSha1SumBase64: function(base) {
+    return crypto.createHash('sha1').update(base).digest('base64');
+  },
+
+  generateRandomBytes: function(numBytes) {
+    return crypto.randomBytes(numBytes);
   }
 };
