@@ -82,10 +82,8 @@ module.exports = class Store {
       //TODO : Clear session
       //TODO : Throw error
     } else {
-      return encryptedSessionToken.substring(0, signatureStart);
+      return session;
     }
-
-    return session;
   };
 
   #validateExpiration() {
