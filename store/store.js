@@ -111,6 +111,7 @@ module.exports = class Store {
   };
 
   #generateExpiry() {
-    //TODO : Implement expiry
+    //TODO : Get this from config - Should the config be a default/static?
+    return 0;
   };
 };
