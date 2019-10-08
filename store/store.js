@@ -1,3 +1,6 @@
+const log4js = require('log4js');
+const logger = log4js.getLogger();
+
 const encoding = require('../encoding/encoding');
 const Session = require('../session/session');
 
@@ -25,39 +28,47 @@ module.exports = class Store {
 
   async load(encryptedSessionToken) {
     const session;
+
+    //Validate encrypted session token
+    session = await getSessionIdFromTokenAndValidate(encryptedSessionToken);
+
+    const encodedData;
+    //Get session from cache - don't expose any error thrown from the cache
     try {
-      //Validate encrypted session token
-      session = await getSessionIdFromTokenAndValidate(encryptedSessionToken);
-
-      //Get session from cache
-      const encodedData = await cache.get(session.getId());
-
-      //Decode session
-      session.setData(await decodeSession(encodedData));
-
-      //Validate expiration
-      const validExpiry = await validateExpiration();
+      encodedData = await cache.get(session.getId());
     } catch (err) {
-      //TODO : Error
+      logger.debug(err.message);
+      throw new Error("Error trying to retrieve from cache");
     }
+
+    //Decode session
+    session.setData(await decodeSession(encodedData));
+
+    //Validate expiration
+    await validateExpiration(session.getData());
 
     //Return session
     return session;
   };
 
   async store(session) {
+
+    //If session id is empty, we're storing a new session rather than updating an existing one
+    if (session.getId() == "") {
+      session.setId(await encoding.generateRandomBytesBase64(idOctets));
+      session.setExpires(await generateExpiry());
+    }
+
+    //Encode session data before adding it to the cache
+    const encodedSessionData = await encodeSession(session.getData());
+
+    //Store session data in cache - don't expose any error thrown from the cache
     try {
-      //If session id is empty, we're storing a new session rather than updating an existing one
-      if (session.getId() == "") {
-        session.setId(await encoding.generateRandomBytesBase64(idOctets));
-        session.setExpires(await generateExpiry());
-      }
-
-      const encodedSessionData = await encodeSession(session.getData());
-
       cache.set(session.getId(), encodedSessionData);
     } catch (err) {
-      //TODO : Throw error
+      //Log as debug - handy for debugging general issues, but don't want to pollute logs
+      logger.debug(err.message);
+      throw new Error("Error trying to store data in cache");
     }
 
     return session;
@@ -66,9 +77,7 @@ module.exports = class Store {
   #getSessionIdFromTokenAndValidate(encryptedSessionToken) {
     //Compare length  of the encrypted session token to that of expected length
     if (encryptedSessionToken.length < valueLength) {
-      //TODO : Clear session
-      //TODO : Throw error
-
+      throw new Error("Encrypted session token not expected length");
     }
 
     const session = new Session();
@@ -79,24 +88,20 @@ module.exports = class Store {
 
     //Validate that the signature is the same as what is expected
     if (sig !== await encoding.generateSha1SumBase64(session.getId() + secret)) {
-      //TODO : Clear session
-      //TODO : Throw error
+      throw new Error("Expected signature does not equal actual");
     } else {
       return session;
     }
   };
 
-  #validateExpiration() {
+  #validateExpiration(sessionData) {
     if (sessionData.expires <= Date.now()) {
-      //TODO : Throw error
+      throw new Error("Session has expired");
     }
   };
 
   async #decodeSession(encodedData) {
-    //decodeBase64
     const base64Decoded = await encoding.decodeBase64(encodedData);
-
-    //decode msgpack
     return encoding.decodeMsgpack(base64Decoded);
   };
 

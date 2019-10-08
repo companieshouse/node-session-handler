@@ -18,6 +18,7 @@
   "homepage": "https://github.com/companieshouse/poc-node-session-handler#readme",
   "dependencies": {
     "ioredis": "^4.14.1",
+    "log4js": "^5.2.0",
     "msgpack": "^1.0.3"
   }
 }
