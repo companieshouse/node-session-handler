@@ -3,8 +3,8 @@ const logger = log4js.getLogger();
 
 const moment = require('moment');
 
-const encoding = require('../encoding/encoding');
-const Session = require('../session/session');
+const encoding = require('../encoding');
+const Session = require('../session');
 
 module.exports.config = {
   cache: {
@@ -130,7 +130,6 @@ module.exports.Store = class Store {
   };
 
   #generateExpiry() {
-
     //Set expiry to now + expiry period (in ms)
     return moment().add(expiryPeriod, 'ms');
   };

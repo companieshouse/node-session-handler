@@ -1,6 +1,6 @@
 const Redis = require('ioredis');
 
-module.exports = class Cache {
+module.exports.Cache = class Cache {
 
     #client;
 

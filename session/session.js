@@ -1,4 +1,4 @@
-module.exports = class Session {
+module.exports.Session = class Session {
   #id;
   #expires;
   #data;
