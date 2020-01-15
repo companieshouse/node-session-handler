@@ -132,6 +132,6 @@ module.exports.Store = class Store {
   #generateExpiry() {
 
     //Set expiry to now + expiry period (in ms)
-    return moment().format().add(expiryPeriod, 'ms');
+    return moment().add(expiryPeriod, 'ms');
   };
 };
