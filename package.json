@@ -19,6 +19,7 @@
   "dependencies": {
     "ioredis": "^4.14.1",
     "log4js": "^5.2.0",
+    "moment": "^2.24.0",
     "msgpack": "^1.0.3"
   },
   "devDependencies": {

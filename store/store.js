@@ -1,29 +1,41 @@
 const log4js = require('log4js');
 const logger = log4js.getLogger();
 
+const moment = require('moment');
+
 const encoding = require('../encoding/encoding');
 const Session = require('../session/session');
 
-module.exports = class Store {
+module.exports.config = {
+  cache: {
+    password,
+    addr,
+    db
+  },
+  secret,
+  expiryPeriod
+};
+
+module.exports.Store = class Store {
 
   #cache;
   #secret;
+  #expiryPeriod;
 
   static #idOctets = 21;
   static #signatureStart = 28;
   static #signatureLength = 27;
   static #valueLength = signatureStart + signatureLength;
 
-  constructor() {
-    //TODO : Source cache details from config, or passed into store?
+  constructor(config) {
     this.cache = new Cache({
-      password: "abc",
-      addr: "127.0.0.1:1234",
-      db: 0
+      password: config.cache.password,
+      addr: config.cache.addr,
+      db: config.cache.db
     });
 
-    //TODO : Load secret from config - Should this be done here? Probably not.
-    secret = "";
+    this.secret = config.secret;
+    this.expiryPeriod = config.expiryPeriod;
   };
 
   async load(encryptedSessionToken) {
@@ -37,6 +49,7 @@ module.exports = class Store {
     try {
       encodedData = await cache.get(session.getId());
     } catch (err) {
+      //Log as debug - handy for debugging general issues, but don't want to pollute logs
       logger.debug(err.message);
       throw new Error("Error trying to retrieve from cache");
     }
@@ -55,8 +68,8 @@ module.exports = class Store {
 
     //If session id is empty, we're storing a new session rather than updating an existing one
     if (session.getId() == "") {
-      session.setId(await encoding.generateRandomBytesBase64(idOctets));
-      session.setExpires(await generateExpiry());
+      session.setId(encoding.generateRandomBytesBase64(idOctets));
+      session.setExpires(generateExpiry());
     }
 
     //Encode session data before adding it to the cache
@@ -75,10 +88,7 @@ module.exports = class Store {
   };
 
   #getSessionIdFromTokenAndValidate(encryptedSessionToken) {
-    //Compare length  of the encrypted session token to that of expected length
-    if (encryptedSessionToken.length < valueLength) {
-      throw new Error("Encrypted session token not expected length");
-    }
+    validateTokenLength(encryptedSessionToken);
 
     const session = new Session();
     session.setId(encryptedSessionToken.substring(0, signatureStart));
@@ -87,10 +97,14 @@ module.exports = class Store {
     const sig = encryptedSessionToken.substring(signatureStart, encryptedSessionToken.length);
 
     //Validate that the signature is the same as what is expected
-    if (sig !== await encoding.generateSha1SumBase64(session.getId() + secret)) {
-      throw new Error("Expected signature does not equal actual");
-    } else {
-      return session;
+    validateSignature(sig, session.getId());
+
+    return session;
+  };
+
+  #validateTokenLength(encryptedSessionToken) {
+    if (encryptedSessionToken.length < valueLength) {
+      throw new Error("Encrypted session token not expected length");
     }
   };
 
@@ -100,18 +114,24 @@ module.exports = class Store {
     }
   };
 
-  async #decodeSession(encodedData) {
-    const base64Decoded = await encoding.decodeBase64(encodedData);
+  #validateSignature(sig, sessionId) {
+    if (sig !== encoding.generateSha1SumBase64(sessionId + secret)) {
+      throw new Error("Expected signature does not equal actual");
+    }
+  };
+
+  #decodeSession(encodedData) {
+    const base64Decoded = encoding.decodeBase64(encodedData);
     return encoding.decodeMsgpack(base64Decoded);
   };
 
   async #encodeSession(sessionData) {
-    const msgpackEncoded = await encoding.encodeMsgpack(sessionData);
-    return encoding.encodeBase64(msgpackEncoded);
+    return encoding.encodeBase64(await encoding.encodeMsgpack(sessionData));
   };
 
   #generateExpiry() {
-    //TODO : Get this from config - Should the config be a default/static?
-    return 0;
+
+    //Set expiry to now + expiry period (in ms)
+    return moment().format().add(expiryPeriod, 'ms');
   };
 };
