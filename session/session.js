@@ -1,35 +1,37 @@
-module.exports.Session = class Session {
+class Session {
   #id;
   #expires;
   #data;
 
   constructor() {
-    id = "";
-    expire = 0;
-    data = {};
+    this.#id = "";
+    this.#expires = 0;
+    this.#data = {};
   };
 
   get getId() {
-    return this.id;
+    return this.#id;
   }
 
   set setId(id) {
-    this.id = id;
+    this.#id = id;
   }
 
   get getExpires() {
-    return this.expires;
+    return this.#expires;
   }
 
   set setExpires(expires) {
-    this.expires = expires;
+    this.#expires = expires;
   }
 
   get getData() {
-    return this.data;
+    return this.#data;
   }
 
   set setData(data) {
-    this.data = data;
+    this.#data = data;
   }
 };
+
+module.exports = Session;

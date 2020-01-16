@@ -1,3 +1,3 @@
-const session = require('./session');
+const Session = require('./session');
 
-module.exports = session;
+module.exports = Session;
