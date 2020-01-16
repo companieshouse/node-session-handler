@@ -15,7 +15,7 @@ module.exports = {
   },
 
   encodeBase64: function(base) {
-    return Buffer.from(base).toString('base64');
+    return base.toString('base64');
   },
 
   generateSha1SumBase64: function(base) {
