@@ -12,27 +12,27 @@ module.exports.Options = class Options {
     this.#db = "";
   };
 
-  get getPassword() {
+  get password() {
     return this.#password;
   };
 
-  set setPassword(password) {
+  set password(password) {
     this.#password = password;
   };
 
-  get getAddr() {
+  get addr() {
     return this.#addr;
   };
 
-  set setAddr(addr) {
+  set addr(addr) {
     this.#addr = addr;
   };
 
-  get getDb() {
+  get db() {
     return this.#db;
   };
 
-  set setDb(db) {
+  set db(db) {
     this.#db = db;
   };
 };
@@ -42,7 +42,7 @@ module.exports.Cache = class Cache {
     #client;
 
     constructor(options) {
-      this.client = new Redis('redis://' + options.getPassword + '@' + options.getAddr + '/' + options.getDb);
+      client = new Redis('redis://' + options.getPassword + '@' + options.getAddr + '/' + options.getDb);
     };
 
     set(key, value) {
