@@ -42,18 +42,18 @@ module.exports.Cache = class Cache {
     #client;
 
     constructor(options) {
-      client = new Redis('redis://' + options.getPassword + '@' + options.getAddr + '/' + options.getDb);
+      this.#client = new Redis('redis://' + options.getPassword + '@' + options.getAddr + '/' + options.getDb);
     };
 
     set(key, value) {
-      this.client.set(key, value);
+      this.#client.set(key, value);
     };
 
     get(key) {
-      return this.client.get(key);
+      return this.#client.get(key);
     };
 
-    delete(key) {
-      this.client.del(key);
+    del(key) {
+      this.#client.del(key);
     };
 };
