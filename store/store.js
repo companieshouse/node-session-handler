@@ -8,12 +8,12 @@ const Session = require('../session');
 
 module.exports.config = {
   cache: {
-    password,
-    addr,
-    db
+    password: "",
+    addr: "",
+    db: 0
   },
-  secret,
-  expiryPeriod
+  secret: "",
+  expiryPeriod: 0
 };
 
 module.exports.Store = class Store {
@@ -25,7 +25,7 @@ module.exports.Store = class Store {
   static #idOctets = 21;
   static #signatureStart = 28;
   static #signatureLength = 27;
-  static #valueLength = signatureStart + signatureLength;
+  static #valueLength = 55; //sig start + sig length
 
   constructor(config) {
     this.cache = new Cache({
@@ -39,12 +39,10 @@ module.exports.Store = class Store {
   };
 
   async load(encryptedSessionToken) {
-    const session;
-
     //Validate encrypted session token
-    session = await getSessionIdFromTokenAndValidate(encryptedSessionToken);
+    const session = await getSessionIdFromTokenAndValidate(encryptedSessionToken);
 
-    const encodedData;
+    const encodedData = {};
     //Get session from cache - don't expose any error thrown from the cache
     try {
       encodedData = await cache.get(session.getId());
@@ -87,7 +85,7 @@ module.exports.Store = class Store {
     return session;
   };
 
-  #getSessionIdFromTokenAndValidate(encryptedSessionToken) {
+  getSessionIdFromTokenAndValidate(encryptedSessionToken) {
     validateTokenLength(encryptedSessionToken);
 
     const session = new Session();
@@ -102,34 +100,34 @@ module.exports.Store = class Store {
     return session;
   };
 
-  #validateTokenLength(encryptedSessionToken) {
+  validateTokenLength(encryptedSessionToken) {
     if (encryptedSessionToken.length < valueLength) {
       throw new Error("Encrypted session token not expected length");
     }
   };
 
-  #validateExpiration(sessionData) {
+  validateExpiration(sessionData) {
     if (sessionData.expires <= Date.now()) {
       throw new Error("Session has expired");
     }
   };
 
-  #validateSignature(sig, sessionId) {
+  validateSignature(sig, sessionId) {
     if (sig !== encoding.generateSha1SumBase64(sessionId + secret)) {
       throw new Error("Expected signature does not equal actual");
     }
   };
 
-  #decodeSession(encodedData) {
+  decodeSession(encodedData) {
     const base64Decoded = encoding.decodeBase64(encodedData);
     return encoding.decodeMsgpack(base64Decoded);
   };
 
-  async #encodeSession(sessionData) {
+  async encodeSession(sessionData) {
     return encoding.encodeBase64(await encoding.encodeMsgpack(sessionData));
   };
 
-  #generateExpiry() {
+  generateExpiry() {
     //Set expiry to now + expiry period (in ms)
     return moment().add(expiryPeriod, 'ms');
   };
