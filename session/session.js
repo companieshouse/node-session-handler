@@ -9,27 +9,27 @@ class Session {
     this.#data = {};
   };
 
-  get getId() {
+  get id() {
     return this.#id;
   }
 
-  set setId(id) {
+  set id(id) {
     this.#id = id;
   }
 
-  get getExpires() {
+  get expires() {
     return this.#expires;
   }
 
-  set setExpires(expires) {
+  set expires(expires) {
     this.#expires = expires;
   }
 
-  get getData() {
+  get data() {
     return this.#data;
   }
 
-  set setData(data) {
+  set data(data) {
     this.#data = data;
   }
 };

@@ -7,9 +7,9 @@ describe("session getting and setting", function() {
   it("basic initialisation of session object", function() {
     let session = new Session();
 
-    expect(session.getId).to.equal("");
-    expect(session.getExpires).to.equal(0);
-    expect(session.getData).to.be.empty;
+    expect(session.id).to.equal("");
+    expect(session.expires).to.equal(0);
+    expect(session.data).to.be.empty;
   });
 
   it("set and get data (other than initialisation) from session object", function() {
@@ -18,12 +18,12 @@ describe("session getting and setting", function() {
     let data = "{\"test\": \"I am some data\"}";
     let session = new Session();
 
-    session.setId = id;
-    session.setExpires = expires;
-    session.setData = data;
+    session.id = id;
+    session.expires = expires;
+    session.data = data;
 
-    expect(session.getId).to.equal(id);
-    expect(session.getExpires).to.equal(expires);
-    expect(session.getData).to.equal(data);
+    expect(session.id).to.equal(id);
+    expect(session.expires).to.equal(expires);
+    expect(session.data).to.equal(data);
   })
 });
