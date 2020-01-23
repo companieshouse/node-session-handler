@@ -1,10 +1,10 @@
-const chai = require('chai');
+const chai = require("chai");
 const expect = chai.expect;
 
-const encoding = require('../../encoding');
+const encoding = require("../../encoding");
 
 describe("msgpack tests", function() {
-  it("encodes from a string to a msgpack'd buffer and decodes vice versa correctly", function() {
+  it("encodes from a string to a msgpacked buffer and decodes vice versa correctly", function() {
     let valueToEncode = "{\"test\": \"JSON that needs encoding\"}";
 
     let encodedValue = encoding.encodeMsgpack(valueToEncode);
@@ -43,10 +43,10 @@ describe("base64 tests", function() {
     expect(sha1sum).to.be.a("string");
   });
 
-  it ("generates some random base64 encoded bytes based on the number of bytes passed in", function() {
+  it ("generates some random base64 encoded bytes based on the number of bytes passed in", async function() {
     let numBytes = 21;
 
-    let result = encoding.generateRandomBytesBase64(numBytes);
+    let result = await encoding.generateRandomBytesBase64(numBytes);
     expect(result).to.be.a("string");
   });
 });

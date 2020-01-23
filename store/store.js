@@ -1,10 +1,10 @@
-const log4js = require('log4js');
+const log4js = require("log4js");
 const logger = log4js.getLogger();
 
-const moment = require('moment');
+const moment = require("moment");
 
-const encoding = require('../encoding');
-const Session = require('../session');
+const encoding = require("../encoding");
+const Session = require("../session");
 
 config = {
   secret: "",
@@ -34,11 +34,11 @@ class Store {
     const session = await this.getSessionIdFromTokenAndValidate(encryptedSessionToken);
 
     const encodedData = {};
-    //Get session from cache - don't expose any error thrown from the cache
+    //Get session from cache - don"t expose any error thrown from the cache
     try {
       encodedData = await this.#cache.get(session.getId());
     } catch (err) {
-      //Log as debug - handy for debugging general issues, but don't want to pollute logs
+      //Log as debug - handy for debugging general issues, but don"t want to pollute logs
       logger.debug(err.message);
       throw new Error("Error trying to retrieve from cache");
     }
@@ -55,7 +55,7 @@ class Store {
 
   async store(session) {
 
-    //If session id is empty, we're storing a new session rather than updating an existing one
+    //If session id is empty, we"re storing a new session rather than updating an existing one
     if (session.getId() == "") {
       session.setId(encoding.generateRandomBytesBase64(idOctets));
       session.setExpires(generateExpiry());
@@ -64,11 +64,11 @@ class Store {
     //Encode session data before adding it to the cache
     const encodedSessionData = await encodeSession(session.getData());
 
-    //Store session data in cache - don't expose any error thrown from the cache
+    //Store session data in cache - don"t expose any error thrown from the cache
     try {
       cache.set(session.getId(), encodedSessionData);
     } catch (err) {
-      //Log as debug - handy for debugging general issues, but don't want to pollute logs
+      //Log as debug - handy for debugging general issues, but don"t want to pollute logs
       logger.debug(err.message);
       throw new Error("Error trying to store data in cache");
     }
@@ -120,7 +120,7 @@ class Store {
 
   generateExpiry() {
     //Set expiry to now + expiry period (in ms)
-    return moment().add(expiryPeriod, 'ms');
+    return moment().add(expiryPeriod, "ms");
   };
 };
 

@@ -1,5 +1,5 @@
-const msgpack = require('msgpack');
-const crypto = require('crypto')
+const msgpack = require("msgpack");
+const crypto = require("crypto")
 
 module.exports = {
   decodeMsgpack: function(base) {
@@ -11,18 +11,29 @@ module.exports = {
   },
 
   decodeBase64: function(base) {
-    return Buffer.from(base, 'base64');
+    return Buffer.from(base, "base64");
   },
 
   encodeBase64: function(base) {
-    return base.toString('base64');
+    return base.toString("base64");
   },
 
   generateSha1SumBase64: function(base) {
-    return crypto.createHash('sha1').update(base).digest('base64');
+    return crypto.createHash("sha1").update(base).digest("base64");
   },
 
   generateRandomBytesBase64: function(numBytes) {
-    return crypto.randomBytes(numBytes).toString('base64');
+
+    return new Promise(function (resolve, reject) {
+
+      crypto.randomBytes(numBytes, function (error, buffer) {
+
+        if (error) {
+          return reject(error);
+        }
+
+        return resolve(buffer.toString("base64"));
+      })
+    });
   }
 };

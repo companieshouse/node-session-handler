@@ -4,7 +4,7 @@
   "description": "PoC for session handler in Node",
   "main": "app.js",
   "scripts": {
-    "test": "mocha test --recursive"
+    "test": "mocha test --recursive --reporter nyan"
   },
   "repository": {
     "type": "git",

@@ -14,7 +14,7 @@ describe("session token size", function() {
     expiryPeriod: 1000
   };
 
-  it("session token is an too small", function() {
+  it("session token is too small", function() {
     let tooSmall = "hello";
 
     let store = new Store(cache, config);
@@ -22,7 +22,7 @@ describe("session token size", function() {
     expect(store.load(tooSmall)).to.be.rejectedWith(Error, "Encrypted session token not long enough");
   });
 
-  it("session token is an too big", function() {
+  it("session token is too big", function() {
     let tooBig = "this is way too long to be considered a valid encrypted session token but we'll try it anyway";
 
     let store = new Store(cache, config);
