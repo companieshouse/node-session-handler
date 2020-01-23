@@ -6,17 +6,12 @@ const moment = require('moment');
 const encoding = require('../encoding');
 const Session = require('../session');
 
-module.exports.config = {
-  cache: {
-    password: "",
-    addr: "",
-    db: 0
-  },
+config = {
   secret: "",
   expiryPeriod: 0
 };
 
-module.exports.Store = class Store {
+class Store {
 
   #cache;
   #secret;
@@ -27,25 +22,21 @@ module.exports.Store = class Store {
   static #signatureLength = 27;
   static #valueLength = 55; //sig start + sig length
 
-  constructor(config) {
-    this.cache = new Cache({
-      password: config.cache.password,
-      addr: config.cache.addr,
-      db: config.cache.db
-    });
+  constructor(cache, config) {
+    this.#cache = cache;
 
-    this.secret = config.secret;
-    this.expiryPeriod = config.expiryPeriod;
+    this.#secret = config.secret;
+    this.#expiryPeriod = config.expiryPeriod;
   };
 
   async load(encryptedSessionToken) {
     //Validate encrypted session token
-    const session = await getSessionIdFromTokenAndValidate(encryptedSessionToken);
+    const session = await this.getSessionIdFromTokenAndValidate(encryptedSessionToken);
 
     const encodedData = {};
     //Get session from cache - don't expose any error thrown from the cache
     try {
-      encodedData = await cache.get(session.getId());
+      encodedData = await this.#cache.get(session.getId());
     } catch (err) {
       //Log as debug - handy for debugging general issues, but don't want to pollute logs
       logger.debug(err.message);
@@ -86,34 +77,34 @@ module.exports.Store = class Store {
   };
 
   getSessionIdFromTokenAndValidate(encryptedSessionToken) {
-    validateTokenLength(encryptedSessionToken);
+    this.validateTokenLength(encryptedSessionToken);
 
     const session = new Session();
-    session.setId(encryptedSessionToken.substring(0, signatureStart));
+    session.id = encryptedSessionToken.substring(0, Store.#signatureStart);
 
     //Strip the signature from the encrypted session token
-    const sig = encryptedSessionToken.substring(signatureStart, encryptedSessionToken.length);
+    const sig = encryptedSessionToken.substring(Store.#signatureStart, encryptedSessionToken.length);
 
     //Validate that the signature is the same as what is expected
-    validateSignature(sig, session.getId());
+    this.validateSignature(sig, session.id);
 
     return session;
   };
 
   validateTokenLength(encryptedSessionToken) {
-    if (encryptedSessionToken.length < valueLength) {
-      throw new Error("Encrypted session token not expected length");
+    if (encryptedSessionToken.length < Store.#valueLength) {
+      throw new Error("Encrypted session token not long enough");
     }
   };
 
   validateExpiration(sessionData) {
-    if (sessionData.expires <= Date.now()) {
+    if (sessionData.expires <= moment().milliseconds()) {
       throw new Error("Session has expired");
     }
   };
 
   validateSignature(sig, sessionId) {
-    if (sig !== encoding.generateSha1SumBase64(sessionId + secret)) {
+    if (sig !== encoding.generateSha1SumBase64(sessionId + this.#secret)) {
       throw new Error("Expected signature does not equal actual");
     }
   };
@@ -132,3 +123,6 @@ module.exports.Store = class Store {
     return moment().add(expiryPeriod, 'ms');
   };
 };
+
+module.exports.config = config;
+module.exports.Store = Store;
