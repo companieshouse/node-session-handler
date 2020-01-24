@@ -6,11 +6,6 @@ const createSession = require("../session");
 
 const logger = log4js.getLogger();
 
-const config = {
-    secret: "",
-    expiryPeriod: 0
-};
-
 const createStore = function (newCache, config) {
     const store = {};
 
@@ -121,5 +116,4 @@ const createStore = function (newCache, config) {
     return store;
 };
 
-module.exports.config = config;
 module.exports = createStore;

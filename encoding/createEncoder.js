@@ -1,7 +1,7 @@
 const msgpack = require("msgpack");
 const crypto = require("crypto");
 
-const createEncoding = function () {
+const createEncoder = function () {
     const me = {};
 
     me.decodeMsgpack = function (base) {
@@ -42,4 +42,4 @@ const createEncoding = function () {
     return me;
 };
 
-module.exports = createEncoding();
+module.exports = createEncoder();

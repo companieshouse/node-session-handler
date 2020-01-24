@@ -1,3 +1,3 @@
-const encoding = require("./encoding");
+const encoding = require("./createEncoder");
 
 module.exports = encoding;
