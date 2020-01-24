@@ -11,32 +11,26 @@ const config = {
     expiryPeriod: 0
 };
 
-class Store {
+const createStore = function (cache, config) {
+    const store = {};
 
-    #cache;
-    #secret;
-    #expiryPeriod;
+    const cache = cache;
+    const secret = config.secret;
+    const expiryPeriod = config.expiryPeriod;
 
-    static #idOctets = 21;
-    static #signatureStart = 28;
-    static #signatureLength = 27;
-    static #valueLength = 55; //sig start + sig length
+    const idOctets = 21;
+    const signatureStart = 28;
+    const signatureLength = 27;
+    const valueLength = 55; //sig start + sig length
 
-    constructor(cache, config) {
-        this.#cache = cache;
-
-        this.#secret = config.secret;
-        this.#expiryPeriod = config.expiryPeriod;
-    }
-
-    async load(encryptedSessionToken) {
+    store.load = async function (encryptedSessionToken) {
         // Validate encrypted session token
-        const session = await this.getSessionIdFromTokenAndValidate(encryptedSessionToken);
+        const session = await store.getSessionIdFromTokenAndValidate(encryptedSessionToken);
 
         const encodedData = {};
         // Get session from cache - don"t expose any error thrown from the cache
         try {
-            encodedData = await this.#cache.get(session.id);
+            encodedData = await cache.get(session.id);
         } catch (err) {
             // Log as debug - handy for debugging general issues, but don"t want to pollute logs
             logger.debug(err.message);
@@ -51,9 +45,9 @@ class Store {
 
         // Return session
         return session;
-    }
+    };
 
-    async store(session) {
+    store.store = async function (session) {
 
         // If session id is empty, we"re storing a new session rather than updating an existing one
         if (session.id == "") {
@@ -74,56 +68,58 @@ class Store {
         }
 
         return session;
-    }
+    };
 
-    getSessionIdFromTokenAndValidate(encryptedSessionToken) {
+    store.getSessionIdFromTokenAndValidate = function (encryptedSessionToken) {
 
-        this.validateTokenLength(encryptedSessionToken);
+        store.validateTokenLength(encryptedSessionToken);
 
         const session = createSession();
-        session.id = encryptedSessionToken.substring(0, Store.#signatureStart);
+        session.id = encryptedSessionToken.substring(0, signatureStart);
 
         // Strip the signature from the encrypted session token
-        const sig = encryptedSessionToken.substring(Store.#signatureStart, encryptedSessionToken.length);
+        const sig = encryptedSessionToken.substring(signatureStart, encryptedSessionToken.length);
 
         // Validate that the signature is the same as what is expected
-        this.validateSignature(sig, session.id);
+        store.validateSignature(sig, session.id);
 
         return session;
-    }
+    };
 
-    validateTokenLength(encryptedSessionToken) {
-        if (encryptedSessionToken.length < Store.#valueLength) {
+    store.validateTokenLength = function (encryptedSessionToken) {
+        if (encryptedSessionToken.length < valueLength) {
             throw new Error("Encrypted session token not long enough");
         }
-    }
+    };
 
-    validateExpiration(sessionData) {
+    store.validateExpiration = function (sessionData) {
         if (sessionData.expires <= moment().milliseconds()) {
             throw new Error("Session has expired");
         }
-    }
+    };
 
-    validateSignature(sig, sessionId) {
-        if (sig !== encoding.generateSha1SumBase64(sessionId + this.#secret)) {
+    store.validateSignature = function (sig, sessionId) {
+        if (sig !== encoding.generateSha1SumBase64(sessionId + secret)) {
             throw new Error("Expected signature does not equal actual");
         }
-    }
+    };
 
-    decodeSession(encodedData) {
+    store.decodeSession = (encodedData) {
         const base64Decoded = encoding.decodeBase64(encodedData);
         return encoding.decodeMsgpack(base64Decoded);
-    }
+    };
 
-    async encodeSession(sessionData) {
+    store.encodeSession = async function (sessionData) {
         return encoding.encodeBase64(await encoding.encodeMsgpack(sessionData));
-    }
+    };
 
-    generateExpiry() {
+    store.generateExpiry = function () {
         // Set expiry to now + expiry period (in ms)
         return moment().add(expiryPeriod, "ms");
-    }
-}
+    };
+
+    return store;
+};
 
 module.exports.config = config;
-module.exports.Store = Store;
+module.exports.store = createStore;
