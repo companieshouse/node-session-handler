@@ -39,7 +39,6 @@ const createEncoding = function () {
         });
     };
 
-
     return me;
 };
 
