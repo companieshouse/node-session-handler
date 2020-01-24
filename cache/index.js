@@ -1,3 +1,3 @@
-const cache = require('./cache');
+const createCache = require('./createCache');
 
-module.exports = cache;
+module.exports = createCache;
