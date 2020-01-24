@@ -2,7 +2,7 @@ const Redis = require("ioredis");
 
 const createCache = function (options) {
 
-    const client = new Redis("redis://" + options.getPassword + "@" + options.getAddr + "/" + options.getDb);
+    const client = new Redis("redis://" + options.password + "@" + options.address + "/" + options.db);
 
     const cache = {};
 

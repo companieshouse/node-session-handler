@@ -1,7 +1,7 @@
-const createOptions = function (password, addr, db) {
+const createOptions = function (password, address, db) {
     return {
         password,
-        addr,
+        address,
         db
     }
 }
