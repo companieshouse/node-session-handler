@@ -46,7 +46,7 @@ const createStore = function (newCache, config) {
 
         // If session id is empty, we"re storing a new session rather than updating an existing one
         if (session.id == "") {
-            session.id = encoding.generateRandomBytesBase64(idOctets);
+            session.id = await encoding.generateRandomBytesBase64(idOctets);
             session.expires = generateExpiry();
         }
 
