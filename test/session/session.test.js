@@ -1,11 +1,12 @@
-const chai = require('chai');
+const chai = require("chai");
 const expect = chai.expect;
 
-const createSession = require('../../lib/session');
+const createSession = require("../../lib/session");
 
 describe("session getting and setting", function () {
     it("basic initialisation of session object", function () {
-        let session = createSession();
+
+        const session = createSession();
 
         expect(session.id).to.equal("");
         expect(session.expires).to.equal(0);
@@ -13,10 +14,11 @@ describe("session getting and setting", function () {
     });
 
     it("set and get data (other than initialisation) from session object", function () {
-        let id = "Hello, world!";
-        let expires = 5000;
-        let data = "{\"test\": \"I am some data\"}";
-        let session = createSession();
+
+        const id = "Hello, world!";
+        const expires = 5000;
+        const data = "{\"test\": \"I am some data\"}";
+        const session = createSession();
 
         session.id = id;
         session.expires = expires;
@@ -25,5 +27,5 @@ describe("session getting and setting", function () {
         expect(session.id).to.equal(id);
         expect(session.expires).to.equal(expires);
         expect(session.data).to.equal(data);
-    })
+    });
 });
