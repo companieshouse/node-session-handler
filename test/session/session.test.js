@@ -1,7 +1,7 @@
 const chai = require('chai');
 const expect = chai.expect;
 
-const createSession = require('../../session');
+const createSession = require('../../lib/session');
 
 describe("session getting and setting", function () {
     it("basic initialisation of session object", function () {

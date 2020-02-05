@@ -1,7 +1,7 @@
 const chai = require("chai");
 const expect = chai.expect;
 
-const encoding = require("../../encoding");
+const encoding = require("../../lib/encoding");
 
 describe("msgpack tests", function () {
     it("encodes from a string to a msgpacked buffer and decodes vice versa correctly", function () {

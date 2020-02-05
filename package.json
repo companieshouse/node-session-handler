@@ -18,8 +18,8 @@
   },
   "homepage": "https://github.com/companieshouse/poc-node-session-handler#readme",
   "dependencies": {
+    "ch-logger": "file:../poc-js-logger",
     "ioredis": "~4.14.1",
-    "log4js": "~5.3.0",
     "moment": "~2.24.0",
     "msgpack": "~1.0.3"
   },

@@ -5,7 +5,7 @@ const chaiAsPromised = require("chai-as-promised");
 chai.use(chaiAsPromised);
 const expect = chai.expect;
 
-const createStore = require("../../store");
+const createStore = require("../../lib/store");
 
 describe("session token size", function () {
 
