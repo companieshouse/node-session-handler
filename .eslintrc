@@ -272,12 +272,12 @@
         "wrap-regex": 2,
         "yield-star-spacing": 2,
         "yoda": 2,
-        "object-curly-spacing": ["error", "always"]
+        "object-curly-spacing": ["error", "always"],
+        "strict": 2
     },
     "env": {
         "node": true,
         "commonjs": true,
-        "mocha": true,
-        "jest": true
+        "mocha": true
     }
 }

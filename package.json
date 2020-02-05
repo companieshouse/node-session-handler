@@ -2,10 +2,11 @@
   "name": "poc-node-session-handler",
   "version": "0.0.1",
   "description": "PoC for session handler in Node",
-  "main": "index.js",
+  "main": "./lib/index.js",
   "scripts": {
     "test": "mocha --recursive --reporter nyan",
-    "test:watch": "mocha --recursive --reporter nyan --watch"
+    "test:watch": "mocha --recursive --reporter nyan --watch",
+    "lint": "eslint lib test"
   },
   "repository": {
     "type": "git",
