@@ -1,6 +1,7 @@
 const msgpack = require("msgpack");
 const crypto = require("crypto");
 const promisify = require("util").promisify;
+const randomBytesAsync = promisify(crypto.randomBytes);
 
 const createEncoder = function () {
     const me = {};
@@ -25,17 +26,14 @@ const createEncoder = function () {
         return crypto.createHash("sha1").update(base).digest("base64");
     };
 
-    me.generateRandomBytesBase64 = promisify(function (numBytes, done) {
+    me.generateRandomBytesBase64 = async function (numBytes) {
 
-        crypto.randomBytes(numBytes, function (error, buffer) {
-
-            if (error) {
-                return done(error);
-            }
-
-            return done(undefined, buffer.toString("base64"));
-        });
-    });
+        try {
+            return await randomBytesAsync(numBytes).toString("base64");
+        } catch (error) {
+            return error;
+        }
+    };
 
     return me;
 };

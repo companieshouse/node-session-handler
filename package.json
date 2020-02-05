@@ -2,9 +2,10 @@
   "name": "poc-node-session-handler",
   "version": "0.0.1",
   "description": "PoC for session handler in Node",
-  "main": "app.js",
+  "main": "index.js",
   "scripts": {
-    "test": "mocha test --recursive --reporter nyan"
+    "test": "mocha tests/**/* --reporter nyan",
+    "test:watch": "mocha tests/**/* --reporter nyan --watch"
   },
   "repository": {
     "type": "git",
@@ -17,15 +18,15 @@
   },
   "homepage": "https://github.com/companieshouse/poc-node-session-handler#readme",
   "dependencies": {
-    "chai-as-promised": "^7.1.1",
-    "ioredis": "^4.14.1",
-    "log4js": "^5.2.0",
-    "moment": "^2.24.0",
-    "msgpack": "^1.0.3"
+    "ioredis": "~4.14.1",
+    "log4js": "~5.3.0",
+    "moment": "~2.24.0",
+    "msgpack": "~1.0.3"
   },
   "devDependencies": {
-    "chai": "^4.2.0",
-    "mocha": "^6.2.1",
-    "sinon": "^7.5.0"
+    "chai": "~4.2.0",
+    "chai-as-promised": "~7.1.1",
+    "mocha": "~6.2.2",
+    "sinon": "~7.5.0"
   }
 }

@@ -7,6 +7,7 @@ const createSession = require("../session");
 const logger = log4js.getLogger();
 
 const createStore = function (newCache, config) {
+
     const store = {};
 
     const cache = newCache;
@@ -42,16 +43,16 @@ const createStore = function (newCache, config) {
         return session;
     };
 
-    store.store = async function (session) {
+    store.store = function (session) {
 
         // If session id is empty, we"re storing a new session rather than updating an existing one
         if (session.id == "") {
-            session.id = await encoding.generateRandomBytesBase64(idOctets);
+            session.id = encoding.generateRandomBytesBase64(idOctets);
             session.expires = generateExpiry();
         }
 
         // Encode session data before adding it to the cache
-        const encodedSessionData = await encodeSession(session.getData());
+        const encodedSessionData = store.encodeSession(session.getData());
 
         // Store session data in cache - don"t expose any error thrown from the cache
         try {
@@ -104,8 +105,8 @@ const createStore = function (newCache, config) {
         return encoding.decodeMsgpack(base64Decoded);
     };
 
-    store.encodeSession = async function (sessionData) {
-        return encoding.encodeBase64(await encoding.encodeMsgpack(sessionData));
+    store.encodeSession = function (sessionData) {
+        return encoding.encodeBase64(encoding.encodeMsgpack(sessionData));
     };
 
     store.generateExpiry = function () {
