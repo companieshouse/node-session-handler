@@ -4,9 +4,10 @@
   "description": "PoC for session handler in Node",
   "main": "./lib/index.js",
   "scripts": {
-    "test": "mocha --recursive --reporter nyan",
+    "test": "mocha --recursive",
     "test:watch": "mocha --recursive --reporter nyan --watch",
-    "lint": "eslint lib test"
+    "lint": "eslint lib test",
+    "test-nyan": "mocha --recursive --reporter nyan"
   },
   "repository": {
     "type": "git",
@@ -19,7 +20,7 @@
   },
   "homepage": "https://github.com/companieshouse/poc-node-session-handler#readme",
   "dependencies": {
-    "ch-logger": "file:../poc-js-logger",
+    "ch-logger": "git://github.com/companieshouse/poc-js-logger",
     "ioredis": "~4.14.1",
     "moment": "~2.24.0",
     "msgpack": "~1.0.3"
