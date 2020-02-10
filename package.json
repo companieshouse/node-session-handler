@@ -1,5 +1,5 @@
 {
-  "name": "poc-node-session-handler",
+  "name": "ch-session",
   "version": "0.0.1",
   "description": "PoC for session handler in Node",
   "main": "./lib/index.js",
