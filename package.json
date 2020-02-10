@@ -20,11 +20,9 @@
   "homepage": "https://github.com/companieshouse/poc-node-session-handler#readme",
   "dependencies": {
     "ch-logger": "file:../poc-js-logger",
-    "connect-redis": "~4.0.4",
-    "express-session": "~1.17.0",
+    "ioredis": "~4.14.1",
     "moment": "~2.24.0",
-    "msgpack": "~1.0.3",
-    "redis": "~2.8.0"
+    "msgpack": "~1.0.3"
   },
   "devDependencies": {
     "chai": "~4.2.0",
