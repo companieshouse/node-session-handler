@@ -3,6 +3,9 @@
   "version": "0.0.1",
   "description": "PoC for session handler in Node",
   "main": "./lib/index.js",
+  "files": [
+    "lib/**/*"
+  ],
   "scripts": {
     "test": "mocha --recursive",
     "test:watch": "mocha --recursive --reporter nyan --watch",
