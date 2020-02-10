@@ -20,7 +20,7 @@
   },
   "homepage": "https://github.com/companieshouse/poc-node-session-handler#readme",
   "dependencies": {
-    "ch-logger": "git://github.com/companieshouse/poc-js-logger",
+    "ch-logger": "git+https://github.com/companieshouse/poc-js-logger.git",
     "ioredis": "~4.14.1",
     "moment": "~2.24.0",
     "msgpack": "~1.0.3"
