@@ -8,11 +8,11 @@ class AccessTokenData {
     token?: any;
     tokenType?: any;
 
-    constructor(rawData: any) {
-        this.expiresIn = rawData[SessionKeys.ExpiresIn];
-        this.refreshToken = rawData[SessionKeys.RefreshToken];
-        this.token = rawData[SessionKeys.AccessToken];
-        this.tokenType = rawData[SessionKeys.TokenType];
+    constructor(data: any) {
+        this.expiresIn = data[SessionKeys.ExpiresIn];
+        this.refreshToken = data[SessionKeys.RefreshToken];
+        this.token = data[SessionKeys.AccessToken];
+        this.tokenType = data[SessionKeys.TokenType];
     }
 
     static createDefault() {

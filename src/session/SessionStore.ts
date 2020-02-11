@@ -14,21 +14,11 @@ import AccessTokenData from "./AccessTokenData";
 class SessionStore {
 
     private _idOctets = 21;
-    private _sessionExpiredError = "Session has expired.";
 
     private _logger: ApplicationLogger;
 
     constructor(logger: ApplicationLogger) {
         this._logger = logger;
-    }
-
-    private getAccessTokenData(data: any) {
-
-        const rawAccessTokenData = data[SessionKeys.AccessToken];
-
-        return rawAccessTokenData ?
-            new AccessTokenData(rawAccessTokenData) :
-            undefined;
     }
 
     async load(sessionId: string): Promise<Session> {
@@ -46,24 +36,18 @@ class SessionStore {
 
         const data = await this.decodeSession(encodedData);
 
-        const accessTokenData = this.getAccessTokenData(data);
-
-        if (accessTokenData && accessTokenData.expiresIn) {
-            this.validateExpiration(accessTokenData.expiresIn);
-        }
-
-        return new Session(sessionId, accessTokenData);
+        return new Session(sessionId, data);
     }
 
     async store(session: Session) {
 
         if (session.id === "") {
+
             session.id = await Encoding.generateRandomBytesBase64(this._idOctets);
-            if (!session.accessToken) {
-                session.accessToken = new AccessTokenData({
-                    [SessionKeys.AccessToken]: this.generateExpiry()
-                });
-            }
+
+            session.signInData.accessToken = new AccessTokenData({
+                [SessionKeys.AccessToken]: this.generateExpiry()
+            });
         }
 
         const encodedSessionData = this.encodeSession(session);
@@ -79,15 +63,6 @@ class SessionStore {
         }
 
         return session;
-    };
-
-    private validateExpiration(expiresIn: number) {
-
-        if (expiresIn <= Date.now()) {
-
-            this._logger.error(this._sessionExpiredError);
-            throw new Error(this._sessionExpiredError);
-        }
     }
 
     private decodeSession(encodedData: any) {
