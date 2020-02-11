@@ -2,7 +2,7 @@
 
 import { RequestHandler } from "express";
 import cookie from "cookie";
-import SessionValidator from "./SessionValidator";
+import SessionValidator from "./session/SessionValidator";
 import SessionStore from "./session/SessionStore";
 import config from "./config";
 

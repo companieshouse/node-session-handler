@@ -1,6 +1,6 @@
 import ApplicationLogger from "ch-logger/lib/ApplicationLogger";
-import Encoding from "./encoding";
-import config from "./config";
+import Encoding from "../encoding";
+import config from "../config";
 
 class SessionValidator {
 
