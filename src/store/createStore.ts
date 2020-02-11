@@ -6,16 +6,14 @@ import moment from "moment";
 import encoding from "../encoding";
 import createSession from "../session";
 import cache from "../cache";
+import config from "../config";
 
-const createStore = function (newCache, config) {
+class SessionStore {
 
-    const me: any = {};
+}
 
-    const logger = (new ChLogger({
-        namespace: "refactor this"
-    })).logger;
+const createStore = function () {
 
-    const cache = newCache;
     const secret = config.secret;
     const expiryPeriod = config.expiryPeriod;
 
