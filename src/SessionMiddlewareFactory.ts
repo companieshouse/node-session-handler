@@ -1,5 +1,5 @@
 "use strict";
-
+import * as logger from 'ch-logger';
 import { RequestHandler } from "express";
 import cookie from "cookie";
 import SessionValidator from "./SessionValidator";
