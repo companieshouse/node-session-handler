@@ -2,9 +2,9 @@
 
 import { RequestHandler } from "express";
 import cookie from "cookie";
-import SessionValidator from "./session/SessionValidator";
-import SessionStore from "./session/SessionStore";
-import config from "./config";
+import SessionValidator from "./SessionValidator";
+import SessionStore from "./SessionStore";
+import config from "../config";
 
 class SessionMiddlewareFactory {
 

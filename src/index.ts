@@ -1,5 +1,5 @@
 "use strict";
 
-import SessionMiddlewareFactory from "./SessionMiddlewareFactory";
+import SessionMiddlewareFactory from "./session/SessionMiddlewareFactory";
 
 export = SessionMiddlewareFactory;
