@@ -9,7 +9,6 @@ class AccessTokenData {
     tokenType?: any;
 
     constructor(rawData: any) {
-
         this.expiresIn = rawData[SessionKeys.ExpiresIn];
         this.refreshToken = rawData[SessionKeys.RefreshToken];
         this.token = rawData[SessionKeys.AccessToken];
@@ -17,10 +16,9 @@ class AccessTokenData {
     }
 
     static createDefault() {
-
         return new AccessTokenData({
             [SessionKeys.ExpiresIn]: Date.now() + config.session.expiryPeriod,
-            [SessionKeys.RefreshToken]: "Hello",
+            [SessionKeys.RefreshToken]: "Hello", // Todo fix all this
             [SessionKeys.AccessToken]: "Hello",
             [SessionKeys.TokenType]: "Hello"
         });

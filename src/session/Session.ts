@@ -1,16 +1,16 @@
 "use strict";
 
 import AccessTokenData = require("./AccessTokenData");
+import SignInData = require("./SignInData");
 
 class Session {
 
     id: string;
-    accessToken?: AccessTokenData;
+    signInData?: SignInData;
 
-    constructor(id: string, accessToken?: AccessTokenData) {
+    constructor(id: string, rawData?: any) {
 
-        this.id = id;
-        this.accessToken = accessToken;
+        this.id = id;   
     }
 }
 
