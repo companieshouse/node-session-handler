@@ -11,12 +11,12 @@ import { Session } from ".";
 
 class SessionStore {
 
-    private idOctets = 21;
+    private _idOctets = 21;
 
-    logger: ApplicationLogger;
+    private _logger: ApplicationLogger;
 
     constructor(logger: ApplicationLogger) {
-        this.logger = logger;
+        this._logger = logger;
     }
 
     async load(sessionId: string) {
@@ -24,20 +24,17 @@ class SessionStore {
         let encodedData;
 
         try {
-
             encodedData = await cache.get(sessionId);
 
         } catch (error) {
 
-            this.logger.error(error.message);
+            this._logger.error(error.message);
             throw new Error("Error trying to retrieve from cache");
         }
 
-        const session: any = {};
-        
-        session.data = await this.decodeSession(encodedData);
+        const decodedData = await this.decodeSession(encodedData);
 
-        await this.validateExpiration(session.data);
+        await this.validateExpiration(session);
 
         return session;
     }
@@ -45,17 +42,19 @@ class SessionStore {
     async store(session: Session) {
 
         if (session.id === "") {
-            session.id = await Encoding.generateRandomBytesBase64(this.idOctets);
+            session.id = await Encoding.generateRandomBytesBase64(this._idOctets);
             session.expires = this.generateExpiry();
         }
 
-        const encodedSessionData = this.encodeSession(session.getData());
+        const encodedSessionData = this.encodeSession(session);
 
         try {
+
             cache.set(session.id, encodedSessionData);
+
         } catch (err) {
 
-            this.logger.debug(err.message);
+            this._logger.debug(err.message);
             throw new Error("Error trying to store data in cache");
         }
 
@@ -64,7 +63,7 @@ class SessionStore {
 
     private validateExpiration(session: Session) {
 
-        if (sessionData.expires <= moment().milliseconds()) {
+        if (session.expires <= moment().milliseconds()) {
             throw new Error("Session has expired");
         }
     }
@@ -77,7 +76,7 @@ class SessionStore {
     }
 
     private encodeSession(session: Session) {
-        return Encoding.encodeBase64(Encoding.encodeMsgpack(sessionData));
+        return Encoding.encodeBase64(Encoding.encodeMsgpack(session));
     }
 
     private generateExpiry() {

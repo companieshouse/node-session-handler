@@ -4,28 +4,28 @@ import config from "./config";
 
 class SessionValidator {
 
-    private signatureStart = 28;
-    private signatureLength = 27;
-    private cookieLength = 55;
+    private _signatureStart = 28;
+    private _signatureLength = 27;
+    private _cookieLength = 55;
 
-    private sessionLengthError = "Encrypted session token not long enough.";
-    private signatureCheckError = "Expected signature does not equal signature provided.";
+    private _sessionLengthError = "Encrypted session token not long enough.";
+    private _signatureCheckError = "Expected signature does not equal signature provided.";
 
-    private logger: ApplicationLogger;
-    private sessionCookie: string;
+    private _logger: ApplicationLogger;
+    private _sessionCookie: string;
 
     constructor(sessionCookie: string, logger: ApplicationLogger) {
 
-        this.logger = logger;
-        this.sessionCookie = sessionCookie;
+        this._logger = logger;
+        this._sessionCookie = sessionCookie;
     }
 
     private validateTokenLength() {
 
-        if (this.sessionCookie.length < this.cookieLength) {
+        if (this._sessionCookie.length < this._cookieLength) {
 
-            this.logger.error(this.sessionLengthError);
-            throw new Error(this.sessionLengthError);
+            this._logger.error(this._sessionLengthError);
+            throw new Error(this._sessionLengthError);
         }
     }
 
@@ -33,8 +33,8 @@ class SessionValidator {
 
         if (signature !== Encoding.generateSha1SumBase64(sessionId + config.session.secret)) {
 
-            this.logger.error(this.signatureCheckError);
-            throw new Error(this.signatureCheckError);
+            this._logger.error(this._signatureCheckError);
+            throw new Error(this._signatureCheckError);
         }
     }
 
@@ -42,8 +42,8 @@ class SessionValidator {
 
         this.validateTokenLength();
 
-        const sessionId = this.sessionCookie.substring(0, this.signatureStart);
-        const signature = this.sessionCookie.substring(this.signatureStart, this.sessionCookie.length);
+        const sessionId = this._sessionCookie.substring(0, this._signatureStart);
+        const signature = this._sessionCookie.substring(this._signatureStart, this._sessionCookie.length);
 
         this.validateSignature(signature, sessionId);
 
