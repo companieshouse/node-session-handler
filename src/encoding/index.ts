@@ -1,5 +1,5 @@
 "use strict";
 
-import encoding from "./createEncoder";
+import Encoding from "./Encoding";
 
-export = encoding;
+export = Encoding;

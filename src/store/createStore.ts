@@ -5,6 +5,7 @@ import moment from "moment";
 
 import encoding from "../encoding";
 import createSession from "../session";
+import cache from "../cache";
 
 const createStore = function (newCache, config) {
 
@@ -64,40 +65,10 @@ const createStore = function (newCache, config) {
         return session;
     };
 
-    me.getSessionIdFromTokenAndValidate = function (encryptedSessionToken) {
-
-        me.validateTokenLength(encryptedSessionToken);
-
-        const session = createSession();
-
-        session.id = encryptedSessionToken.substring(0, signatureStart);
-
-        // Strip the signature from the encrypted session token
-        const sig = encryptedSessionToken.substring(signatureStart, encryptedSessionToken.length);
-
-        me.validateSignature(sig, session.id);
-
-        return session;
-    };
-
-    me.validateTokenLength = function (encryptedSessionToken) {
-
-        if (encryptedSessionToken.length < valueLength) {
-            throw new Error("Encrypted session token not long enough");
-        }
-    };
-
     me.validateExpiration = function (sessionData) {
 
         if (sessionData.expires <= moment().milliseconds()) {
             throw new Error("Session has expired");
-        }
-    };
-
-    me.validateSignature = function (sig, sessionId) {
-
-        if (sig !== encoding.generateSha1SumBase64(sessionId + secret)) {
-            throw new Error("Expected signature does not equal actual");
         }
     };
 

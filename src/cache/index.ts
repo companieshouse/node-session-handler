@@ -1,5 +1,5 @@
 "use strict";
 
-import createCache from "./createCache";
+import cache from "./cache";
 
-export = createCache;
+export = cache;
