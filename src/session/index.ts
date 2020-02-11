@@ -1,9 +1,9 @@
 "use strict";
 
-import createSession from "./Session";
+import Session from "./Session";
 import createStore from "./createStore";
 
 export {
-    createSession,
+    Session,
     createStore
 };
