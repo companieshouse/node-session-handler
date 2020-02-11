@@ -1,6 +1,5 @@
 "use strict";
 
-import { SessionData } from "./SessionData";
 import AccessTokenData = require("./AccessTokenData");
 
 class Session {

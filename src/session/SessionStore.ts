@@ -7,20 +7,21 @@ import Encoding from "../encoding";
 import cache from "../cache";
 import config from "../config";
 import ApplicationLogger from "ch-logger/lib/ApplicationLogger";
-import { Session } from ".";
+import Session from "./Session";
 import SessionKeys from "./SessionKeys";
 import AccessTokenData from "./AccessTokenData";
 
 class SessionStore {
 
     private _idOctets = 21;
+    private _sessionExpiredError = "Session has expired.";
 
     private _logger: ApplicationLogger;
 
     constructor(logger: ApplicationLogger) {
         this._logger = logger;
     }
-    
+
     private getAccessTokenData(data: any) {
 
         const rawAccessTokenData = data[SessionKeys.AccessToken];
@@ -30,7 +31,7 @@ class SessionStore {
             undefined;
     }
 
-    async load(sessionId: string) {
+    async load(sessionId: string): Promise<Session> {
 
         let encodedData;
 
@@ -47,16 +48,22 @@ class SessionStore {
 
         const accessTokenData = this.getAccessTokenData(data);
 
-        await this.validateExpiration(session);
+        if (accessTokenData && accessTokenData.expiresIn) {
+            this.validateExpiration(accessTokenData.expiresIn);
+        }
 
-        return session;
+        return new Session(sessionId, accessTokenData);
     }
 
     async store(session: Session) {
 
         if (session.id === "") {
             session.id = await Encoding.generateRandomBytesBase64(this._idOctets);
-            session.expires = this.generateExpiry();
+            if (!session.accessToken) {
+                session.accessToken = new AccessTokenData({
+                    [SessionKeys.AccessToken]: this.generateExpiry()
+                });
+            }
         }
 
         const encodedSessionData = this.encodeSession(session);
@@ -68,16 +75,18 @@ class SessionStore {
         } catch (err) {
 
             this._logger.debug(err.message);
-            throw new Error("Error trying to store data in cache");
+            throw new Error("Error trying to store data in cache.");
         }
 
         return session;
     };
 
-    private validateExpiration(session: Session) {
+    private validateExpiration(expiresIn: number) {
 
-        if (session.expires <= moment().milliseconds()) {
-            throw new Error("Session has expired");
+        if (expiresIn <= Date.now()) {
+
+            this._logger.error(this._sessionExpiredError);
+            throw new Error(this._sessionExpiredError);
         }
     }
 
@@ -93,10 +102,7 @@ class SessionStore {
     }
 
     private generateExpiry() {
-
-        return moment()
-            .add(config.session.expiryPeriod, "ms")
-            .valueOf();
+        return Date.now() + config.session.expiryPeriod;
     }
 }
 

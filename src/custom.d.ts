@@ -1,4 +1,4 @@
-import { Session } from "./Session";
+import Session = require("./session/Session");
 
 declare global {
     namespace Express {
