@@ -4,7 +4,6 @@ import config from "./config";
 
 class SessionValidator {
 
-    private idOctets = 21;
     private signatureStart = 28;
     private signatureLength = 27;
     private cookieLength = 55;
@@ -16,6 +15,7 @@ class SessionValidator {
     private sessionCookie: string;
 
     constructor(sessionCookie: string, logger: ApplicationLogger) {
+
         this.logger = logger;
         this.sessionCookie = sessionCookie;
     }

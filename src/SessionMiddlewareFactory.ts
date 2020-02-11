@@ -3,12 +3,13 @@
 import { RequestHandler } from "express";
 import cookie from "cookie";
 import SessionValidator from "./SessionValidator";
+import SessionStore from "./session/SessionStore";
 
 class SessionMiddlewareFactory {
 
     static create(): RequestHandler {
 
-        return function (request, _response, next) {
+        return async function (request, _response, next) {
 
             const cookies = cookie.parse(request.headers.cookie || "");
 
@@ -30,7 +31,8 @@ class SessionMiddlewareFactory {
                 const sessionValidator = new SessionValidator(sessionCookie, request.logger);
                 const sessionId = sessionValidator.validateTokenAndRetrieveId();
 
-                request.session = SessionStore
+                const sessionStore = new SessionStore(request.logger);
+                request.session = await sessionStore.load(sessionId);
 
             } else {
                 /**
