@@ -35,7 +35,6 @@ enum SessionKeys {
     MissingAuthenticationCodeChosen = "missing_company_authentication_code_chosen",
     OtherChosen = "other_chosen",
     AlreadySubmitted = "already_submitted"
-    
 }
 
 export = SessionKeys;

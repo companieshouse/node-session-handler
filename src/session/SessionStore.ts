@@ -8,6 +8,8 @@ import cache from "../cache";
 import config from "../config";
 import ApplicationLogger from "ch-logger/lib/ApplicationLogger";
 import { Session } from ".";
+import SessionKeys from "./SessionKeys";
+import AccessTokenData from "./AccessTokenData";
 
 class SessionStore {
 
@@ -17,6 +19,15 @@ class SessionStore {
 
     constructor(logger: ApplicationLogger) {
         this._logger = logger;
+    }
+    
+    private getAccessTokenData(data: any) {
+
+        const rawAccessTokenData = data[SessionKeys.AccessToken];
+
+        return rawAccessTokenData ?
+            new AccessTokenData(rawAccessTokenData) :
+            undefined;
     }
 
     async load(sessionId: string) {
@@ -32,7 +43,9 @@ class SessionStore {
             throw new Error("Error trying to retrieve from cache");
         }
 
-        const decodedData = await this.decodeSession(encodedData);
+        const data = await this.decodeSession(encodedData);
+
+        const accessTokenData = this.getAccessTokenData(data);
 
         await this.validateExpiration(session);
 
