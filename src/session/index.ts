@@ -1,5 +1,9 @@
 "use strict";
 
-import createSession from "./createSession";
+import createSession from "./Session";
+import createStore from "./createStore";
 
-export = createSession;
+export {
+    createSession,
+    createStore
+};
