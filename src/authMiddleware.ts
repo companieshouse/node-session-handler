@@ -13,7 +13,7 @@ const authMiddleware = function (routeRoles): RequestHandler {
 
         // Check roles if roles supplied, else just check if signed in.
 
-        if (request.chSession.isSignedIn) { // And role
+        if (request.session.signInData.signedIn) { // And role
             
         } else {
             // Redirect to signin page with referer
