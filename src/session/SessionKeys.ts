@@ -1,4 +1,4 @@
-enum SessionKeys {
+export enum SessionKeys {
     SignInInfo = "signin_info",
     AccessToken = "access_token",
     ExpiresIn = "expires_in",
@@ -36,5 +36,3 @@ enum SessionKeys {
     OtherChosen = "other_chosen",
     AlreadySubmitted = "already_submitted"
 }
-
-export = SessionKeys;

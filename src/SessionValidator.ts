@@ -1,54 +1,68 @@
-import ApplicationLogger from "ch-logger/lib/ApplicationLogger";
 import Encoding from "./encoding";
 import config from "./config";
+import { Either, Left, Right } from "purify-ts";
+import { Response } from "express";
 
-class SessionValidator {
-
-    private _signatureStart = 28;
-    private _signatureLength = 27;
-    private _cookieLength = 55;
-
-    private _sessionLengthError = "Encrypted session token not long enough.";
-    private _signatureCheckError = "Expected signature does not equal signature provided.";
-
-    private _logger: ApplicationLogger;
-    private _sessionCookie: string;
-
-    constructor(sessionCookie: string, logger: ApplicationLogger) {
-
-        this._logger = logger;
-        this._sessionCookie = sessionCookie;
-    }
-
-    private validateTokenLength() {
-
-        if (this._sessionCookie.length < this._cookieLength) {
-
-            this._logger.error(this._sessionLengthError);
-            throw new Error(this._sessionLengthError);
-        }
-    }
-
-    private validateSignature(signature: string, sessionId: string) {
-
-        if (signature !== Encoding.generateSha1SumBase64(sessionId + config.session.secret)) {
-
-            this._logger.error(this._signatureCheckError);
-            throw new Error(this._signatureCheckError);
-        }
-    }
-
-    validateTokenAndRetrieveId() {
-
-        this.validateTokenLength();
-
-        const sessionId = this._sessionCookie.substring(0, this._signatureStart);
-        const signature = this._sessionCookie.substring(this._signatureStart, this._sessionCookie.length);
-
-        this.validateSignature(signature, sessionId);
-
-        return sessionId;
-    }
+export enum ValidatorConstant {
+    _signatureStart = 28,
+    _signatureLength = 27,
+    _cookieLength = 55
 }
 
-export = SessionValidator;
+export enum ValidatorErrorEnum {
+    _sessionLengthError = "Encrypted session token not long enough.",
+    _signatureCheckError = "Expected signature does not equal signature provided."
+}
+
+export type ValidatorErrorFunction = (response: Response) => ValidatorErrorEnum;
+export const SessionLengthError: ValidatorErrorFunction = (response: Response) => {
+    response.redirect("/signin");
+    return ValidatorErrorEnum._sessionLengthError;
+};
+
+export const SignatureCheckError: ValidatorErrorFunction = (response: Response) => {
+    response.redirect("/signin");
+    return ValidatorErrorEnum._signatureCheckError;
+};
+
+export type Success<T> = { result: T; };
+export type Failure = { errorFunction: ValidatorErrorFunction; };
+
+export const Success = <T>(result: T): Success<T> => {
+    return {
+        result
+    };
+};
+export const Failure = (errorFunction: ValidatorErrorFunction): Failure => {
+    return {
+        errorFunction
+    };
+};
+
+export class SessionValidator {
+
+    public static validateSessionCookieLength =
+        (sessionCookie: string): Either<Failure, Success<string>> => {
+
+            if (sessionCookie.length < ValidatorConstant._cookieLength) {
+                return Left(Failure(SessionLengthError));
+            }
+            return Right(Success(sessionCookie));
+
+        };
+
+    public static validateSessionCookieSignature =
+        (sessionCookie: string, sessionIdValue: string): Either<Failure, Success<string>> => {
+            const signature = sessionCookie.substring(ValidatorConstant._signatureStart, sessionCookie.length);
+
+            if (signature !== Encoding.generateSha1SumBase64(sessionIdValue + config.session.secret)) {
+
+                return Left(Failure(SignatureCheckError));
+            }
+
+            return Right(Success(signature));
+        };
+
+}
+
+

@@ -1,37 +1,38 @@
 "use strict";
-import * as logger from 'ch-logger';
-import { RequestHandler } from "express";
+import { Request, Response, NextFunction } from "express";
 import cookie from "cookie";
-import SessionValidator from "./SessionValidator";
-import SessionStore from "./session/SessionStore";
+import { SessionValidator, Failure, Success } from "./SessionValidator";
+import { SessionStore } from "./session/SessionStore";
+import { Either } from "purify-ts";
+import { SessionId } from './session/SessionId';
+import { SessionKeys } from './session/SessionKeys';
 
-class SessionMiddlewareFactory {
+export class SessionMiddlerwareFactory {
+    private sessionStore: SessionStore;
 
-    static create(): RequestHandler {
+    constructor(sessionStore: SessionStore) {
+        this.sessionStore = sessionStore;
+    }
 
-        return async function (request, _response, next) {
-
+    public createSessionMiddleware = () =>
+        (request: Request, response: Response, next: NextFunction): void => {
             const cookies = cookie.parse(request.headers.cookie || "");
 
-            const sessionCookie = cookies["__SID"];
+            const sessionCookie = cookies.__SID;
 
-            if (cookies["__SID"]) {
+            if (cookies.__SID) {
 
-                const sessionValidator = new SessionValidator(sessionCookie, request.logger);
-                const sessionId = sessionValidator.validateTokenAndRetrieveId();
 
-                const sessionStore = new SessionStore(request.logger);
-                request.session = await sessionStore.load(sessionId);
-
-            } else {
-                /**
-                 * Generate and redirect?
-                 */
+                const maybeSessionId: Either<Failure, SessionId> =
+                    SessionId.validSessionId(sessionCookie[SessionKeys.Id], sessionCookie[SessionKeys.ClientSig]);
+                maybeSessionId.either(failure => {
+                    failure.errorFunction(response);
+                }, async success => {
+                    request.session = await this.sessionStore.load(success.result.sessionIdValue);
+                });
             }
 
-            return next();
-        }
-    }
+            next();
+        };
 }
 
-export = SessionMiddlewareFactory;
