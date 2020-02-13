@@ -1,67 +1,60 @@
 "use strict";
 
-import cache from "../cache";
-import { Session } from "./Session";
+import { Cache } from "../cache/cache";
 import { SessionKeys } from "./SessionKeys";
-import { AccessTokenData } from "./model/AccessTokenData";
+import { AccessToken } from "./model/AccessToken";
 import { Encoding } from "../encoding/Encoding";
+import { SessionId } from "./model/SessionId";
+import { UnverifiedSession, VerifiedSession, Session } from "./model/Session";
+import { ISignInInfo } from "./model/ISignInInfo";
+import { Either, EitherAsync } from "purify-ts";
+import { Failure } from "../error/FailureType";
+import {
+    liftEitherFunctionToAsyncEither,
+    eitherPromiseFunctionToEitherAsync,
+    liftToAsyncEither,
+    eitherPromiseToEitherAsync
+} from "../utils/EitherUtils";
+
 
 export class SessionStore {
 
-    private _sessionExpiredError = "Session has expired.";
+    private cache: Cache;
 
-    private getAccessTokenData(data: any): AccessTokenData | undefined {
-
-        const rawAccessTokenData = data[SessionKeys.AccessToken];
-
-        return rawAccessTokenData ?
-            new AccessTokenData(rawAccessTokenData) :
-            undefined;
+    constructor() {
+        this.cache = Cache.instance();
     }
 
-    public async load(sessionId: string): Promise<Session> {
+    private getAccessTokenData(session: Session): AccessToken | undefined {
 
-        let encodedData;
+        const rawAccessTokenData: ISignInInfo | undefined = session.data[SessionKeys.SignInInfo];
 
-        try {
-            encodedData = await cache.get(sessionId);
-
-        } catch (error) {
-            throw new Error("Error trying to retrieve from cache");
-        }
-
-        const data = await Encoding.decodeSession(encodedData);
-
-        const accessTokenData = this.getAccessTokenData(data);
-
-        if (accessTokenData && accessTokenData.expiresIn) {
-            this.validateExpiration(accessTokenData.expiresIn);
-        }
-
-        return new Session(sessionId, accessTokenData);
+        return rawAccessTokenData ? rawAccessTokenData[SessionKeys.AccessToken] : undefined;
     }
 
-    public async store(session: Session): Promise<string> {
+    public load(sessionId: SessionId): EitherAsync<Failure, VerifiedSession> {
 
-        const encodedSessionData = await Encoding.encodeSession(session);
+        const getFromCache = eitherPromiseFunctionToEitherAsync<Failure, string, SessionId>(this.cache.get);
 
-        try {
+        const decodeData =
+            liftEitherFunctionToAsyncEither<Failure, UnverifiedSession, string>
+                ((data: any) => Either.of(Encoding.decodeSession(data)));
 
-            cache.set(session.id, encodedSessionData);
+        const validateSessionData =
+            liftEitherFunctionToAsyncEither(VerifiedSession.createValidSession);
 
-        } catch (err) {
-            throw new Error("Error trying to store data in cache.");
-        }
 
-        return encodedSessionData;
+        return liftToAsyncEither<Failure, SessionId>(sessionId)
+            .chain(getFromCache)
+            .chain(decodeData)
+            .chain(validateSessionData);
+
+    }
+
+    public store(session: UnverifiedSession): EitherAsync<Failure, string> {
+        const encodedSessionData = Encoding.encodeSession(session);
+        return eitherPromiseToEitherAsync(this.cache.set(session[SessionKeys.Id], encodedSessionData));
+
     };
-
-    private validateExpiration(expiresIn: number): void {
-
-        if (expiresIn <= Date.now()) {
-
-            throw new Error(this._sessionExpiredError);
-        }
-    }
 
 }

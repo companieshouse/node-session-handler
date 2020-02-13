@@ -1,9 +1,9 @@
-import { Session } from "./session/Session";
+export {};
 
 declare global {
     namespace Express {
         export interface Request {
-            session?: Session;
+            session?: any;
         }
     }
 }

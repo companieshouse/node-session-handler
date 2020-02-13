@@ -34,5 +34,7 @@ export enum SessionKeys {
     IllnessChosen = "illness_chosen",
     MissingAuthenticationCodeChosen = "missing_company_authentication_code_chosen",
     OtherChosen = "other_chosen",
-    AlreadySubmitted = "already_submitted"
+    AlreadySubmitted = "already_submitted",
+    ExtraData = "extra_data",
+    SessionId = "SessionId"
 }

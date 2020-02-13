@@ -1,22 +1,22 @@
-import { IAccessToken } from "./IAccessToken";
+import { AccessToken } from "./AccessToken";
 import { SessionKeys } from "../SessionKeys";
 
 export interface ISignInInfo {
-    [SessionKeys.AccessToken]?: IAccessToken;
-    [SessionKeys.AdminPermissions]?: boolean;
+    [SessionKeys.AccessToken]?: AccessToken;
+    [SessionKeys.AdminPermissions]?: string;
     [SessionKeys.CompanyNumber]?: string;
-    [SessionKeys.SignedIn]?: boolean;
+    [SessionKeys.SignedIn]?: number;
     [SessionKeys.UserProfile]?: IUserProfile;
 }
 
 export interface IUserProfile {
-    [SessionKeys.Email]?: string;
-    [SessionKeys.Forename]?: string;
-    [SessionKeys.Id]?: string;
-    [SessionKeys.Locale]?: string;
-    [SessionKeys.Scope]?: string;
-    [SessionKeys.Permissions]?: IMap<boolean>;
-    [SessionKeys.Surname]?: string;
+    [SessionKeys.Email]?: string | null;
+    [SessionKeys.Forename]?: string | null;
+    [SessionKeys.UserId]?: string | null;
+    [SessionKeys.Locale]?: string | null;
+    [SessionKeys.Scope]?: string | null;
+    [SessionKeys.Permissions]?: IMap<boolean> | null;
+    [SessionKeys.Surname]?: string | null;
 }
 
 export interface IMap<T> {

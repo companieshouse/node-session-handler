@@ -1,34 +1,41 @@
-"use strict";
-
 import msgpack from "msgpack";
 import crypto from "crypto";
 import { promisify } from "util";
-import config from "../config";
-import {SessionKeys} from "../session/SessionKeys";
-import { Session } from '../session/model/ISession';
+import { UnverifiedSession, Session, VerifiedSession } from "../session/model/Session";
 const randomBytesAsync = promisify(crypto.randomBytes);
+
+export enum EncondingConstant {
+    _idOctets = (7 * 3),
+    _signatureStart = (_idOctets * 4) / 3,
+    _signatureLength = 27,
+    _cookieValueLength = _signatureStart + _signatureLength
+
+}
 
 export class Encoding {
 
-    public static readonly _idOctets = 21;
-
-    public static decodeMsgpack(base: any) {
+    public static decodeMsgpack(base: any): string {
         return msgpack.unpack(base);
     }
 
-    public static encodeMsgpack(base: any) {
+    public static encodeMsgpack(base: any): string {
         return msgpack.pack(base);
     }
 
-    public static decodeBase64(base: any) {
+    public static decodeBase64(base: any): Buffer {
         return Buffer.from(base, "base64");
     }
 
-    public static encodeBase64(base: any) {
+    public static encodeBase64(base: any): string {
         return base.toString("base64");
     }
 
-    public static generateSha1SumBase64(base: any) {
+    public static generateSignature(id: string, secret: string): string {
+        const adjustedId = id.substr(0, EncondingConstant._idOctets);
+        return this.generateSha1SumBase64(adjustedId + secret).substr(0, EncondingConstant._signatureLength);
+    }
+
+    public static generateSha1SumBase64(base: any): string {
 
         return crypto
             .createHash("sha1")
@@ -36,7 +43,7 @@ export class Encoding {
             .digest("base64");
     }
 
-    public static async generateRandomBytesBase64(numBytes: number) {
+    public static async generateRandomBytesBase64(numBytes: number): Promise<string> {
 
         try {
             return (await randomBytesAsync(numBytes)).toString("base64");
@@ -45,32 +52,18 @@ export class Encoding {
         }
     }
 
-    public static decodeSession<T>(encodedData: any): T {
+    public static decodeSession(encodedData: any): UnverifiedSession {
 
         const base64Decoded = Encoding.decodeBase64(encodedData);
 
-        return Encoding.decodeMsgpack(base64Decoded);
+        return UnverifiedSession.parseSession(Encoding.decodeMsgpack(base64Decoded));
     }
 
-
-    public static generateExpiry(): number {
-        return Date.now() + config.session.expiryPeriod;
-    }
-
-    public static async encodeSession(session: Session): Promise<string> {
-        if (session[".id"] === "") {
-            session[".id"] = await Encoding.generateSessionId();
-            if (!session.signin_info?.access_token) {
-                const signInInfo = session.signin_info;
-                signInInfo.access_token = {
-                    [SessionKeys.AccessToken]: Encoding.generateExpiry()
-                };
-            }
-        }
-        return Encoding.encodeBase64(Encoding.encodeMsgpack(session));
+    public static encodeSession(session: UnverifiedSession): string {
+        return Encoding.encodeBase64(Encoding.encodeMsgpack(session.unmarshall()));
     }
 
     public static async generateSessionId(): Promise<string> {
-        return Encoding.generateRandomBytesBase64(this._idOctets);
+        return Encoding.generateRandomBytesBase64(EncondingConstant._idOctets);
     }
 }
