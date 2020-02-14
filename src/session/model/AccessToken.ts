@@ -1,5 +1,4 @@
 import { SessionKeys } from "../SessionKeys";
-import config = require("../../config");
 
 export class AccessToken {
     public readonly [SessionKeys.AccessToken]?: string;
@@ -7,17 +6,14 @@ export class AccessToken {
     public readonly [SessionKeys.RefreshToken]?: string;
     public readonly [SessionKeys.TokenType]?: string;
 
-    public static createDefaultAccessToken(): AccessToken {
+    public static createDefaultAccessToken(expiryPeriod: number): AccessToken {
         return {
-            [SessionKeys.ExpiresIn]: this.generateExpiry(),
+            [SessionKeys.ExpiresIn]: Date.now() + expiryPeriod,
             [SessionKeys.RefreshToken]: "Hello",
             [SessionKeys.AccessToken]: "Hello",
             [SessionKeys.TokenType]: "Hello"
         };
     }
 
-    public static generateExpiry(): number {
-        return Date.now() + config.session.expiryPeriod;
-    }
 }
 

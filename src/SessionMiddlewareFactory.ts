@@ -1,48 +1,62 @@
-"use strict";
 import { Request, Response, NextFunction } from "express";
-import cookie from "cookie";
 import { SessionStore } from "./session/SessionStore";
-import { SessionId } from "./session/model/SessionId";
 import { Failure } from "./error/FailureType";
-import {
-    liftEitherFunctionToAsyncEither, liftToAsyncEither
-} from "./utils/EitherUtils";
+import {liftEitherToAsyncEither} from "./utils/EitherUtils";
 import { Either } from "purify-ts";
 import { VerifiedSession } from "./session/model/Session";
+import { SessionHandlerConfig } from "./SessionHandlerConfig";
+import { Cookie } from "./session/model/Cookie";
 
-export class SessionMiddlerwareFactory {
-    private sessionStore: SessionStore;
+export class SessionMiddlerware {
 
-    constructor(sessionStore: SessionStore) {
-        this.sessionStore = sessionStore;
+    constructor(private readonly config: SessionHandlerConfig,
+        private readonly sessionStore: SessionStore,
+    ) {
+
+        if (!config.sessionSecret) {
+            throw Error("Must provide secret of at least 16 bytes (64 characters) long");
+        }
+
+        if (!config.expiryPeriod) {
+            throw Error("Must provide expiry period");
+        }
+
+        if (!config.redisUrl) {
+            throw Error("Must provide redis url");
+        }
+
+        if (config.sessionSecret.length < 24) {
+            console.log(config.sessionSecret.length);
+            throw Error("Secret must be at least 16 bytes (24 characters) long");
+        }
+
     }
 
-    public createSessionMiddleware = () =>
-        async (request: Request, response: Response, next: NextFunction): Promise<void> => {
-            const cookies = cookie.parse(request.headers.cookie || "");
+    public handler = () =>
+        async (request: Request, response: Response, next: NextFunction): Promise<any> => {
 
-            const sessionCookie = cookies.__SID;
+            const sessionCookie = request.cookies.__SID;
 
-            if (cookies.__SID) {
+            if (sessionCookie) {
 
-                const result = await this.tryToLoadValidSession(sessionCookie);
+                console.log("Cookie: " + sessionCookie);
+
+                const result: Either<Failure, VerifiedSession> = await liftEitherToAsyncEither(
+                    Cookie.validateCookieString(sessionCookie, this.config.sessionSecret)
+                ).chain(this.sessionStore.load).run();
+
                 result.either(
-                    (failure: Failure) => failure.errorFunction(response),
-                    (verifiedSession: VerifiedSession) => request.session = verifiedSession
+                    (failure: Failure) => {
+                        failure.errorFunction(response)},
+                    (verifiedSession: VerifiedSession) => {
+                        request.session = verifiedSession;
+                    }
                 );
 
             }
 
-            next();
+            return next();
         };
 
-    private async tryToLoadValidSession(sessionCookie: string): Promise<Either<Failure, VerifiedSession>> {
-
-        const validateSessionId = liftEitherFunctionToAsyncEither(SessionId.getValidatedSessionId);
-
-        return liftToAsyncEither<Failure, string>(sessionCookie)
-            .chain(validateSessionId)
-            .chain(this.sessionStore.load).run();
-    }
 }
 

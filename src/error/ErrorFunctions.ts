@@ -8,7 +8,8 @@ export enum ErrorEnum {
     _accessTokenMissingError = "Access Token missing",
     _expiresInMissingError = "Expires in field missing",
     _storeError = "Store error",
-    _promiseError = "Promise error"
+    _promiseError = "Promise error",
+    _noDataRetrievedError = "No data retrieved from Redis"
 }
 
 export type ResponseHandler = (response: Response) => void;
@@ -23,14 +24,17 @@ export const GeneralSessonError: GeneralErrorHandlerFactory =
         return (response: Response) => onError(response)(errorEnum);
     };
 
-export const SessionLengthError: ResponseHandler =
-    GeneralSessonError(ErrorEnum._sessionLengthError)((r: Response) => (_: ErrorEnum) => {
-        log(_); r.redirect("/signin");
-    });
+export const SessionLengthError: (expected: number, actual: number) => ResponseHandler =
+    (expected: number, actual: number) =>
+        GeneralSessonError(ErrorEnum._sessionLengthError)((r: Response) => (_: ErrorEnum) => {
+            r.redirect("/signin");
+            log(`${_}\nExpected: ${expected}\nActual: ${actual}`); r.redirect("/signin");
+        });
 
 export const SignatureCheckError: (expected: string, actual: string) => ResponseHandler =
     (expected: string, actual: string) =>
         GeneralSessonError(ErrorEnum._signatureCheckError)((r: Response) => (_: ErrorEnum) => {
+            r.redirect("/signin");
             log(`${_}\nExpected: ${expected}\nActual: ${actual}`); r.redirect("/signin");
         });
 
@@ -44,13 +48,21 @@ export const SessionSecretNotSet: ResponseHandler =
         log(_); throw Error("Session Secret is not set");
     });
 
+export const PromiseError =
+    (callStack: any): ResponseHandler =>
+        GeneralSessonError(ErrorEnum._promiseError)((_: Response) => (err: ErrorEnum) =>
+            log(`Error: ${err}.\n${callStack}`));
+
 export const SignInInfoMissingError =
     GeneralSessonError(ErrorEnum._signInfoMissingError)
         ((r: Response) => (_: ErrorEnum) => log(ErrorEnum._signInfoMissingError));
 
-export const AccessTokenMissingError = GeneralSessonError(ErrorEnum._signInfoMissingError)
+export const AccessTokenMissingError = GeneralSessonError(ErrorEnum._accessTokenMissingError)
     ((r: Response) => (_: ErrorEnum) => log(ErrorEnum._accessTokenMissingError));
 
-export const ExpiresInMissingError = GeneralSessonError(ErrorEnum._signInfoMissingError)
-    ((r: Response) => (_: ErrorEnum) => log(ErrorEnum._signInfoMissingError));
+export const ExpiresMissingError = GeneralSessonError(ErrorEnum._expiresInMissingError)
+    ((r: Response) => (_: ErrorEnum) => log(ErrorEnum._expiresInMissingError));
 
+
+export const NoDataRetrievedError = (key: string) => GeneralSessonError(ErrorEnum._noDataRetrievedError)
+    ((r: Response) => (_: ErrorEnum) => log(`${ErrorEnum._noDataRetrievedError} using key: ${key}`));

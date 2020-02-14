@@ -1,8 +1,7 @@
 import msgpack from "msgpack";
 import crypto from "crypto";
 import { promisify } from "util";
-import { UnverifiedSession, Session, VerifiedSession } from "../session/model/Session";
-const randomBytesAsync = promisify(crypto.randomBytes);
+import { Session, VerifiedSession } from "../session/model/Session";
 
 export enum EncondingConstant {
     _idOctets = (7 * 3),
@@ -43,27 +42,33 @@ export class Encoding {
             .digest("base64");
     }
 
-    public static async generateRandomBytesBase64(numBytes: number): Promise<string> {
+    public static generateRandomBytesBase64(numBytes: number): string {
+        return crypto.randomBytes(numBytes).toString("base64");
 
-        try {
-            return (await randomBytesAsync(numBytes)).toString("base64");
-        } catch (error) {
-            throw new Error(error);
-        }
     }
 
-    public static decodeSession(encodedData: any): UnverifiedSession {
+    public static async generateRandomBytesBase64Async(numBytes: number): Promise<string> {
+        const asyncFun = promisify(crypto.randomBytes);
+        return (await asyncFun(numBytes)).toString("base64");
+
+    }
+
+    public static decodeSession(encodedData: any): Session {
 
         const base64Decoded = Encoding.decodeBase64(encodedData);
 
-        return UnverifiedSession.parseSession(Encoding.decodeMsgpack(base64Decoded));
+        return new Session(Encoding.decodeMsgpack(base64Decoded));
     }
 
-    public static encodeSession(session: UnverifiedSession): string {
+    public static encodeSession(session: Session): string {
         return Encoding.encodeBase64(Encoding.encodeMsgpack(session.unmarshall()));
     }
 
-    public static async generateSessionId(): Promise<string> {
+    public static generateSessionId(): string {
         return Encoding.generateRandomBytesBase64(EncondingConstant._idOctets);
+    }
+
+    public static async generateSessionIdAsync(): Promise<string> {
+        return Encoding.generateRandomBytesBase64Async(EncondingConstant._idOctets);
     }
 }

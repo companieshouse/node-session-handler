@@ -1,14 +1,24 @@
 import { Either, Left, Right } from "purify-ts";
-import { AccessTokenMissingError, ExpiresInMissingError, SessionExpiredError, SignInInfoMissingError } from "../../error/ErrorFunctions";
+import { AccessTokenMissingError, ExpiresMissingError, SessionExpiredError, SignInInfoMissingError } from "../../error/ErrorFunctions";
 import { Failure } from "../../error/FailureType";
 import { SessionKeys } from "../SessionKeys";
 import { AccessToken } from "./AccessToken";
 import { IMap } from "./ISignInInfo";
-import { SessionId } from "./SessionId";
+import { Cookie } from "./Cookie";
 
-export abstract class Session {
-    protected [SessionKeys.Id]: string;
+export class Session {
+
     protected _data: IMap<any> = {};
+
+    public constructor(data?: any) {
+
+        if (data) {
+
+            Session.marshall(this, data);
+        }
+
+    }
+
 
     set data(data: IMap<any>) {
         this._data = data;
@@ -22,8 +32,8 @@ export abstract class Session {
 
         const obj: any = {};
         const thisObj: any = this._data;
-        obj[SessionKeys.Id] = this[SessionKeys.Id];
-        const keys = Object.keys(thisObj).sort()
+
+        const keys = Object.keys(thisObj).sort();
         for (const i in keys) {
             if (thisObj.hasOwnProperty(keys[i])) {
                 obj[keys[i]] = thisObj[keys[i]];
@@ -34,63 +44,57 @@ export abstract class Session {
         return obj;
     }
 
-}
+    public verify(): Either<Failure, VerifiedSession> {
+        return VerifiedSession.verifySession(this);
+    }
 
-
-export class UnverifiedSession extends Session {
-
-    private constructor(data: any, id?: SessionId, ) {
-        super();
-        if (id) {
-            this[SessionKeys.Id] = id.value;
-        } else {
-            this[SessionKeys.Id] = data[SessionKeys.Id];
-        }
-        const keys = Object.keys(data).sort()
+    public static marshall(session: Session, data: any): void {
+        const keys = Object.keys(data).sort();
 
         for (const i in keys) {
-            if (data.hasOwnProperty(keys[i]) && keys[i] !== SessionKeys.Id) {
-                this._data[keys[i]] = data[keys[i]];
+            if (data.hasOwnProperty(keys[i])) {
+                session._data[keys[i]] = data[keys[i]];
             }
         }
-    }
-
-
-    public static async newSession(): Promise<UnverifiedSession> {
-        const signInInfo = {
-            [SessionKeys.AccessToken]: AccessToken.createDefaultAccessToken()
-        }
-        return new UnverifiedSession({
-            [SessionKeys.Id]: await SessionId.randomSessionId(),
-            [SessionKeys.SignInInfo]: signInInfo
-        });
-    }
-
-    public static async newSessionWithData(data: any): Promise<UnverifiedSession> {
-        return new UnverifiedSession(data, await SessionId.randomSessionId());
-    }
-
-    public static parseSession(data: any): UnverifiedSession {
-        return new UnverifiedSession(data);
     }
 
 }
 
 export class VerifiedSession extends Session {
 
-    private constructor(session: UnverifiedSession) {
+    private constructor(session: Session) {
         super();
-        this[SessionKeys.Id] = session[SessionKeys.Id];
         this._data = session.data;
     }
 
-    public static createValidSession(session: UnverifiedSession): Either<Failure, VerifiedSession> {
+    public asCookie(): Cookie {
+        return Cookie.sessionCookie(this);
+    }
 
-        return this.isSessionValid(session).map(success => new VerifiedSession(success));
+    public static createNewVerifiedSession(
+        sessionSecret: string,
+        expiryPeriod: number,
+        extraData?: any): Either<Failure, VerifiedSession> {
+
+        const newCookie: Cookie = Cookie.newCookie(sessionSecret);
+
+        const signInInfo = {
+            [SessionKeys.AccessToken]: AccessToken.createDefaultAccessToken(expiryPeriod)
+        };
+
+        const sessionData = !extraData ? {} : extraData;
+
+        sessionData[SessionKeys.Id] = newCookie.sessionId;
+        sessionData[SessionKeys.ClientSig] = newCookie.signature;
+        sessionData[SessionKeys.SignInInfo] = signInInfo;
+
+        const session = new Session(sessionData);
+
+        return VerifiedSession.verifySession(session).map(success => new VerifiedSession(success));
 
     }
 
-    public static isSessionValid(session: UnverifiedSession): Either<Failure, UnverifiedSession> {
+    public static verifySession(session: Session): Either<Failure, VerifiedSession> {
 
         const signInInfo = session.data[SessionKeys.SignInInfo];
 
@@ -108,21 +112,21 @@ export class VerifiedSession extends Session {
             );
         }
 
-        const expiresIn = accessToken[SessionKeys.ExpiresIn];
+        const expires = session.data[SessionKeys.Expires];
 
-        if (!expiresIn) {
+        if (!expires) {
             return Left(
-                Failure(ExpiresInMissingError)
+                Failure(ExpiresMissingError)
             );
         }
 
-        if (expiresIn <= Date.now()) {
+        if (expires <= Date.now()) {
             return Left(
                 Failure(SessionExpiredError)
             );
         }
 
-        return Right(session);
+        return Right(new VerifiedSession(session));
 
     }
 

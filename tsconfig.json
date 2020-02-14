@@ -9,10 +9,10 @@
         "pretty": true,
         "emitDecoratorMetadata": true,
         "experimentalDecorators": true,
-        "strictNullChecks": true,
+        "strictNullChecks": false,
         "sourceMap": true,
         "typeRoots": [
-            "src/custom.d.ts",
+            "src/index.d.ts",
             "node_modules/@types"
         ]
     },
@@ -21,6 +21,5 @@
     ],
     "exclude": [
         "node_modules",
-        "**/__tests__/*"
     ]
 }

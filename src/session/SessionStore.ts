@@ -1,28 +1,25 @@
 "use strict";
 
-import { Cache } from "../cache/cache";
+import { Cache } from "../cache/Cache";
 import { SessionKeys } from "./SessionKeys";
 import { AccessToken } from "./model/AccessToken";
 import { Encoding } from "../encoding/Encoding";
-import { SessionId } from "./model/SessionId";
-import { UnverifiedSession, VerifiedSession, Session } from "./model/Session";
+import { VerifiedSession, Session } from "./model/Session";
 import { ISignInInfo } from "./model/ISignInInfo";
-import { Either, EitherAsync } from "purify-ts";
+import { Either, EitherAsync, Just } from "purify-ts";
 import { Failure } from "../error/FailureType";
 import {
     liftEitherFunctionToAsyncEither,
-    eitherPromiseFunctionToEitherAsync,
     liftToAsyncEither,
-    eitherPromiseToEitherAsync
+    liftEitherToAsyncEither,
+    liftFunctionToAsyncEither,
 } from "../utils/EitherUtils";
-
+import { Cookie } from "./model/Cookie";
 
 export class SessionStore {
 
-    private cache: Cache;
 
-    constructor() {
-        this.cache = Cache.instance();
+    public constructor(private readonly cache: Cache) {
     }
 
     private getAccessTokenData(session: Session): AccessToken | undefined {
@@ -32,28 +29,20 @@ export class SessionStore {
         return rawAccessTokenData ? rawAccessTokenData[SessionKeys.AccessToken] : undefined;
     }
 
-    public load(sessionId: SessionId): EitherAsync<Failure, VerifiedSession> {
+    public load = (cookie: Cookie): EitherAsync<Failure, VerifiedSession> => {
 
-        const getFromCache = eitherPromiseFunctionToEitherAsync<Failure, string, SessionId>(this.cache.get);
+        const decodeSession = liftFunctionToAsyncEither<Failure, Session, string>(Encoding.decodeSession);
 
-        const decodeData =
-            liftEitherFunctionToAsyncEither<Failure, UnverifiedSession, string>
-                ((data: any) => Either.of(Encoding.decodeSession(data)));
-
-        const validateSessionData =
-            liftEitherFunctionToAsyncEither(VerifiedSession.createValidSession);
-
-
-        return liftToAsyncEither<Failure, SessionId>(sessionId)
-            .chain(getFromCache)
-            .chain(decodeData)
-            .chain(validateSessionData);
+        return liftToAsyncEither<Failure, Cookie>(cookie)
+            .chain(this.cache.get)
+            .chain(decodeSession)
+            .chain(session => liftEitherToAsyncEither(session.verify()));
 
     }
 
-    public store(session: UnverifiedSession): EitherAsync<Failure, string> {
+    public store = (session: Session): EitherAsync<Failure, string> => {
         const encodedSessionData = Encoding.encodeSession(session);
-        return eitherPromiseToEitherAsync(this.cache.set(session[SessionKeys.Id], encodedSessionData));
+        return this.cache.set(session.data[SessionKeys.Id], encodedSessionData);
 
     };
 

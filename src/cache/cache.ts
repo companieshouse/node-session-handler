@@ -1,51 +1,44 @@
-"use strict";
-
-import Redis from "ioredis";
-
-import config from "../config";
-import { EitherAsync, Right, Either } from "purify-ts";
+import { Redis } from "ioredis";
+import { EitherAsync, Right, Either, Left } from "purify-ts";
 import { Failure } from "../error/FailureType";
-import { GeneralSessonError, ErrorEnum, ResponseHandler, log } from "../error/ErrorFunctions";
-import { SessionId } from "../session/model/SessionId";
-import { Response } from "express";
+import { PromiseError, NoDataRetrievedError } from "../error/ErrorFunctions";
+import IORedis = require("ioredis");
+import { eitherPromiseToEitherAsync } from "../utils/EitherUtils";
+import { Cookie } from "../session/model/Cookie";
 
 export class Cache {
 
-    private client: Redis.Redis;
-    private errorFun =
-        (callStack: any): ResponseHandler =>
-            GeneralSessonError(ErrorEnum._promiseError)((res: Response) => (err: ErrorEnum) =>
-                log(`Error: ${err}.\n${callStack}`));
-    public static cacheInstance: Cache;
 
-    constructor() {
-        this.client = new Redis(`redis://${config.redis.address}`);
-    }
+    public constructor(private readonly client: Redis) { }
 
-    public static instance(): Cache {
-        if (!this.cacheInstance) {
-            Cache.cacheInstance = new Cache();
+    public static redisInstance(url: string): Redis {
+
+        if (url.startsWith("redis://")) {
+            return IORedis(url);
+        } else {
+            return IORedis(`redis://${url}`);
         }
-        return Cache.cacheInstance;
+
     }
 
-    async set(key: string, value: string): Promise<Either<Failure, string>> {
-        return EitherAsync<Failure, string>(async ({ throwE }) =>
-            await this.client.set(key, value).catch(err => throwE(Failure(this.errorFun(err))))).run();
+    public set = (key: string, value: string): EitherAsync<Failure, string> => {
+        return eitherPromiseToEitherAsync<Failure, string>(this.client.set(key, value)
+            .then(r => Either.of<Failure, string>(r))
+            .catch(err => Left<Failure, string>(Failure(PromiseError(err)))));
     }
 
-    async get(key: SessionId): Promise<Either<Failure, string>> {
-
-        return EitherAsync<Failure, string>(async ({ liftEither, throwE }) => {
-            const c = await this.client.get(key.value).catch(err => throwE(Failure(this.errorFun(err))));
-            if (!c) return throwE(Failure(this.errorFun));
-            return liftEither(Right(c));
-
-        }).run();
+    public get = (key: Cookie): EitherAsync<Failure, string> => {
+        return eitherPromiseToEitherAsync(this.client.get(key.sessionId)
+            .then(result => Either.of<Failure, string>(result).chain(r => {
+                if (!r) return Left(Failure(NoDataRetrievedError(key.value)));
+                return Right(r);
+            })
+            ).catch(err => Left<Failure, string>(Failure(PromiseError(err)))));
     }
 
-    async del(key: string): Promise<Either<Failure, number>> {
-        return EitherAsync<Failure, number>(async ({ throwE }) =>
-            await this.client.del(key).catch(err => throwE(Failure(this.errorFun(err))))).run();
+    public del = (key: string): EitherAsync<Failure, number> => {
+        return eitherPromiseToEitherAsync(this.client.del(key)
+            .then(r => Either.of<Failure, number>(r))
+            .catch(err => Left<Failure, number>(Failure(PromiseError(err)))));
     }
 }
