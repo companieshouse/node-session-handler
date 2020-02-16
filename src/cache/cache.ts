@@ -14,11 +14,7 @@ export class Cache {
 
     public static redisInstance(config: SessionHandlerConfig): Redis {
 
-        return IORedis({
-            host: config.cacheServer,
-            db: config.cacheDB,
-            password: config.cachePassword
-        });
+        return new IORedis(`redis://:${config.cachePassword}${config.cacheServer}/${config.cacheDB}`);
 
     }
 
