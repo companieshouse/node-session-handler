@@ -5,6 +5,7 @@ import { SessionKeys } from "../SessionKeys";
 import { AccessToken } from "./AccessToken";
 import { IMap } from "./ISignInInfo";
 import { Cookie } from "./Cookie";
+import { SessionHandlerConfig } from "../../SessionHandlerConfig";
 
 export class Session {
 
@@ -72,14 +73,14 @@ export class VerifiedSession extends Session {
     }
 
     public static createNewVerifiedSession(
-        sessionSecret: string,
-        expiryPeriod: number,
-        extraData?: any): Either<Failure, VerifiedSession> {
+        config: SessionHandlerConfig,
+        extraData?: any): VerifiedSession {
 
-        const newCookie: Cookie = Cookie.newCookie(sessionSecret);
+        const newCookie: Cookie = Cookie.newCookie(config.cookieSecret);
 
         const signInInfo = {
-            [SessionKeys.AccessToken]: AccessToken.createDefaultAccessToken(expiryPeriod)
+            [SessionKeys.AccessToken]: AccessToken.createDefaultAccessToken(config.defaultSessionExpiration),
+            [SessionKeys.SignedIn]: 0
         };
 
         const sessionData = !extraData ? {} : extraData;
@@ -88,10 +89,7 @@ export class VerifiedSession extends Session {
         sessionData[SessionKeys.ClientSig] = newCookie.signature;
         sessionData[SessionKeys.SignInInfo] = signInInfo;
 
-        const session = new Session(sessionData);
-
-        return VerifiedSession.verifySession(session).map(success => new VerifiedSession(success));
-
+        return new VerifiedSession(new Session(sessionData));
     }
 
     public static verifySession(session: Session): Either<Failure, VerifiedSession> {

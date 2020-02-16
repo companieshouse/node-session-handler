@@ -5,19 +5,20 @@ import { PromiseError, NoDataRetrievedError } from "../error/ErrorFunctions";
 import IORedis = require("ioredis");
 import { eitherPromiseToEitherAsync } from "../utils/EitherUtils";
 import { Cookie } from "../session/model/Cookie";
+import { SessionHandlerConfig } from "../SessionHandlerConfig";
 
 export class Cache {
 
 
     public constructor(private readonly client: Redis) { }
 
-    public static redisInstance(url: string): Redis {
+    public static redisInstance(config: SessionHandlerConfig): Redis {
 
-        if (url.startsWith("redis://")) {
-            return IORedis(url);
-        } else {
-            return IORedis(`redis://${url}`);
-        }
+        return IORedis({
+            host: config.cacheServer,
+            db: config.cacheDB,
+            password: config.cachePassword
+        });
 
     }
 

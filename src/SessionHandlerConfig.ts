@@ -1,5 +1,8 @@
 export interface SessionHandlerConfig {
-    sessionSecret: string;
-    expiryPeriod: number;
-    redisUrl: string;
+    cookieSecret: string,
+    cookieName: string,
+    defaultSessionExpiration: number,
+    cacheServer: string,
+    cacheDB: number,
+    cachePassword: string
 }

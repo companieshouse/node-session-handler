@@ -6,7 +6,7 @@ import { VerifiedSession, Session } from "../../src/session/model/Session";
 
 export function getValidSessionDataJson(config: SessionHandlerConfig): any {
     const mockSessionId = Encoding.generateRandomBytesBase64(EncondingConstant._idOctets);
-    const expectedSignature = Encoding.generateSignature(mockSessionId, config.sessionSecret);
+    const expectedSignature = Encoding.generateSignature(mockSessionId, config.cookieSecret);
     return {
         [SessionKeys.Id]: mockSessionId,
         [SessionKeys.ClientSig]: expectedSignature,

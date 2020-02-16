@@ -12,14 +12,16 @@
         "strictNullChecks": false,
         "sourceMap": true,
         "typeRoots": [
-            "src/index.d.ts",
+            "index.ts",
+            "src/global.d.ts",
             "node_modules/@types"
         ]
     },
     "include": [
-        "./src", "./test"
+        "./src", "index.ts"
     ],
     "exclude": [
         "node_modules",
+        "test"
     ]
 }
