@@ -1,14 +1,14 @@
-"use strict";
-
 import { Request, Response, NextFunction } from "express";
+import { SessionKeys } from "./session/SessionKeys";
 
 export type RedirectFunction = (response: Response) => void;
-export const createAuthenticationMiddleware = (redirectFn: RedirectFunction) => (request: Request, response: Response, next: NextFunction): void => {
+export const createAuthenticationMiddleware = (redirectFn: RedirectFunction) =>
+    (request: Request, response: Response, next: NextFunction): void => {
 
-    if (!request.session || !request.session.signInData?.signedIn) {
-        redirectFn(response);
-    }
+        if (!request.session || !request.session.data[SessionKeys.SignInInfo]?.signedIn) {
+            redirectFn(response);
+        }
 
-    next();
+        next();
 
-};
+    };

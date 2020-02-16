@@ -2,22 +2,21 @@ import { expect, assert } from "chai";
 import { SessionKeys } from "../../src/session/SessionKeys";
 import { Session, VerifiedSession } from "../../src/session/model/Session";
 import { Encoding, EncondingConstant } from "../../src/encoding/Encoding";
-import { SessionMiddlerware } from "../../src/SessionMiddlewareFactory";
+import { SessionMiddlewareFactory } from "../../src/SessionMiddlewareFactory";
 import { SessionStore } from "../../src/session/SessionStore";
 import { Substitute, Arg, SubstituteOf } from "@fluffy-spoon/substitute";
 import * as express from "express";
 import { SessionHandlerConfig } from "../../src/SessionHandlerConfig";
 import { Cache } from "../../src/cache/Cache";
-import { Failure } from "../../src/error/FailureType";
 import { Redis } from "ioredis";
-import { getValidSessionObject, unmarshall } from "../utils/SessionGenerator";
+import { getValidSessionObject } from "../utils/SessionGenerator";
 import { Cookie } from "../../src/session/model/Cookie";
 import { Either } from "purify-ts";
 
 declare global {
     namespace Express {
         export interface Request {
-            session?: any;
+            session?: Session;
         }
     }
 }
@@ -54,9 +53,12 @@ const rawData: any = {
 
 describe("Session Middleware", () => {
     const config: SessionHandlerConfig = {
-        redisUrl: "redis//:test",
-        expiryPeriod: 60 * 60,
-        sessionSecret: Encoding.generateRandomBytesBase64(16)
+        cacheServer: "redis//:test",
+        cacheDB: 0,
+        cachePassword: "",
+        cookieName: "__SID",
+        defaultSessionExpiration: 60 * 60,
+        cookieSecret: Encoding.generateRandomBytesBase64(16)
     };
     it("should marshall and unmarshall session object correctly", () => {
 
@@ -68,16 +70,14 @@ describe("Session Middleware", () => {
 
     });
     it("should create a verified session", () => {
-        const validSession: Either<Failure, VerifiedSession> = VerifiedSession
-            .createNewVerifiedSession(config.sessionSecret, config.expiryPeriod);
+        const validSession: VerifiedSession = VerifiedSession.createNewVerifiedSession(config);
 
-        validSession
-            .chain(verifiedSession => Either.of<Failure, VerifiedSession>(verifiedSession)
+        Either.of(validSession)
                 .map(Encoding.encodeSession)
                 .map(encoded => {
                     const decoded = Encoding.decodeSession(encoded);
-                    expect(decoded.data[SessionKeys.Id]).to.equals(verifiedSession.data[SessionKeys.Id]);
-                }));
+                    expect(decoded.data[SessionKeys.Id]).to.equals(validSession.data[SessionKeys.Id]);
+                });
 
 
     });
@@ -88,12 +88,12 @@ describe("Session Middleware", () => {
 
         // Generate valid sessin id, secret and signature.
         const mockSessionId: string = Encoding.generateRandomBytesBase64(EncondingConstant._idOctets);
-        const expectedSignature: string = Encoding.generateSignature(mockSessionId, config.sessionSecret);
+        const expectedSignature: string = Encoding.generateSignature(mockSessionId, config.cookieSecret);
 
         const cookieValue: string = mockSessionId + expectedSignature;
 
         // Attempt to validate Cookie
-        Cookie.validateCookieString(cookieValue, config.sessionSecret)
+        Cookie.validateCookieString(cookieValue, config.cookieSecret)
             .either(
                 failure => assert.fail(failure.errorFunction(response)),
                 r => assert.equal(r.value, cookieValue)
@@ -117,7 +117,7 @@ describe("Session Middleware", () => {
 
         expect(await redis.get(verifiedSession.data[SessionKeys.Id])).to.equal(encodedVerifiedSession);
 
-        const validCookie = Cookie.newCookie(config.sessionSecret);
+        const validCookie = Cookie.newCookie(config.cookieSecret);
 
         const valueFromCache = await cache.get(validCookie).run();
 
@@ -136,7 +136,7 @@ describe("Session Middleware", () => {
     });
 
     it("should insert the session object in the request", async () => {
-        const validCookie = Cookie.newCookie(config.sessionSecret);
+        const validCookie = Cookie.newCookie(config.cookieSecret);
         const verifiedSession: VerifiedSession = getValidSessionObject(config);
         const serializedSession = Encoding.encodeSession(verifiedSession);
 
@@ -145,7 +145,7 @@ describe("Session Middleware", () => {
 
         const cache = new Cache(redis);
         const sessionStore = new SessionStore(cache);
-        const realMiddleware = new SessionMiddlerware(config, sessionStore);
+        const realMiddleware = new SessionMiddlewareFactory(config, sessionStore);
         const mockResponse: SubstituteOf<express.Response> = Substitute.for<express.Response>();
         const mockRequest = {
             cookies: { __SID: validCookie.value },

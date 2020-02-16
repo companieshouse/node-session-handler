@@ -7,26 +7,26 @@ import { VerifiedSession } from "./session/model/Session";
 import { SessionHandlerConfig } from "./SessionHandlerConfig";
 import { Cookie } from "./session/model/Cookie";
 
-export class SessionMiddlerware {
+export class SessionMiddlewareFactory {
 
     constructor(private readonly config: SessionHandlerConfig,
         private readonly sessionStore: SessionStore,
     ) {
 
-        if (!config.sessionSecret) {
+        if (!config.cookieSecret) {
             throw Error("Must provide secret of at least 16 bytes (64 characters) long");
         }
 
-        if (!config.expiryPeriod) {
+        if (!config.defaultSessionExpiration) {
             throw Error("Must provide expiry period");
         }
 
-        if (!config.redisUrl) {
+        if (!config.cacheServer) {
             throw Error("Must provide redis url");
         }
 
-        if (config.sessionSecret.length < 24) {
-            console.log(config.sessionSecret.length);
+        if (config.cookieSecret.length < 24) {
+            console.log(config.cookieSecret.length);
             throw Error("Secret must be at least 16 bytes (24 characters) long");
         }
 
@@ -35,14 +35,14 @@ export class SessionMiddlerware {
     public handler = () =>
         async (request: Request, response: Response, next: NextFunction): Promise<any> => {
 
-            const sessionCookie = request.cookies.__SID;
+            const sessionCookie = request.cookies[this.config.cookieName];
 
             if (sessionCookie) {
 
                 console.log("Cookie: " + sessionCookie);
 
                 const result: Either<Failure, VerifiedSession> = await liftEitherToAsyncEither(
-                    Cookie.validateCookieString(sessionCookie, this.config.sessionSecret)
+                    Cookie.validateCookieString(sessionCookie, this.config.cookieSecret)
                 ).chain(this.sessionStore.load).run();
 
                 result.either(
@@ -53,8 +53,11 @@ export class SessionMiddlerware {
                     }
                 );
 
+            } else {
+                request.session = VerifiedSession.createNewVerifiedSession(this.config)
             }
 
+            response.cookie(this.config.cookieName, sessionCookie);
             return next();
         };
 

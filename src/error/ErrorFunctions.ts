@@ -1,9 +1,10 @@
-import { Response } from "express";
+import { Response, RequestHandler } from "express";
 
 export enum ErrorEnum {
     _sessionLengthError = "Encrypted session token not long enough.",
     _signatureCheckError = "Expected signature does not equal signature provided.",
     _sessionExpiredError = "Session has expired.",
+    _sessionSecretNotSet = "Session Secret is not set",
     _signInfoMissingError = "Sign-in information missing.",
     _accessTokenMissingError = "Access Token missing",
     _expiresInMissingError = "Expires in field missing",
@@ -11,58 +12,58 @@ export enum ErrorEnum {
     _promiseError = "Promise error",
     _noDataRetrievedError = "No data retrieved from Redis"
 }
+export const redirectURL = "/signin";
+
+
+type Logger = (m: string) => void;
+export const log: Logger = (message: string) => console.log(message);
+export const logDifference = <A>(expected: A) => (actual: A): Logger => (message: string) =>
+    log(`${message}\nExpected: ${expected}\nActual: ${actual}`);
 
 export type ResponseHandler = (response: Response) => void;
-export type ResponseErrorHandlerFactory = (response: Response) => (errorEnum: ErrorEnum) => void;
+export type ResponseErrorHandlerFactory = (logger: Logger) => (response: Response) => (errorEnum: ErrorEnum) => void;
 export type GeneralErrorHandlerFactory =
     (errorEnum: ErrorEnum) => (onError: ResponseErrorHandlerFactory) => ResponseHandler;
 
-export const log = (message: string) => console.log(message);
 
 export const GeneralSessonError: GeneralErrorHandlerFactory =
     (errorEnum: ErrorEnum) => (onError: ResponseErrorHandlerFactory): ResponseHandler => {
-        return (response: Response) => onError(response)(errorEnum);
+        return (response: Response) => onError(log)(response)(errorEnum);
     };
 
-export const SessionLengthError: (expected: number, actual: number) => ResponseHandler =
+export const RedirectHandler = (logger: Logger) => (errorEnum: ErrorEnum): ResponseHandler => {
+    return (response: Response) => {
+        logger(errorEnum);
+        response.redirect(redirectURL);
+    };
+};
+export const SessionLengthError =
     (expected: number, actual: number) =>
-        GeneralSessonError(ErrorEnum._sessionLengthError)((r: Response) => (_: ErrorEnum) => {
-            r.redirect("/signin");
-            log(`${_}\nExpected: ${expected}\nActual: ${actual}`); r.redirect("/signin");
-        });
+        RedirectHandler(logDifference(expected)(actual))(ErrorEnum._sessionLengthError);
 
-export const SignatureCheckError: (expected: string, actual: string) => ResponseHandler =
+export const SignatureCheckError =
     (expected: string, actual: string) =>
-        GeneralSessonError(ErrorEnum._signatureCheckError)((r: Response) => (_: ErrorEnum) => {
-            r.redirect("/signin");
-            log(`${_}\nExpected: ${expected}\nActual: ${actual}`); r.redirect("/signin");
-        });
+        RedirectHandler(logDifference(expected)(actual))(ErrorEnum._signatureCheckError);
 
 
-export const SessionExpiredError: ResponseHandler =
-    GeneralSessonError(ErrorEnum._sessionExpiredError)((r: Response) => (_: ErrorEnum) => {
-        log(_); r.redirect("/signin");
-    });
+export const SessionExpiredError: ResponseHandler = RedirectHandler(log)(ErrorEnum._sessionExpiredError);
+
 export const SessionSecretNotSet: ResponseHandler =
-    GeneralSessonError(ErrorEnum._sessionExpiredError)((r: Response) => (_: ErrorEnum) => {
-        log(_); throw Error("Session Secret is not set");
-    });
+    (_: Response) => {
+        log(ErrorEnum._sessionSecretNotSet); throw Error(ErrorEnum._sessionSecretNotSet);
+    };
 
 export const PromiseError =
     (callStack: any): ResponseHandler =>
-        GeneralSessonError(ErrorEnum._promiseError)((_: Response) => (err: ErrorEnum) =>
-            log(`Error: ${err}.\n${callStack}`));
+        (_: Response) => {
+            log(`Error: ${ErrorEnum._promiseError}.\n${callStack}`);
+        };
 
-export const SignInInfoMissingError =
-    GeneralSessonError(ErrorEnum._signInfoMissingError)
-        ((r: Response) => (_: ErrorEnum) => log(ErrorEnum._signInfoMissingError));
+export const SignInInfoMissingError: ResponseHandler = RedirectHandler(log)(ErrorEnum._signInfoMissingError);
 
-export const AccessTokenMissingError = GeneralSessonError(ErrorEnum._accessTokenMissingError)
-    ((r: Response) => (_: ErrorEnum) => log(ErrorEnum._accessTokenMissingError));
+export const AccessTokenMissingError: ResponseHandler = RedirectHandler(log)(ErrorEnum._accessTokenMissingError);
 
-export const ExpiresMissingError = GeneralSessonError(ErrorEnum._expiresInMissingError)
-    ((r: Response) => (_: ErrorEnum) => log(ErrorEnum._expiresInMissingError));
+export const ExpiresMissingError: ResponseHandler = RedirectHandler(log)(ErrorEnum._expiresInMissingError);
 
-
-export const NoDataRetrievedError = (key: string) => GeneralSessonError(ErrorEnum._noDataRetrievedError)
-    ((r: Response) => (_: ErrorEnum) => log(`${ErrorEnum._noDataRetrievedError} using key: ${key}`));
+export const NoDataRetrievedError = (key: string): ResponseHandler =>
+    (_: Response) => log(`${ErrorEnum._noDataRetrievedError} using key: ${key}`);

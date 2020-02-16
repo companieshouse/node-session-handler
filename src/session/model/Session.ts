@@ -5,10 +5,11 @@ import { SessionKeys } from "../SessionKeys";
 import { AccessToken } from "./AccessToken";
 import { IMap } from "./ISignInInfo";
 import { Cookie } from "./Cookie";
+import { SessionHandlerConfig } from "../../SessionHandlerConfig";
 
 export class Session {
 
-    protected _data: IMap<any> = {};
+    public data: IMap<any> = {};
 
     public constructor(data?: any) {
 
@@ -19,19 +20,10 @@ export class Session {
 
     }
 
-
-    set data(data: IMap<any>) {
-        this._data = data;
-    }
-
-    get data(): IMap<any> {
-        return this._data;
-    }
-
     public unmarshall(): any {
 
         const obj: any = {};
-        const thisObj: any = this._data;
+        const thisObj: any = this.data;
 
         const keys = Object.keys(thisObj).sort();
         for (const i in keys) {
@@ -53,7 +45,7 @@ export class Session {
 
         for (const i in keys) {
             if (data.hasOwnProperty(keys[i])) {
-                session._data[keys[i]] = data[keys[i]];
+                session.data[keys[i]] = data[keys[i]];
             }
         }
     }
@@ -64,7 +56,7 @@ export class VerifiedSession extends Session {
 
     private constructor(session: Session) {
         super();
-        this._data = session.data;
+        this.data = session.data;
     }
 
     public asCookie(): Cookie {
@@ -72,14 +64,14 @@ export class VerifiedSession extends Session {
     }
 
     public static createNewVerifiedSession(
-        sessionSecret: string,
-        expiryPeriod: number,
-        extraData?: any): Either<Failure, VerifiedSession> {
+        config: SessionHandlerConfig,
+        extraData?: any): VerifiedSession {
 
-        const newCookie: Cookie = Cookie.newCookie(sessionSecret);
+        const newCookie: Cookie = Cookie.newCookie(config.cookieSecret);
 
         const signInInfo = {
-            [SessionKeys.AccessToken]: AccessToken.createDefaultAccessToken(expiryPeriod)
+            [SessionKeys.AccessToken]: AccessToken.createDefaultAccessToken(config.defaultSessionExpiration),
+            [SessionKeys.SignedIn]: 0
         };
 
         const sessionData = !extraData ? {} : extraData;
@@ -88,10 +80,7 @@ export class VerifiedSession extends Session {
         sessionData[SessionKeys.ClientSig] = newCookie.signature;
         sessionData[SessionKeys.SignInInfo] = signInInfo;
 
-        const session = new Session(sessionData);
-
-        return VerifiedSession.verifySession(session).map(success => new VerifiedSession(success));
-
+        return new VerifiedSession(new Session(sessionData));
     }
 
     public static verifySession(session: Session): Either<Failure, VerifiedSession> {
