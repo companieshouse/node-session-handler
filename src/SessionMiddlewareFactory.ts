@@ -1,67 +1,75 @@
-import { Request, Response, NextFunction } from "express";
+import { Request, Response, NextFunction, RequestHandler } from "express";
 import { SessionStore } from "./session/SessionStore";
 import { Failure } from "./error/FailureType";
-import {liftEitherToAsyncEither} from "./utils/EitherUtils";
 import { Either } from "purify-ts";
-import { VerifiedSession } from "./session/model/Session";
-import { SessionHandlerConfig } from "./SessionHandlerConfig";
+import { VerifiedSession, Session } from "./session/model/Session";
+import { CookieConfig } from "./CookieConfig";
+import { log } from "./error/ErrorFunctions";
+import expressAsyncHandler from "express-async-handler";
+import { wrapEitherFunction, wrapValue, wrapEither } from "./utils/EitherAsyncUtils";
 import { Cookie } from "./session/model/Cookie";
-import { log } from './error/ErrorFunctions';
+
 
 export class SessionMiddlewareFactory {
 
-    constructor(private readonly config: SessionHandlerConfig,
+    constructor(private readonly config: CookieConfig,
         private readonly sessionStore: SessionStore,
     ) {
-
         if (!config.cookieSecret) {
-            throw Error("Must provide secret of at least 16 bytes (64 characters) long");
-        }
-
-        if (!config.defaultSessionExpiration) {
-            throw Error("Must provide expiry period");
-        }
-
-        if (!config.cacheServer) {
-            throw Error("Must provide redis url");
+            throw Error("Must provide secret of at least 16 bytes long encoded in base 64 string");
         }
 
         if (config.cookieSecret.length < 24) {
-            console.log(config.cookieSecret.length);
-            throw Error("Secret must be at least 16 bytes (24 characters) long");
+            throw Error("Secret must be at least 16 bytes (24 characters) long  encoded in base 64 string");
         }
 
     }
 
-    public handler = () =>
-        async (request: Request, response: Response, next: NextFunction): Promise<any> => {
+    public handler = (): RequestHandler => {
+
+        const handler = async (request: Request, response: Response, next: NextFunction): Promise<any> => {
 
             const sessionCookie = request.cookies[this.config.cookieName];
 
             if (sessionCookie) {
 
-                console.log("Cookie: " + sessionCookie);
+                log("Cookie: " + sessionCookie);
 
-                const result: Either<Failure, VerifiedSession> = await liftEitherToAsyncEither(
-                    Cookie.validateCookieString(sessionCookie, this.config.cookieSecret)
-                ).chain(this.sessionStore.load).run();
+                const validateCookieString = wrapEitherFunction(
+                    Cookie.validateCookieString(this.config.cookieSecret));
 
-                result.either(
+                const loadSession: Either<Failure, VerifiedSession> =
+                    await wrapValue<Failure, string>(sessionCookie)
+                        .chain<Cookie>(validateCookieString)
+                        .chain<Cookie>(this.sessionStore.load)
+                        .chain<Session>(wrapEitherFunction(Session.createInstance))
+                        .chain<VerifiedSession>(session => wrapEither(session.verify()))
+                        .run();
+
+                loadSession.either(
                     (failure: Failure) => {
-                        failure.errorFunction(response)},
+
+                        validateCookieString(sessionCookie).chain(this.sessionStore.delete).run();
+
+                        response.clearCookie(this.config.cookieName);
+
+                        failure.errorFunction(response);
+
+                    },
+
                     (verifiedSession: VerifiedSession) => {
+
                         request.session = verifiedSession;
+
                     }
                 );
 
-            } else {
-                const newSession: VerifiedSession = VerifiedSession.createNewVerifiedSession(this.config);
-                request.cookies[this.config.cookieName] = newSession.asCookie().value;
-                await this.sessionStore.store(newSession).run().then(_ => request.session = newSession).catch(log);
             }
 
             return next();
         };
+        return expressAsyncHandler(handler);
+    };
 
 }
 

@@ -1,7 +1,12 @@
 export interface SessionHandlerConfig {
+    cookieConfig: CookieConfig;
+    cacheConfig: CacheConfig;
+}
+export interface CookieConfig {
     cookieSecret: string;
     cookieName: string;
-    defaultSessionExpiration: number;
+}
+export interface CacheConfig {
     cacheServer: string;
     cacheDB: number;
     cachePassword: string;

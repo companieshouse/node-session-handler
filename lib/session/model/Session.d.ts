@@ -1,18 +1,18 @@
 import { Either } from "purify-ts";
 import { Failure } from "../../error/FailureType";
-import { IMap } from "./ISignInInfo";
-import { Cookie } from "./Cookie";
-import { SessionHandlerConfig } from "../../SessionHandlerConfig";
+import { SessionKey } from "../keys/SessionKey";
+import { ISession, ISessionValue } from "./SessionInterfaces";
 export declare class Session {
-    data: IMap<any>;
+    private isDirty;
+    data: ISession;
     constructor(data?: any);
-    unmarshall: () => any;
+    getValue: <T = ISessionValue>(key: SessionKey) => T;
+    getExtraData: () => any;
+    saveExtraData: <T>(key: string, value: T) => void;
     verify: () => Either<Failure, VerifiedSession>;
-    static marshall: (session: Session, data: any) => void;
+    static createInstance: (object: any) => Either<Failure, Session>;
 }
 export declare class VerifiedSession extends Session {
     private constructor();
-    asCookie: () => Cookie;
-    static createNewVerifiedSession(config: SessionHandlerConfig, extraData?: any): VerifiedSession;
     static verifySession(session: Session): Either<Failure, VerifiedSession>;
 }

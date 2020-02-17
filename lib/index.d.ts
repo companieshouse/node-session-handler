@@ -1,11 +1,5 @@
-import { SessionHandlerConfig } from "./SessionHandlerConfig";
+import { CookieConfig } from "./CookieConfig";
 import { SessionStore } from "./session/SessionStore";
-import { RequestHandler } from "express";
-import * as EitherUtils from "./utils/EitherUtils";
-export interface CHSessionService {
-    readonly config: SessionHandlerConfig;
-    readonly sessionStore: SessionStore;
-    readonly sessionHandler: RequestHandler;
-}
-export declare const CHSessionServiceInstance: (config: SessionHandlerConfig) => CHSessionService;
-export { SessionHandlerConfig, EitherUtils };
+import * as EitherUtils from "./utils/EitherAsyncUtils";
+import { SessionMiddlewareFactory } from "./SessionMiddlewareFactory";
+export { SessionStore, SessionMiddlewareFactory, CookieConfig, EitherUtils };

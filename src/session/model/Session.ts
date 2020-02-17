@@ -1,56 +1,63 @@
 import { Either, Left, Right } from "purify-ts";
-import { AccessTokenMissingError, ExpiresMissingError, SessionExpiredError, SignInInfoMissingError } from "../../error/ErrorFunctions";
+import {
+    AccessTokenMissingError,
+    ExpiresMissingError,
+    SessionExpiredError,
+    SignInInfoMissingError,
+    SessionParseError as SessionCreationError
+} from "../../error/ErrorFunctions";
 import { Failure } from "../../error/FailureType";
-import { SessionKeys } from "../SessionKeys";
-import { AccessToken } from "./AccessToken";
-import { IMap } from "./ISignInInfo";
+import { SessionKey } from "../keys/SessionKey";
 import { Cookie } from "./Cookie";
-import { SessionHandlerConfig } from "../../SessionHandlerConfig";
+import { Encoding } from "../../encoding/Encoding";
+import { ISession, ISessionValue, ISignInInfo } from "./SessionInterfaces";
+import { SignInInfoKeys } from "../keys/SignInInfoKeys";
 
 export class Session {
 
-    public data: IMap<any> = {};
+    private isDirty: boolean;
+    public data: ISession = {};
 
     public constructor(data?: any) {
 
         if (data) {
 
-            Session.marshall(this, data);
+            this.data = data;
+            this.isDirty = false;
         }
 
     }
 
+    public getValue = <T = ISessionValue>(key: SessionKey): T => {
+        return this.data[key];
+    };
 
-    public unmarshall = () => {
+    public getExtraData = (): any => this.data[SessionKey.ExtraData];
 
-        const obj: any = {};
-        const thisObj: any = this.data;
-
-        const keys = Object.keys(thisObj).sort();
-        for (const i in keys) {
-            if (thisObj.hasOwnProperty(keys[i])) {
-                obj[keys[i]] = thisObj[keys[i]];
-
-            }
+    public saveExtraData = <T>(key: string, value: T): void => {
+        this.isDirty = true;
+        if (!this.data[SessionKey.ExtraData]) {
+            this.data[SessionKey.ExtraData] = {};
         }
 
-        return obj;
+        const extraData = this.data[SessionKey.ExtraData];
+
+        extraData[key] = value;
+
+        this.data[SessionKey.ExtraData] = extraData;
+
     };
 
     public verify = (): Either<Failure, VerifiedSession> => {
         return VerifiedSession.verifySession(this);
     };
 
-    public static marshall = (session: Session, data: any): void => {
-        const keys = Object.keys(data).sort();
-
-        for (const i in keys) {
-            if (data.hasOwnProperty(keys[i])) {
-                session.data[keys[i]] = data[keys[i]];
-            }
+    public static createInstance = (object: any): Either<Failure, Session> => {
+        if (object) {
+            return Right(new Session(object));
         }
+        return Left(Failure(SessionCreationError(object)));
     };
-
 }
 
 export class VerifiedSession extends Session {
@@ -60,36 +67,9 @@ export class VerifiedSession extends Session {
         this.data = session.data;
     }
 
-    public asCookie = (): Cookie => {
-        return Cookie.sessionCookie(this);
-    };
-
-    public static createNewVerifiedSession(
-        config: SessionHandlerConfig,
-        extraData?: any): VerifiedSession {
-
-        const newCookie: Cookie = Cookie.newCookie(config.cookieSecret);
-
-        const accessToken = AccessToken.createDefaultAccessToken(config.defaultSessionExpiration);
-
-        const signInInfo = {
-            [SessionKeys.AccessToken]: accessToken,
-            [SessionKeys.SignedIn]: 0
-        };
-
-        const sessionData = !extraData ? {} : extraData;
-
-        sessionData[SessionKeys.Id] = newCookie.sessionId;
-        sessionData[SessionKeys.ClientSig] = newCookie.signature;
-        sessionData[SessionKeys.SignInInfo] = signInInfo;
-        sessionData[SessionKeys.Expires] = Date.now() + accessToken.expires_in*1000;
-
-        return new VerifiedSession(new Session(sessionData));
-    }
-
     public static verifySession(session: Session): Either<Failure, VerifiedSession> {
 
-        const signInInfo = session.data[SessionKeys.SignInInfo];
+        const signInInfo = session.getValue<ISignInInfo>(SessionKey.SignInInfo);
 
         if (!signInInfo) {
             return Left(
@@ -97,7 +77,7 @@ export class VerifiedSession extends Session {
             );
         }
 
-        const accessToken = signInInfo[SessionKeys.AccessToken];
+        const accessToken = signInInfo[SignInInfoKeys.AccessToken];
 
         if (!accessToken) {
             return Left(
@@ -105,7 +85,7 @@ export class VerifiedSession extends Session {
             );
         }
 
-        const expires = session.data[SessionKeys.Expires];
+        const expires = session.getValue<number>(SessionKey.Expires);
 
         if (!expires) {
             return Left(
@@ -125,3 +105,5 @@ export class VerifiedSession extends Session {
     }
 
 }
+
+

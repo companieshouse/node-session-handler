@@ -1,12 +1,12 @@
-import { Cache } from "../cache/Cache";
-import { VerifiedSession, Session } from "./model/Session";
 import { EitherAsync } from "purify-ts";
 import { Failure } from "../error/FailureType";
+import { Redis } from "ioredis";
 import { Cookie } from "./model/Cookie";
 export declare class SessionStore {
-    private readonly cache;
-    constructor(cache: Cache);
-    private getAccessTokenData;
-    load: (cookie: Cookie) => EitherAsync<Failure, VerifiedSession>;
-    store: (session: Session) => EitherAsync<Failure, string>;
+    readonly redis: Redis;
+    private readonly redisWrapper;
+    constructor(redis: Redis);
+    load: <T>(cookie: Cookie) => EitherAsync<Failure, T>;
+    store: <T>(cookie: Cookie, value: T) => EitherAsync<Failure, string>;
+    delete: (cookie: Cookie) => EitherAsync<Failure, number>;
 }

@@ -10,14 +10,13 @@ export enum ErrorEnum {
     _expiresInMissingError = "Expires in field missing",
     _storeError = "Store error",
     _promiseError = "Promise error",
-    _noDataRetrievedError = "No data retrieved from Redis"
+    _noDataRetrievedError = "No data retrieved from Redis",
+    _sessionParseError = "Failed to parse session object"
 }
-export const redirectURL = "/signin";
-
 
 type Logger = (m: string) => void;
 export const log: Logger = (message: string) => console.log(message);
-export const logDifference = <A>(expected: A) => (actual: A): Logger => (message: string) =>
+export const logDifference = <A>(expected: A, actual: A): Logger => (message: string) =>
     log(`${message}\nExpected: ${expected}\nActual: ${actual}`);
 
 export type ResponseHandler = (response: Response) => void;
@@ -25,28 +24,20 @@ export type ResponseErrorHandlerFactory = (logger: Logger) => (response: Respons
 export type GeneralErrorHandlerFactory =
     (errorEnum: ErrorEnum) => (onError: ResponseErrorHandlerFactory) => ResponseHandler;
 
-
-export const GeneralSessonError: GeneralErrorHandlerFactory =
-    (errorEnum: ErrorEnum) => (onError: ResponseErrorHandlerFactory): ResponseHandler => {
-        return (response: Response) => onError(log)(response)(errorEnum);
-    };
-
-export const RedirectHandler = (logger: Logger) => (errorEnum: ErrorEnum): ResponseHandler => {
+export const LogOnly = (logger: Logger) => (errorEnum: ErrorEnum): ResponseHandler => {
     return (response: Response) => {
         logger(errorEnum);
-        response.redirect(redirectURL);
     };
 };
 export const SessionLengthError =
     (expected: number, actual: number) =>
-        RedirectHandler(logDifference(expected)(actual))(ErrorEnum._sessionLengthError);
+        LogOnly(logDifference(expected, actual))(ErrorEnum._sessionLengthError);
 
 export const SignatureCheckError =
     (expected: string, actual: string) =>
-        RedirectHandler(logDifference(expected)(actual))(ErrorEnum._signatureCheckError);
+        LogOnly(logDifference(expected, actual))(ErrorEnum._signatureCheckError);
 
-
-export const SessionExpiredError: ResponseHandler = RedirectHandler(log)(ErrorEnum._sessionExpiredError);
+export const SessionExpiredError: ResponseHandler = LogOnly(log)(ErrorEnum._sessionExpiredError);
 
 export const SessionSecretNotSet: ResponseHandler =
     (_: Response) => {
@@ -58,12 +49,20 @@ export const PromiseError =
         (_: Response) => {
             log(`Error: ${ErrorEnum._promiseError}.\n${callStack}`);
         };
+export const SessionParseError =
+    (object: any): ResponseHandler =>
+        (_: Response) => {
+            log(`Error: ${ErrorEnum._sessionParseError}. Received: ${object}`);
+        };
 
-export const SignInInfoMissingError: ResponseHandler = RedirectHandler(log)(ErrorEnum._signInfoMissingError);
+export const SignInInfoMissingError: ResponseHandler = LogOnly(log)(ErrorEnum._signInfoMissingError);
 
-export const AccessTokenMissingError: ResponseHandler = RedirectHandler(log)(ErrorEnum._accessTokenMissingError);
+export const AccessTokenMissingError: ResponseHandler = LogOnly(log)(ErrorEnum._accessTokenMissingError);
 
-export const ExpiresMissingError: ResponseHandler = RedirectHandler(log)(ErrorEnum._expiresInMissingError);
+export const ExpiresMissingError: ResponseHandler = LogOnly(log)(ErrorEnum._expiresInMissingError);
 
 export const NoDataRetrievedError = (key: string): ResponseHandler =>
     (_: Response) => log(`${ErrorEnum._noDataRetrievedError} using key: ${key}`);
+
+export const StoringError = (err: string, key: string, value: string): ResponseHandler =>
+    (_: Response) => log(`${err}\n${ErrorEnum._storeError} using key: ${key} and value ${value}`);
