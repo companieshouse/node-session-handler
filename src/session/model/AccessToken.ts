@@ -8,10 +8,8 @@ export class AccessToken {
 
     public static createDefaultAccessToken(expiryPeriod: number): AccessToken {
         return {
-            [SessionKeys.ExpiresIn]: Date.now() + expiryPeriod,
-            [SessionKeys.RefreshToken]: "Hello",
-            [SessionKeys.AccessToken]: "Hello",
-            [SessionKeys.TokenType]: "Hello"
+            [SessionKeys.ExpiresIn]: expiryPeriod,
+            [SessionKeys.TokenType]: "temp"
         };
     }
 

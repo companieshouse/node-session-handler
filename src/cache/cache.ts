@@ -1,11 +1,13 @@
-import { Redis } from "ioredis";
+
 import { EitherAsync, Right, Either, Left } from "purify-ts";
 import { Failure } from "../error/FailureType";
 import { PromiseError, NoDataRetrievedError } from "../error/ErrorFunctions";
-import IORedis = require("ioredis");
+
 import { eitherPromiseToEitherAsync } from "../utils/EitherUtils";
 import { Cookie } from "../session/model/Cookie";
 import { SessionHandlerConfig } from "../SessionHandlerConfig";
+import { Redis } from 'ioredis';
+import IORedis = require('ioredis');
 
 export class Cache {
 
@@ -14,7 +16,7 @@ export class Cache {
 
     public static redisInstance(config: SessionHandlerConfig): Redis {
 
-        return new IORedis(`redis://:${config.cachePassword}${config.cacheServer}/${config.cacheDB}`);
+        return new IORedis(`redis://:${config.cachePassword}@${config.cacheServer}/${config.cacheDB}`);
 
     }
 

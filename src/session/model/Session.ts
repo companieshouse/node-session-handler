@@ -20,7 +20,8 @@ export class Session {
 
     }
 
-    public unmarshall(): any {
+
+    public unmarshall = () => {
 
         const obj: any = {};
         const thisObj: any = this.data;
@@ -34,13 +35,13 @@ export class Session {
         }
 
         return obj;
-    }
+    };
 
-    public verify(): Either<Failure, VerifiedSession> {
+    public verify = (): Either<Failure, VerifiedSession> => {
         return VerifiedSession.verifySession(this);
-    }
+    };
 
-    public static marshall(session: Session, data: any): void {
+    public static marshall = (session: Session, data: any): void => {
         const keys = Object.keys(data).sort();
 
         for (const i in keys) {
@@ -48,7 +49,7 @@ export class Session {
                 session.data[keys[i]] = data[keys[i]];
             }
         }
-    }
+    };
 
 }
 
@@ -59,9 +60,9 @@ export class VerifiedSession extends Session {
         this.data = session.data;
     }
 
-    public asCookie(): Cookie {
+    public asCookie = (): Cookie => {
         return Cookie.sessionCookie(this);
-    }
+    };
 
     public static createNewVerifiedSession(
         config: SessionHandlerConfig,
@@ -69,8 +70,10 @@ export class VerifiedSession extends Session {
 
         const newCookie: Cookie = Cookie.newCookie(config.cookieSecret);
 
+        const accessToken = AccessToken.createDefaultAccessToken(config.defaultSessionExpiration);
+
         const signInInfo = {
-            [SessionKeys.AccessToken]: AccessToken.createDefaultAccessToken(config.defaultSessionExpiration),
+            [SessionKeys.AccessToken]: accessToken,
             [SessionKeys.SignedIn]: 0
         };
 
@@ -79,6 +82,7 @@ export class VerifiedSession extends Session {
         sessionData[SessionKeys.Id] = newCookie.sessionId;
         sessionData[SessionKeys.ClientSig] = newCookie.signature;
         sessionData[SessionKeys.SignInInfo] = signInInfo;
+        sessionData[SessionKeys.Expires] = Date.now() + accessToken.expires_in*1000;
 
         return new VerifiedSession(new Session(sessionData));
     }
@@ -108,6 +112,7 @@ export class VerifiedSession extends Session {
                 Failure(ExpiresMissingError)
             );
         }
+
 
         if (expires <= Date.now()) {
             return Left(

@@ -15,7 +15,7 @@ export class Cookie {
     }
 
     public static sessionCookie(verifiedSession: VerifiedSession): Cookie {
-        return new Cookie(verifiedSession.data[SessionKeys.SessionId], verifiedSession.data[SessionKeys.ClientSig]);
+        return new Cookie(verifiedSession.data[SessionKeys.Id], verifiedSession.data[SessionKeys.ClientSig]);
     }
 
     public static newCookie(sessionSecret: string): Cookie {

@@ -69,15 +69,19 @@ describe("Session Middleware", () => {
         assert.deepEqual(parsedSession.unmarshall(), rawData);
 
     });
+    it("should create a verified session and it's valid", () => {
+        const session = VerifiedSession.createNewVerifiedSession(config);
+        expect(session.verify().isRight()).equals(true);
+    });
     it("should create a verified session", () => {
         const validSession: VerifiedSession = VerifiedSession.createNewVerifiedSession(config);
 
         Either.of(validSession)
-                .map(Encoding.encodeSession)
-                .map(encoded => {
-                    const decoded = Encoding.decodeSession(encoded);
-                    expect(decoded.data[SessionKeys.Id]).to.equals(validSession.data[SessionKeys.Id]);
-                });
+            .map(Encoding.encodeSession)
+            .map(encoded => {
+                const decoded = Encoding.decodeSession(encoded);
+                expect(decoded.data[SessionKeys.Id]).to.equals(validSession.data[SessionKeys.Id]);
+            });
 
 
     });
@@ -96,7 +100,7 @@ describe("Session Middleware", () => {
         Cookie.validateCookieString(cookieValue, config.cookieSecret)
             .either(
                 failure => assert.fail(failure.errorFunction(response)),
-                r => assert.equal(r.value, cookieValue)
+                cookie => assert.equal(cookie.value, cookieValue)
             );
 
 
@@ -106,7 +110,7 @@ describe("Session Middleware", () => {
         const mockResponse: SubstituteOf<express.Response> = Substitute.for<express.Response>();
 
 
-        const verifiedSession: VerifiedSession = getValidSessionObject(config);
+        const verifiedSession: VerifiedSession = VerifiedSession.createNewVerifiedSession(config);
 
         const redis = Substitute.for<Redis>();
         const encodedVerifiedSession = Encoding.encodeSession(verifiedSession);
@@ -124,8 +128,8 @@ describe("Session Middleware", () => {
         valueFromCache.map(value => assert.equal(value, encodedVerifiedSession));
 
         valueFromCache
-            .map(Encoding.decodeSession).map(v => { console.log(v); return v; })
-            .chain(session => session.verify()).map(v => { console.log(v); return v; })
+            .map(Encoding.decodeSession)
+            .chain(session => session.verify())
             .either(fail => {
                 fail.errorFunction(mockResponse);
                 assert.fail("failure", "a valid session");
@@ -150,12 +154,13 @@ describe("Session Middleware", () => {
         const mockRequest = {
             cookies: { __SID: validCookie.value },
             session: {}
-        } as express.Request
+        } as express.Request;
 
 
         const handler = realMiddleware.handler();
         await handler(mockRequest, mockResponse, () => true).catch(console.log);
-        assert.deepEqual(mockRequest.session, verifiedSession);
+
+        assert.deepEqual(mockRequest.session.unmarshall(), verifiedSession.unmarshall());
     });
 
 

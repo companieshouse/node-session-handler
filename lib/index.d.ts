@@ -1,4 +1,11 @@
-/// <reference types="express" />
 import { SessionHandlerConfig } from "./SessionHandlerConfig";
-export declare const CHSessionMiddleware: (config: SessionHandlerConfig) => (request: import("express").Request<import("express-serve-static-core").ParamsDictionary>, response: import("express").Response, next: import("express").NextFunction) => Promise<any>;
-export { SessionHandlerConfig };
+import { SessionStore } from "./session/SessionStore";
+import { RequestHandler } from "express";
+import * as EitherUtils from "./utils/EitherUtils";
+export interface CHSessionService {
+    readonly config: SessionHandlerConfig;
+    readonly sessionStore: SessionStore;
+    readonly sessionHandler: RequestHandler;
+}
+export declare const CHSessionServiceInstance: (config: SessionHandlerConfig) => CHSessionService;
+export { SessionHandlerConfig, EitherUtils };

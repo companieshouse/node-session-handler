@@ -6,6 +6,7 @@ import { Either } from "purify-ts";
 import { VerifiedSession } from "./session/model/Session";
 import { SessionHandlerConfig } from "./SessionHandlerConfig";
 import { Cookie } from "./session/model/Cookie";
+import { log } from './error/ErrorFunctions';
 
 export class SessionMiddlewareFactory {
 
@@ -54,10 +55,11 @@ export class SessionMiddlewareFactory {
                 );
 
             } else {
-                request.session = VerifiedSession.createNewVerifiedSession(this.config)
+                const newSession: VerifiedSession = VerifiedSession.createNewVerifiedSession(this.config);
+                request.cookies[this.config.cookieName] = newSession.asCookie().value;
+                await this.sessionStore.store(newSession).run().then(_ => request.session = newSession).catch(log);
             }
 
-            response.cookie(this.config.cookieName, sessionCookie);
             return next();
         };
 

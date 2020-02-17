@@ -1,15 +1,12 @@
-"use strict";
-
 import { Cache } from "../cache/Cache";
 import { SessionKeys } from "./SessionKeys";
 import { AccessToken } from "./model/AccessToken";
 import { Encoding } from "../encoding/Encoding";
 import { VerifiedSession, Session } from "./model/Session";
 import { ISignInInfo } from "./model/ISignInInfo";
-import { Either, EitherAsync, Just } from "purify-ts";
+import { EitherAsync } from "purify-ts";
 import { Failure } from "../error/FailureType";
 import {
-    liftEitherFunctionToAsyncEither,
     liftToAsyncEither,
     liftEitherToAsyncEither,
     liftFunctionToAsyncEither,
