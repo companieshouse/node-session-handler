@@ -9,7 +9,7 @@ import { CookieConfig } from "../../src/CookieConfig";
 import { Redis } from "ioredis";
 import { getValidSessionObject, createNewVerifiedSession } from "../utils/SessionGenerator";
 import { Cookie } from "../../src/session/model/Cookie";
-import { Either } from "purify-ts";
+import { Either, Maybe } from "purify-ts";
 import { Failure } from "../../src/error/FailureType";
 import { SessionKey } from "../../src/session/keys/SessionKey";
 import { generateRandomBytesBase64, generateSessionId, generateSignature } from "../../src/utils/CookieUtils";
@@ -17,7 +17,7 @@ import { generateRandomBytesBase64, generateSessionId, generateSignature } from 
 declare global {
     namespace Express {
         export interface Request {
-            session?: Session;
+            session: Maybe<Session>;
         }
     }
 }
@@ -57,79 +57,6 @@ describe("Session Middleware", () => {
         cookieName: "__SID",
         cookieSecret: generateRandomBytesBase64(16),
     };
-    it("should create a verified session and it's valid", () => {
-        const session = createNewVerifiedSession(config);
-        expect(session.verify().isRight()).equals(true);
-    });
-    it("should create a verified session", () => {
-        const validSession: VerifiedSession = createNewVerifiedSession(config);
-
-        Either.of<Failure, any>(validSession.data)
-            .map(Encoding.encode)
-            .map(Encoding.decode)
-            .chain(Session.createInstance)
-            .map(decoded => {
-                console.log(decoded);
-                console.log(validSession);
-                expect(decoded.getValue<string>(SessionKey.Id)).to.equals(validSession.getValue<string>(SessionKey.Id));
-            });
-
-
-    });
-
-    it("should validate a valid session cookie and return a verified session object", () => {
-
-        const response: express.Response = Substitute.for<express.Response>();
-
-        // Generate valid sessin id, secret and signature.
-        const mockSessionId: string = generateSessionId();
-        const expectedSignature: string = generateSignature(mockSessionId, config.cookieSecret);
-
-        const cookieValue: string = mockSessionId + expectedSignature;
-
-        // Attempt to validate Cookie
-        Cookie.validateCookieString(config.cookieSecret)(cookieValue)
-            .either(
-                failure => assert.fail(failure.errorFunction(response)),
-                cookie => assert.equal(cookie.value, cookieValue)
-            );
-
-
-    });
-    it("should return valid session from cache", async () => {
-
-        const mockResponse: SubstituteOf<express.Response> = Substitute.for<express.Response>();
-
-
-        const verifiedSession: Session = new Session(createNewVerifiedSession(config).data);
-
-        const redis = Substitute.for<Redis>();
-        const encodedVerifiedSession = Encoding.encode(verifiedSession.data);
-        const promiseEncodedReturnValue = Promise.resolve(encodedVerifiedSession);
-        redis.get(Arg.any()).returns(promiseEncodedReturnValue);
-        const store = new SessionStore(redis);
-
-        await store.load(Arg.any())
-            .map(_ => assert.equal(_, encodedVerifiedSession))
-            .run();
-
-
-        const validCookie = Cookie.newCookie(config.cookieSecret);
-
-        const valueFromStore = await store.load(validCookie).run();
-
-        valueFromStore
-            .chain(Session.createInstance)
-            .chain(session => session.verify())
-            .either(fail => {
-                fail.errorFunction(mockResponse);
-                assert.fail("failure", "a valid session");
-            }, session => assert.equal(session.data[SessionKey.Id],
-                (verifiedSession as VerifiedSession).data[SessionKey.Id]));
-
-
-    });
-
     it("should insert the session object in the request", async () => {
         const validCookie = Cookie.newCookie(config.cookieSecret);
         const verifiedSession: VerifiedSession = getValidSessionObject(config);
@@ -150,13 +77,31 @@ describe("Session Middleware", () => {
         const handler = realMiddleware.handler();
         await handler(mockRequest, mockResponse, () => true).catch(console.log);
 
-        assert.deepEqual(mockRequest.session.data, verifiedSession.data);
+        assert.deepEqual(mockRequest.session.__value.data, verifiedSession.data);
+        mockRequest.cookies.__SID = validCookie.value;
     });
     it("Should add extra data to session and retrieve it" ,() => {
         const verifiedSession = getValidSessionObject(config);
         verifiedSession.saveExtraData("Test", "Hello");
 
         expect(verifiedSession.data.extra_data).to.deep.equal({Test: "Hello"});
+    })
+    it("Should show failures if session is invalid", () => {
+        const session1 = createNewVerifiedSession(config);
+        session1.data[SessionKey.SignInInfo] = null;
+
+        expect(session1.verify().isLeft()).to.equal(true);
+
+        const session2 = createNewVerifiedSession(config);
+        session2.data[SessionKey.ExtraData] = null;
+
+        expect(session1.verify().isLeft()).to.equal(true);
+
+        const session3 = createNewVerifiedSession(config);
+        session3.data[SessionKey.Expires] = Date.now();
+
+        expect(session3.verify().isLeft()).to.equal(true);
+
     })
 
 

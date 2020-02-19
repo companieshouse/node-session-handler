@@ -1,4 +1,4 @@
-import { Either, Left, Right } from "purify-ts";
+import { Either, Left, Right, Maybe } from "purify-ts";
 import {
     AccessTokenMissingError,
     ExpiresMissingError,
@@ -8,8 +8,6 @@ import {
 } from "../../error/ErrorFunctions";
 import { Failure } from "../../error/FailureType";
 import { SessionKey } from "../keys/SessionKey";
-import { Cookie } from "./Cookie";
-import { Encoding } from "../../encoding/Encoding";
 import { ISession, ISessionValue, ISignInInfo } from "./SessionInterfaces";
 import { SignInInfoKeys } from "../keys/SignInInfoKeys";
 
@@ -28,13 +26,13 @@ export class Session {
 
     }
 
-    public getValue = <T = ISessionValue>(key: SessionKey): T => {
-        return this.data[key];
+    public getValue = <T = ISessionValue>(key: SessionKey): Maybe<T> => {
+        return Maybe.fromNullable(this.data[key]);
     };
 
-    public getExtraData = (): any => this.data[SessionKey.ExtraData];
+    public getExtraData = (): Maybe<any> => Maybe.fromNullable(this.data[SessionKey.ExtraData]);
 
-    public saveExtraData = <T>(key: string, value: T): void => {
+    public saveExtraData = <T>(key: string, value: T): Session => {
         this.isDirty = true;
         if (!this.data[SessionKey.ExtraData]) {
             this.data[SessionKey.ExtraData] = {};
@@ -46,6 +44,7 @@ export class Session {
 
         this.data[SessionKey.ExtraData] = extraData;
 
+        return this;
     };
 
     public verify = (): Either<Failure, VerifiedSession> => {
@@ -71,13 +70,13 @@ export class VerifiedSession extends Session {
 
         const signInInfo = session.getValue<ISignInInfo>(SessionKey.SignInInfo);
 
-        if (!signInInfo) {
+        if (signInInfo.isNothing()) {
             return Left(
                 Failure(SignInInfoMissingError)
             );
         }
 
-        const accessToken = signInInfo[SignInInfoKeys.AccessToken];
+        const accessToken = signInInfo.map(info => info[SignInInfoKeys.AccessToken]);
 
         if (!accessToken) {
             return Left(
@@ -87,14 +86,13 @@ export class VerifiedSession extends Session {
 
         const expires = session.getValue<number>(SessionKey.Expires);
 
-        if (!expires) {
+        if (expires.isNothing()) {
             return Left(
                 Failure(ExpiresMissingError)
             );
         }
 
-
-        if (expires <= Date.now()) {
+        if (expires.filter(_ => _ > Date.now()).isNothing()) {
             return Left(
                 Failure(SessionExpiredError)
             );

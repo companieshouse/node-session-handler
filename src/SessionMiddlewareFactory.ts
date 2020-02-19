@@ -1,10 +1,9 @@
 import { Request, Response, NextFunction, RequestHandler } from "express";
 import { SessionStore } from "./session/SessionStore";
 import { Failure } from "./error/FailureType";
-import { Either } from "purify-ts";
+import { Either, Just, Nothing } from "purify-ts";
 import { VerifiedSession, Session } from "./session/model/Session";
 import { CookieConfig } from "./CookieConfig";
-import { log } from "./error/ErrorFunctions";
 import expressAsyncHandler from "express-async-handler";
 import { wrapEitherFunction, wrapValue, wrapEither } from "./utils/EitherAsyncUtils";
 import { Cookie } from "./session/model/Cookie";
@@ -33,10 +32,9 @@ export class SessionMiddlewareFactory {
 
             if (sessionCookie) {
 
-                log("Cookie: " + sessionCookie);
-
                 const validateCookieString = wrapEitherFunction(
                     Cookie.validateCookieString(this.config.cookieSecret));
+
 
                 const loadSession: Either<Failure, VerifiedSession> =
                     await wrapValue<Failure, string>(sessionCookie)
@@ -46,24 +44,25 @@ export class SessionMiddlewareFactory {
                         .chain<VerifiedSession>(session => wrapEither(session.verify()))
                         .run();
 
-                loadSession.either(
-                    (failure: Failure) => {
+                const handleFailure = (failure: Failure) => validateCookieString(sessionCookie)
+                    .chain(this.sessionStore.delete)
+                    .map(_ => response.clearCookie(this.config.cookieName))
+                    .map(_ => failure.errorFunction(response));
 
-                        validateCookieString(sessionCookie).chain(this.sessionStore.delete).run();
-
-                        response.clearCookie(this.config.cookieName);
-
-                        failure.errorFunction(response);
-
+                await loadSession.either(
+                    async (failure: Failure) => {
+                        request.session = Nothing;
+                        await handleFailure(failure).run();
                     },
-
-                    (verifiedSession: VerifiedSession) => {
-
-                        request.session = verifiedSession;
-
+                    async (verifiedSession: VerifiedSession) => {
+                        request.session = Just(verifiedSession);
+                        response.cookie(this.config.cookieName, Cookie.asCookie(verifiedSession).value)
+                        return await Promise.resolve();
                     }
                 );
 
+            } else {
+                request.session = Nothing;
             }
 
             return next();
