@@ -56,4 +56,22 @@ describe("Store", () => {
 
     });
 
+
+    it("should encode and decode to the same data from cache", () => {
+        const object = {
+            name: "tester",
+            age: 21
+        };
+
+        const redis = Substitute.for<Redis>();
+        redis.get(Arg.any()).returns(Promise.resolve(Encoding.encode(object)));
+
+        const store = new SessionStore(redis);
+        store.load(Arg.any()).map(_ => assert.deepEqual(_, object));
+
+        const session = new Session(object)
+        redis.get(Arg.any()).returns(Promise.resolve(Encoding.encode(session)));
+        store.load(Arg.any()).map(_ => assert.deepEqual(_, session));
+
+    });
 });

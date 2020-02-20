@@ -19,7 +19,7 @@ describe("Session", () => {
         const session = createNewVerifiedSession(config);
         expect(session.verify().isRight()).equals(true);
     });
-    it("should create a verified session", () => {
+    it("should create a verified session and it stays verified after encoding and decoding", () => {
         const validSession: VerifiedSession = createNewVerifiedSession(config);
 
         Either.of<Failure, any>(validSession.data)
@@ -96,11 +96,23 @@ describe("Session", () => {
         const result2 = Cookie.validateCookieString(config.cookieSecret)(badCookieValue2);
         const result3 = Cookie.validateCookieString(config.cookieSecret)(badCookieValue3);
 
-        expect(result1.isLeft()).to.eq(true);
-        expect(result2.isLeft()).to.eq(true);
-        expect(result3.isLeft()).to.eq(true);
+        expect(result1.isLeft()).to.eq(true)
+        expect(result2.isLeft()).to.eq(true)
+        expect(result3.isLeft()).to.eq(true)
+    });
 
+    it("should marshall and unmarshall session object correctly", () => {
 
+        const rawData = {
+            a: "a",
+            b: "b",
+            c: "c"
+        };
+
+        const parsedSession = new Session(rawData);
+
+        expect(parsedSession.data).to.not.equal(undefined);
+        assert.deepEqual(parsedSession.data as any, rawData);
     });
 
 });
