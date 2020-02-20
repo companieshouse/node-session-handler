@@ -9,8 +9,7 @@ import { CookieConfig } from "../../src/config/CookieConfig";
 import { Redis } from "ioredis";
 import { getValidSessionObject, createNewVerifiedSession } from "../utils/SessionGenerator";
 import { Cookie } from "../../src/session/model/Cookie";
-import { Either, Maybe } from "purify-ts";
-import { Failure } from "../../src/error/FailureType";
+import { Maybe } from "purify-ts";
 import { SessionKey } from "../../src/session/keys/SessionKey";
 import { generateRandomBytesBase64, generateSessionId, generateSignature } from "../../src/utils/CookieUtils";
 
@@ -84,7 +83,7 @@ describe("Session Middleware", () => {
         verifiedSession.saveExtraData("Test", "Hello");
 
         expect(verifiedSession.data.extra_data).to.deep.equal({Test: "Hello"});
-    })
+    });
     it("Should show failures if session is invalid", () => {
         const session1 = createNewVerifiedSession(config);
         session1.data[SessionKey.SignInInfo] = null;
@@ -101,7 +100,7 @@ describe("Session Middleware", () => {
 
         expect(session3.verify().isLeft()).to.equal(true);
 
-    })
+    });
 
 
 });

@@ -17,7 +17,7 @@ describe("Coding and Deconding test", () => {
         assert.deepEqual(decoded, object);
 
     });
-    it("should marshall and unmarshall session object correctly", () => {
+    it("should parse session object correctly", () => {
 
         const rawData = {
             a: "a",

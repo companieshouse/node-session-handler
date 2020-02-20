@@ -53,4 +53,30 @@ describe("Session", () => {
 
 
     });
+
+    it("should fail if cookie is invalid", () => {
+
+        const response: Response = Substitute.for<Response>();
+
+        // Generate valid sessin id, secret and signature.
+        const mockSessionId: string = generateSessionId();
+        const badId: string = "jasdfasd";
+
+        const expectedSignature: string = generateSignature(mockSessionId, config.cookieSecret);
+        const badSignature = "asdkfasd";
+
+        const badCookieValue1: string = badId + expectedSignature;
+        const badCookieValue2: string = mockSessionId + badSignature
+        const badCookieValue3: string = badId + badSignature
+        // Attempt to validate Cookie
+        const result1 = Cookie.validateCookieString(config.cookieSecret)(badCookieValue1);
+        const result2 = Cookie.validateCookieString(config.cookieSecret)(badCookieValue2);
+        const result3 = Cookie.validateCookieString(config.cookieSecret)(badCookieValue3);
+
+        expect(result1.isLeft()).to.eq(true)
+        expect(result2.isLeft()).to.eq(true)
+        expect(result3.isLeft()).to.eq(true)
+
+
+    });
 });
