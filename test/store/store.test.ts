@@ -10,12 +10,29 @@ import { SessionKey } from "../../src/session/keys/SessionKey";
 import { Response } from "express";
 import { CookieConfig } from "../../src/config/CookieConfig";
 import { generateRandomBytesBase64 } from "../../src/utils/CookieUtils";
+import { Either } from "purify-ts";
+import { Failure } from "../../src/error/FailureType";
 
 describe("Store", () => {
     const config: CookieConfig = {
         cookieName: "__SID",
         cookieSecret: generateRandomBytesBase64(16),
     };
+    it("should create a verified session and it stays verified after encoding and decoding", () => {
+        const validSession: VerifiedSession = createNewVerifiedSession(config);
+
+        Either.of<Failure, any>(validSession.data)
+            .map(Encoding.encode)
+            .map(Encoding.decode)
+            .chain(Session.createInstance)
+            .map(decoded => {
+                expect(decoded.verify().isRight()).to.equals(true);
+                expect(decoded.data).to.deep.equals(validSession.data);
+
+            });
+
+
+    });
     it("should return valid session from cache", async () => {
 
         const mockResponse: SubstituteOf<Response> = Substitute.for<Response>();

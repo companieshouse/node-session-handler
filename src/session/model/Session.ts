@@ -10,6 +10,7 @@ import { Failure } from "../../error/FailureType";
 import { SessionKey } from "../keys/SessionKey";
 import { ISession, ISessionValue, ISignInInfo } from "./SessionInterfaces";
 import { SignInInfoKeys } from "../keys/SignInInfoKeys";
+import { AccessTokenKeys } from '../keys/AccessTokenKeys';
 
 export class Session {
 
@@ -72,31 +73,31 @@ export class VerifiedSession extends Session {
 
     public static verifySession(session: Session): Either<Failure, VerifiedSession> {
 
-        const signInInfo = session.getValue<ISignInInfo>(SessionKey.SignInInfo);
+        const signInInfo = session.data[SessionKey.SignInInfo];
 
-        if (signInInfo.isNothing()) {
+        if (!signInInfo) {
             return Left(
                 Failure(SignInInfoMissingError)
             );
         }
 
-        const accessToken = signInInfo.map(info => info[SignInInfoKeys.AccessToken]);
+        const accessToken = signInInfo[SignInInfoKeys.AccessToken];
 
-        if (!accessToken) {
+        if (!accessToken || !accessToken[AccessTokenKeys.AccessToken]) {
             return Left(
                 Failure(AccessTokenMissingError)
             );
         }
 
-        const expires = session.getValue<number>(SessionKey.Expires);
+        const expires = session.data[SessionKey.Expires];
 
-        if (expires.isNothing()) {
+        if (!expires) {
             return Left(
                 Failure(ExpiresMissingError)
             );
         }
 
-        if (expires.filter(_ => _ > Date.now()).isNothing()) {
+        if (expires <= Date.now()) {
             return Left(
                 Failure(SessionExpiredError)
             );

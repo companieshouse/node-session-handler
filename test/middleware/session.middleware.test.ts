@@ -95,23 +95,6 @@ describe("Session Middleware", () => {
 
         expect(verifiedSession.data.extra_data).to.deep.equal({ Test: "Hello" });
     });
-    it("Should show failures if session is invalid", () => {
-        const session1 = createNewVerifiedSession(config);
-        session1.data[SessionKey.SignInInfo] = null;
-
-        expect(session1.verify().isLeft()).to.equal(true);
-
-        const session2 = createNewVerifiedSession(config);
-        session2.data[SessionKey.ExtraData] = null;
-
-        expect(session1.verify().isLeft()).to.equal(true);
-
-        const session3 = createNewVerifiedSession(config);
-        session3.data[SessionKey.Expires] = Date.now();
-
-        expect(session3.verify().isLeft()).to.equal(true);
-
-    });
     it("should not try to load a session if cookie is not present", async () => {
         const mockResponse: SubstituteOf<express.Response> = Substitute.for<express.Response>();
         const mockRequest = {

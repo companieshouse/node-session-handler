@@ -9,6 +9,9 @@ import { generateSessionId, generateSignature, generateRandomBytesBase64 } from 
 import { Cookie } from "../../src/session/model/Cookie";
 import { CookieConfig } from "../../src/config/CookieConfig";
 import { Response } from "express";
+import { SessionKey } from "../../src/session/keys/SessionKey";
+import { IAccessToken } from '../../src/session/model/SessionInterfaces';
+import { SignInInfoKeys } from '../../src/session/keys/SignInInfoKeys';
 
 describe("Session", () => {
     const config: CookieConfig = {
@@ -18,21 +21,6 @@ describe("Session", () => {
     it("should create a verified session and it's valid", () => {
         const session = createNewVerifiedSession(config);
         expect(session.verify().isRight()).equals(true);
-    });
-    it("should create a verified session and it stays verified after encoding and decoding", () => {
-        const validSession: VerifiedSession = createNewVerifiedSession(config);
-
-        Either.of<Failure, any>(validSession.data)
-            .map(Encoding.encode)
-            .map(Encoding.decode)
-            .chain(Session.createInstance)
-            .map(decoded => {
-                expect(decoded.verify().isRight()).to.equals(true);
-                expect(decoded.data).to.deep.equals(validSession.data);
-
-            });
-
-
     });
     it("Should return Just and the data inside it should be correct when trying to access a session", () => {
         const session = createNewVerifiedSession(config);
@@ -78,27 +66,25 @@ describe("Session", () => {
 
 
     });
+    it("Should show failures if session is invalid", () => {
+        const session1 = createNewVerifiedSession(config);
+        session1.data[SessionKey.SignInInfo] = null;
 
-    it("should fail if cookie is invalid", () => {
+        expect(session1.verify().isLeft()).to.equal(true);
 
-        // Generate valid sessin id, secret and signature.
-        const mockSessionId: string = generateSessionId();
-        const badId: string = "jasdfasd";
+        const session2 = createNewVerifiedSession(config);
+        const signInInfo = session2.data[SessionKey.SignInInfo];
 
-        const expectedSignature: string = generateSignature(mockSessionId, config.cookieSecret);
-        const badSignature = "asdkfasd";
+        signInInfo[SignInInfoKeys.AccessToken] = null;
+        session2.data[SessionKey.SignInInfo] = signInInfo;
 
-        const badCookieValue1: string = badId + expectedSignature;
-        const badCookieValue2: string = mockSessionId + badSignature;
-        const badCookieValue3: string = badId + badSignature;
-        // Attempt to validate Cookie
-        const result1 = Cookie.validateCookieString(config.cookieSecret)(badCookieValue1);
-        const result2 = Cookie.validateCookieString(config.cookieSecret)(badCookieValue2);
-        const result3 = Cookie.validateCookieString(config.cookieSecret)(badCookieValue3);
+        expect(session2.verify().isLeft()).to.equal(true);
 
-        expect(result1.isLeft()).to.eq(true)
-        expect(result2.isLeft()).to.eq(true)
-        expect(result3.isLeft()).to.eq(true)
+        const session3 = createNewVerifiedSession(config);
+        session3.data[SessionKey.Expires] = Date.now();
+
+        expect(session3.verify().isLeft()).to.equal(true);
+
     });
 
     it("should marshall and unmarshall session object correctly", () => {
