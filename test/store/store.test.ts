@@ -1,7 +1,7 @@
 import Substitute, { SubstituteOf, Arg } from "@fluffy-spoon/substitute";
 import { Session, VerifiedSession } from "../../src/session/model/Session";
 import { createNewVerifiedSession } from "../utils/SessionGenerator";
-import { assert } from "chai";
+import { assert, expect } from "chai";
 import { Redis } from "ioredis";
 import { Encoding } from "../../src/encoding/Encoding";
 import { SessionStore } from "../../src/session/store/SessionStore";
@@ -49,4 +49,11 @@ describe("Store", () => {
 
 
     });
+    it("Should return Nothing when trying to access a newly created session", () => {
+        const session = createNewVerifiedSession(config);
+
+        expect(session.getExtraData().isNothing()).to.eq(true);
+
+    });
+
 });

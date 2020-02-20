@@ -13,7 +13,7 @@ import { SignInInfoKeys } from "../keys/SignInInfoKeys";
 
 export class Session {
 
-    private isDirty: boolean;
+    private dirty: boolean;
     public data: ISession = {};
 
     public constructor(data?: any) {
@@ -21,9 +21,13 @@ export class Session {
         if (data) {
 
             this.data = data;
-            this.isDirty = false;
+            this.dirty = false;
         }
 
+    }
+
+    public isDirty(): boolean {
+        return this.dirty;
     }
 
     public getValue = <T = ISessionValue>(key: SessionKey): Maybe<T> => {
@@ -33,7 +37,7 @@ export class Session {
     public getExtraData = (): Maybe<any> => Maybe.fromNullable(this.data[SessionKey.ExtraData]);
 
     public saveExtraData = <T>(key: string, value: T): Session => {
-        this.isDirty = true;
+        this.dirty = true;
         if (!this.data[SessionKey.ExtraData]) {
             this.data[SessionKey.ExtraData] = {};
         }

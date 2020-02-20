@@ -4,18 +4,18 @@ import { VerifiedSession, Session } from "../../src/session/model/Session";
 import { Cookie } from "../../src/session/model/Cookie";
 import { SessionKey } from "../../src/session/keys/SessionKey";
 import { SignInInfoKeys } from "../../src/session/keys/SignInInfoKeys";
-import { IAccessToken } from "../../src/session/model/SessionInterfaces";
+import { IAccessToken, ISession } from "../../src/session/model/SessionInterfaces";
 import { AccessTokenKeys } from "../../src/session/keys/AccessTokenKeys";
 import { generateRandomBytesBase64, generateSessionId, generateSignature } from "../../src/utils/CookieUtils";
 
 
-export function getValidSessionDataJson(config: CookieConfig): any {
+export function getValidSessionDataJson(config: CookieConfig): ISession {
     const mockSessionId = generateSessionId();
     const expectedSignature = generateSignature(mockSessionId, config.cookieSecret);
     return {
         [SessionKey.Id]: mockSessionId,
         [SessionKey.ClientSig]: expectedSignature,
-        [SessionKey.Expires]: Date.now() + 1000,
+        [SessionKey.Expires]: Date.now() + 3600 * 1000,
         [SessionKey.SignInInfo]: {
             [SignInInfoKeys.AccessToken]: {
                 access_token: "oKi1z8KY0gXsXu__hy2-YU_JJSdtxOkJ4K5MAE-gOFVzpKt5lvqnFpVeUjhqhVHZ1K8Hkr7M4IYdzJUnOz2hQw",

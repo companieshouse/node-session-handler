@@ -11,7 +11,10 @@ import { getValidSessionObject, createNewVerifiedSession } from "../utils/Sessio
 import { Cookie } from "../../src/session/model/Cookie";
 import { Maybe } from "purify-ts";
 import { SessionKey } from "../../src/session/keys/SessionKey";
-import { generateRandomBytesBase64, generateSessionId, generateSignature } from "../../src/utils/CookieUtils";
+import { generateRandomBytesBase64 } from "../../src/utils/CookieUtils";
+import { Failure } from "../../src/error/FailureType";
+import { wrapValue } from "../../src/utils/EitherAsyncUtils";
+import { NextFunction } from "express";
 
 declare global {
     namespace Express {
@@ -56,33 +59,41 @@ describe("Session Middleware", () => {
         cookieName: "__SID",
         cookieSecret: generateRandomBytesBase64(16),
     };
-    it("should insert the session object in the request", async () => {
-        const validCookie = Cookie.newCookie(config.cookieSecret);
+    const redis = Substitute.for<Redis>();
+    const realSessionStore = new SessionStore(redis);
+    let sessionStore = Substitute.for<SessionStore>();
+
+    const realMiddleware = SessionMiddleware(config, sessionStore);
+
+    it("should insert the session object in the request and set the cookie in the response", async () => {
         const verifiedSession: VerifiedSession = getValidSessionObject(config);
         const serializedSession = Encoding.encode(verifiedSession.data);
 
-        const redis = Substitute.for<Redis>();
-        redis.get(validCookie.sessionId).returns(Promise.resolve(serializedSession));
+        expect(verifiedSession.verify().isRight()).to.eq(true);
 
-        const sessionStore = new SessionStore(redis);
-        const realMiddleware = SessionMiddleware(config, sessionStore);
+        const cookie = Cookie.asCookie(verifiedSession);
+
+        redis.get(verifiedSession.data[SessionKey.Id]).returns(Promise.resolve(serializedSession));
+        sessionStore.load(Arg.any()).mimicks(realSessionStore.load);
+
         const mockResponse: SubstituteOf<express.Response> = Substitute.for<express.Response>();
         const mockRequest = {
-            cookies: { __SID: validCookie.value },
+            cookies: { [config.cookieName]: cookie.value },
             session: {}
         } as express.Request;
 
 
         await realMiddleware(mockRequest, mockResponse, () => true).catch(console.log);
 
+        expect(mockResponse.received().cookie(config.cookieName, cookie.value));
+        expect(mockRequest.session.isJust()).to.equal(true);
         assert.deepEqual(mockRequest.session.__value.data, verifiedSession.data);
-        mockRequest.cookies.__SID = validCookie.value;
     });
-    it("Should add extra data to session and retrieve it" ,() => {
+    it("Should add extra data to session and retrieve it", () => {
         const verifiedSession = getValidSessionObject(config);
         verifiedSession.saveExtraData("Test", "Hello");
 
-        expect(verifiedSession.data.extra_data).to.deep.equal({Test: "Hello"});
+        expect(verifiedSession.data.extra_data).to.deep.equal({ Test: "Hello" });
     });
     it("Should show failures if session is invalid", () => {
         const session1 = createNewVerifiedSession(config);
@@ -101,6 +112,58 @@ describe("Session Middleware", () => {
         expect(session3.verify().isLeft()).to.equal(true);
 
     });
+    it("should not try to load a session if cookie is not present", async () => {
+        const mockResponse: SubstituteOf<express.Response> = Substitute.for<express.Response>();
+        const mockRequest = {
+            cookies: {}
+        } as express.Request;
+
+        await realMiddleware(mockRequest, mockResponse, () => true);
+        sessionStore.didNotReceive().load(Arg.any());
+        expect(mockRequest.session.isNothing()).to.eq(true);
+        expect(mockResponse.didNotReceive().cookie(Arg.any(), Arg.any()));
+
+    });
+    it("should set the session object to Nothing if session load fails", async () => {
+        const mockResponse: SubstituteOf<express.Response> = Substitute.for<express.Response>();
+        const mockRequest = {
+            cookies: {}
+        } as express.Request;
+
+        sessionStore = Substitute.for<SessionStore>();
+        sessionStore.load(Arg.any()).returns(wrapValue(Failure(_ => console.log("Fail"))));
+
+        await realMiddleware(mockRequest, mockResponse, () => true);
+
+        expect(mockRequest.session.isNothing()).to.eq(true);
+        expect(mockResponse.didNotReceive().cookie(Arg.any(), Arg.any()));
+        expect(mockRequest.cookies).to.deep.eq({});
+
+    });
+    it("should call next regardless of failure or success", async () => {
+        const mockResponse: SubstituteOf<express.Response> = Substitute.for<express.Response>();
+        const mockRequest = {
+            cookies: {}
+        } as express.Request;
+
+        const next = Substitute.for<NextFunction>();
+
+        sessionStore = Substitute.for<SessionStore>();
+        sessionStore.load(Arg.any()).returns(wrapValue(createNewVerifiedSession(config)));
+
+        await realMiddleware(mockRequest, mockResponse, next);
+
+        expect(next.received());
+
+        sessionStore = Substitute.for<SessionStore>();
+        sessionStore.load(Arg.any()).returns(wrapValue(Failure(_ => console.log("Fail"))));
+
+        await realMiddleware(mockRequest, mockResponse, next);
+
+        expect(next.received());
+
+    });
+
 
 
 });
