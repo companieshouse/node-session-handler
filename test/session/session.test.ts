@@ -76,7 +76,19 @@ describe("Session", () => {
         expect(result1.isLeft()).to.eq(true)
         expect(result2.isLeft()).to.eq(true)
         expect(result3.isLeft()).to.eq(true)
+    });
 
+    it("should marshall and unmarshall session object correctly", () => {
 
+        const rawData = {
+            a: "a",
+            b: "b",
+            c: "c"
+        };
+
+        const parsedSession = new Session(rawData);
+
+        expect(parsedSession.data).to.not.equal(undefined);
+        assert.deepEqual(parsedSession.data as any, rawData);
     });
 });

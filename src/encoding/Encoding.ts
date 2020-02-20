@@ -2,8 +2,11 @@ import msgpack5 from "msgpack5";
 
 export class Encoding {
 
-    public static encode = <T>(object: T): string => {
-        return Encoding.encodeMsgpack(object);
+    public static encode = <T>(value: T): string => {
+        if (!value) {
+            throw new Error("Value to encode must be defined");
+        }
+        return Encoding.encodeMsgpack(value);
     };
 
     private static encodeMsgpack = (data: any): string => {
@@ -11,6 +14,9 @@ export class Encoding {
     };
 
     public static decode = (value: string): any => {
+        if (!value) {
+            throw new Error("Value to decode must be defined");
+        }
         return Encoding.decodeMsgpack(value);
     };
 
