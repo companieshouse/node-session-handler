@@ -1,11 +1,11 @@
 import { expect, assert } from "chai";
 import { Session, VerifiedSession } from "../../src/session/model/Session";
 import { Encoding } from "../../src/encoding/Encoding";
-import { SessionMiddlewareFactory } from "../../src/SessionMiddlewareFactory";
-import { SessionStore } from "../../src/session/SessionStore";
+import { SessionMiddleware } from "../../src/session/SessionMiddleware";
+import { SessionStore } from "../../src/session/store/SessionStore";
 import { Substitute, Arg, SubstituteOf } from "@fluffy-spoon/substitute";
 import * as express from "express";
-import { CookieConfig } from "../../src/CookieConfig";
+import { CookieConfig } from "../../src/config/CookieConfig";
 import { Redis } from "ioredis";
 import { getValidSessionObject, createNewVerifiedSession } from "../utils/SessionGenerator";
 import { Cookie } from "../../src/session/model/Cookie";
@@ -66,7 +66,7 @@ describe("Session Middleware", () => {
         redis.get(validCookie.sessionId).returns(Promise.resolve(serializedSession));
 
         const sessionStore = new SessionStore(redis);
-        const realMiddleware = new SessionMiddlewareFactory(config, sessionStore);
+        const realMiddleware = SessionMiddleware(config, sessionStore);
         const mockResponse: SubstituteOf<express.Response> = Substitute.for<express.Response>();
         const mockRequest = {
             cookies: { __SID: validCookie.value },
@@ -74,8 +74,7 @@ describe("Session Middleware", () => {
         } as express.Request;
 
 
-        const handler = realMiddleware.handler();
-        await handler(mockRequest, mockResponse, () => true).catch(console.log);
+        await realMiddleware(mockRequest, mockResponse, () => true).catch(console.log);
 
         assert.deepEqual(mockRequest.session.__value.data, verifiedSession.data);
         mockRequest.cookies.__SID = validCookie.value;

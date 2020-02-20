@@ -1,5 +1,5 @@
 import { Encoding } from "../../src/encoding/Encoding";
-import { CookieConfig } from "../../src/CookieConfig";
+import { CookieConfig } from "../../src/config/CookieConfig";
 import { VerifiedSession, Session } from "../../src/session/model/Session";
 import { Cookie } from "../../src/session/model/Cookie";
 import { SessionKey } from "../../src/session/keys/SessionKey";

@@ -8,7 +8,7 @@ import { SessionKey } from "../../src/session/keys/SessionKey";
 import Substitute from "@fluffy-spoon/substitute";
 import { generateSessionId, generateSignature, generateRandomBytesBase64 } from "../../src/utils/CookieUtils";
 import { Cookie } from "../../src/session/model/Cookie";
-import { CookieConfig } from "../../src/CookieConfig";
+import { CookieConfig } from "../../src/config/CookieConfig";
 import { Response } from "express";
 
 describe("Session", () => {

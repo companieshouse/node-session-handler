@@ -1,14 +1,14 @@
-import { Encoding } from "../encoding/Encoding";
+import { Encoding } from "../../encoding/Encoding";
 import { EitherAsync, Right, Left } from "purify-ts";
-import { Failure } from "../error/FailureType";
+import { Failure } from "../../error/FailureType";
 import {
     wrapValue,
     wrapFunction,
     wrapPromise,
-} from "../utils/EitherAsyncUtils";
-import { PromiseError, NoDataRetrievedError, StoringError } from "../error/ErrorFunctions";
+} from "../../utils/EitherAsyncUtils";
+import { PromiseError, NoDataRetrievedError, StoringError } from "../../error/ErrorFunctions";
 import { Redis } from "ioredis";
-import { Cookie } from "./model/Cookie";
+import { Cookie } from "../model/Cookie";
 
 export class SessionStore {
 

@@ -4,11 +4,11 @@ import { createNewVerifiedSession } from "../utils/SessionGenerator";
 import { assert } from "chai";
 import { Redis } from "ioredis";
 import { Encoding } from "../../src/encoding/Encoding";
-import { SessionStore } from "../../src/session/SessionStore";
+import { SessionStore } from "../../src/session/store/SessionStore";
 import { Cookie } from "../../src/session/model/Cookie";
 import { SessionKey } from "../../src/session/keys/SessionKey";
 import { Response } from "express";
-import { CookieConfig } from "../../src/CookieConfig";
+import { CookieConfig } from "../../src/config/CookieConfig";
 import { generateRandomBytesBase64 } from "../../src/utils/CookieUtils";
 
 describe("Store", () => {

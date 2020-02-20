@@ -1,6 +1,6 @@
-import { CookieConfig } from "./CookieConfig";
-import { SessionStore } from "./session/SessionStore";
+import { CookieConfig } from "./config/CookieConfig";
+import { SessionStore } from "./session/store/SessionStore";
 import * as EitherUtils from "./utils/EitherAsyncUtils";
-import { SessionMiddlewareFactory } from "./SessionMiddlewareFactory";
+import { SessionMiddleware } from "./session/SessionMiddleware";
 import { Maybe, Either } from "purify-ts";
-export { SessionStore, SessionMiddlewareFactory, CookieConfig, EitherUtils, Maybe, Either };
+export { SessionStore, SessionMiddleware, CookieConfig, EitherUtils, Maybe, Either };

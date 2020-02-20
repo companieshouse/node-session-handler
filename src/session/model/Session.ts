@@ -4,7 +4,7 @@ import {
     ExpiresMissingError,
     SessionExpiredError,
     SignInInfoMissingError,
-    SessionParseError as SessionCreationError
+    SessionParseError
 } from "../../error/ErrorFunctions";
 import { Failure } from "../../error/FailureType";
 import { SessionKey } from "../keys/SessionKey";
@@ -55,7 +55,7 @@ export class Session {
         if (object) {
             return Right(new Session(object));
         }
-        return Left(Failure(SessionCreationError(object)));
+        return Left(Failure(SessionParseError(object)));
     };
 }
 
