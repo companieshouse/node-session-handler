@@ -1,91 +1,91 @@
-import Substitute, { SubstituteOf, Arg } from "@fluffy-spoon/substitute";
-import { Session, VerifiedSession } from "../../src/session/model/Session";
-import { createNewVerifiedSession } from "../utils/SessionGenerator";
 import { assert, expect } from "chai";
+import { Substitute, Arg } from "@fluffy-spoon/substitute";
 import { Redis } from "ioredis";
-import { Encoding } from "../../src/encoding/Encoding";
 import { SessionStore } from "../../src/session/store/SessionStore";
 import { Cookie } from "../../src/session/model/Cookie";
-import { SessionKey } from "../../src/session/keys/SessionKey";
-import { Response } from "express";
 import { generateRandomBytesBase64 } from "../../src/utils/CookieUtils";
-import { Either } from "purify-ts";
-import { Failure } from "../../src/error/FailureType";
+import { Encoding } from "../../src/encoding/Encoding";
+
+type Data = Record<string, any>
 
 describe("Store", () => {
-    const cookieSecret = generateRandomBytesBase64(16)
+    const cookie = Cookie.create(generateRandomBytesBase64(16));
+    const data: Data = {
+        name: "Mark",
+        age: 18
+    };
+    const encodedData = Encoding.encode(data);
 
-    it("should create a verified session and it stays verified after encoding and decoding", () => {
-        const validSession: VerifiedSession = createNewVerifiedSession(cookieSecret);
+    describe("data loading", () => {
+        it("should read from cache using session id and decode data after read", async () => {
+            const redis = Substitute.for<Redis>();
+            redis.get(cookie.sessionId).returns(Promise.resolve(encodedData));
 
-        Either.of<Failure, any>(validSession.data)
-            .map(Encoding.encode)
-            .map(Encoding.decode)
-            .chain(Session.createInstance)
-            .map(decoded => {
-                expect(decoded.verify().isRight()).to.equals(true);
-                expect(decoded.data).to.deep.equals(validSession.data);
+            const result = await new SessionStore(redis).load<Data>(cookie).run();
+            result.either(
+                _ => assert.fail(),
+                response => expect(response).to.be.deep.equal(data)
+            );
 
-            });
+            redis.received().get(cookie.sessionId);
+        });
 
+        it("should return failure when read failed", async () => {
+            const redis = Substitute.for<Redis>();
+            redis.get(cookie.sessionId).returns(Promise.reject("Some error"));
 
-    });
-    it("should return valid session from cache", async () => {
-
-        const mockResponse: SubstituteOf<Response> = Substitute.for<Response>();
-
-
-        const verifiedSession: Session = new Session(createNewVerifiedSession(cookieSecret).data);
-
-        const redis = Substitute.for<Redis>();
-        const encodedVerifiedSession = Encoding.encode(verifiedSession.data);
-        const promiseEncodedReturnValue = Promise.resolve(encodedVerifiedSession);
-        redis.get(Arg.any()).returns(promiseEncodedReturnValue);
-        const store = new SessionStore(redis);
-
-        await store.load(Arg.any())
-            .map(_ => assert.equal(_, encodedVerifiedSession))
-            .run();
-
-
-        const validCookie = Cookie.create(cookieSecret);
-
-        const valueFromStore = await store.load(validCookie).run();
-
-        valueFromStore
-            .chain(Session.createInstance)
-            .chain(session => session.verify())
-            .either(fail => {
-                fail.errorFunction(mockResponse);
-                assert.fail("failure", "a valid session");
-            }, session => assert.equal(session.data[SessionKey.Id],
-                (verifiedSession as VerifiedSession).data[SessionKey.Id]));
-
-
-    });
-    it("Should return Nothing when trying to access a newly created session", () => {
-        const session = createNewVerifiedSession(cookieSecret);
-
-        expect(session.getExtraData().isNothing()).to.eq(true);
-
+            const result = await new SessionStore(redis).load<Data>(cookie).run();
+            expect(result.isLeft()).to.equal(true);
+        });
     });
 
+    describe("data storing", () => {
+        it("should write to cache using session id and encode data before write", async () => {
+            const redis = Substitute.for<Redis>();
+            // @ts-ignore
+            redis.set(cookie.sessionId, encodedData).returns(Promise.resolve("OK"));
 
-    it("should encode and decode to the same data from cache", () => {
-        const object = {
-            name: "tester",
-            age: 21
-        };
+            const result = await new SessionStore(redis).store<Data>(cookie, data).run();
+            result.either(
+                _ => assert.fail(),
+                response => expect(response).to.be.equal("OK")
+            );
 
-        const redis = Substitute.for<Redis>();
-        redis.get(Arg.any()).returns(Promise.resolve(Encoding.encode(object)));
+            // @ts-ignore
+            redis.received().set(cookie.sessionId, Arg.any());
+        });
 
-        const store = new SessionStore(redis);
-        store.load(Arg.any()).map(_ => assert.deepEqual(_, object));
+        it("should return failure when write failed", async () => {
+            const redis = Substitute.for<Redis>();
+            // @ts-ignore
+            redis.set(cookie.sessionId, encodedData).returns(Promise.reject("Some error"));
 
-        const session = new Session(object)
-        redis.get(Arg.any()).returns(Promise.resolve(Encoding.encode(session)));
-        store.load(Arg.any()).map(_ => assert.deepEqual(_, session));
-
+            const result = await new SessionStore(redis).store<Data>(cookie, data).run();
+            expect(result.isLeft()).to.equal(true);
+        });
     });
+
+    describe("deleting storing", () => {
+        it("should delete from cache using session id", async () => {
+            const redis = Substitute.for<Redis>();
+            redis.del(Arg.any()).returns(Promise.resolve(1));
+
+            const result = await new SessionStore(redis).delete(cookie).run();
+            result.either(
+                _ => assert.fail(),
+                response => expect(response).to.be.equal(1)
+            );
+
+            // @ts-ignore
+            redis.received().del(cookie.sessionId);
+        });
+
+        it("should return failure when delete failed", async () => {
+            const redis = Substitute.for<Redis>();
+            redis.del(cookie.sessionId).returns(Promise.reject("Some error"));
+
+            const result = await new SessionStore(redis).delete(cookie).run();
+            expect(result.isLeft()).to.equal(true);
+        })
+    })
 });
