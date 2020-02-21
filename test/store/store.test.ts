@@ -8,18 +8,15 @@ import { SessionStore } from "../../src/session/store/SessionStore";
 import { Cookie } from "../../src/session/model/Cookie";
 import { SessionKey } from "../../src/session/keys/SessionKey";
 import { Response } from "express";
-import { CookieConfig } from "../../src/config/CookieConfig";
 import { generateRandomBytesBase64 } from "../../src/utils/CookieUtils";
 import { Either } from "purify-ts";
 import { Failure } from "../../src/error/FailureType";
 
 describe("Store", () => {
-    const config: CookieConfig = {
-        cookieName: "__SID",
-        cookieSecret: generateRandomBytesBase64(16),
-    };
+    const cookieSecret = generateRandomBytesBase64(16)
+
     it("should create a verified session and it stays verified after encoding and decoding", () => {
-        const validSession: VerifiedSession = createNewVerifiedSession(config);
+        const validSession: VerifiedSession = createNewVerifiedSession(cookieSecret);
 
         Either.of<Failure, any>(validSession.data)
             .map(Encoding.encode)
@@ -38,7 +35,7 @@ describe("Store", () => {
         const mockResponse: SubstituteOf<Response> = Substitute.for<Response>();
 
 
-        const verifiedSession: Session = new Session(createNewVerifiedSession(config).data);
+        const verifiedSession: Session = new Session(createNewVerifiedSession(cookieSecret).data);
 
         const redis = Substitute.for<Redis>();
         const encodedVerifiedSession = Encoding.encode(verifiedSession.data);
@@ -51,7 +48,7 @@ describe("Store", () => {
             .run();
 
 
-        const validCookie = Cookie.create(config.cookieSecret);
+        const validCookie = Cookie.create(cookieSecret);
 
         const valueFromStore = await store.load(validCookie).run();
 
@@ -67,7 +64,7 @@ describe("Store", () => {
 
     });
     it("Should return Nothing when trying to access a newly created session", () => {
-        const session = createNewVerifiedSession(config);
+        const session = createNewVerifiedSession(cookieSecret);
 
         expect(session.getExtraData().isNothing()).to.eq(true);
 

@@ -1,4 +1,4 @@
-import { Response, RequestHandler } from "express";
+import { Response } from "express";
 
 export enum ErrorEnum {
     _sessionLengthError = "Encrypted session token not long enough.",

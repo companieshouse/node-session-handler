@@ -8,9 +8,9 @@ import {
 } from "../../error/ErrorFunctions";
 import { Failure } from "../../error/FailureType";
 import { SessionKey } from "../keys/SessionKey";
-import { ISession, ISessionValue, ISignInInfo } from "./SessionInterfaces";
+import { ISession, ISessionValue } from "./SessionInterfaces";
 import { SignInInfoKeys } from "../keys/SignInInfoKeys";
-import { AccessTokenKeys } from '../keys/AccessTokenKeys';
+import { AccessTokenKeys } from "../keys/AccessTokenKeys";
 
 export class Session {
 
@@ -18,9 +18,7 @@ export class Session {
     public data: ISession = {};
 
     public constructor(data?: any) {
-
         if (data) {
-
             this.data = data;
             this.dirty = false;
         }
@@ -108,5 +106,3 @@ export class VerifiedSession extends Session {
     }
 
 }
-
-

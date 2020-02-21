@@ -130,7 +130,7 @@ describe("Session Middleware", () => {
         const next = Substitute.for<NextFunction>();
 
         sessionStore = Substitute.for<SessionStore>();
-        sessionStore.load(Arg.any()).returns(wrapValue(createNewVerifiedSession(config)));
+        sessionStore.load(Arg.any()).returns(wrapValue(createNewVerifiedSession(config.cookieSecret)));
 
         await realMiddleware(mockRequest, mockResponse, next);
 

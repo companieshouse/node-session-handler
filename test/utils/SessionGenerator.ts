@@ -1,5 +1,5 @@
 import { CookieConfig } from "../../src/config/CookieConfig";
-import { VerifiedSession, Session } from "../../src/session/model/Session";
+import { Session, VerifiedSession } from "../../src/session/model/Session";
 import { Cookie } from "../../src/session/model/Cookie";
 import { SessionKey } from "../../src/session/keys/SessionKey";
 import { SignInInfoKeys } from "../../src/session/keys/SignInInfoKeys";
@@ -32,25 +32,20 @@ export function getValidSessionObject(config: CookieConfig): VerifiedSession {
         .orDefaultLazy(() => ({ } as VerifiedSession));
 }
 
-export function createNewVerifiedSession(
-    config: CookieConfig,
-    extraData?: any): VerifiedSession {
-
-    const newCookie: Cookie = Cookie.create(config.cookieSecret);
-
-    const accessToken = createDefaultAccessToken(3600);
+export function createNewVerifiedSession(cookieSecret: string, extraData?: any): VerifiedSession {
+    const cookie: Cookie = Cookie.create(cookieSecret);
 
     const signInInfo = {
-        [SignInInfoKeys.AccessToken]: accessToken,
+        [SignInInfoKeys.AccessToken]: createDefaultAccessToken(3600),
         [SignInInfoKeys.SignedIn]: 0
     };
 
     const sessionData = !extraData ? {} : extraData;
 
-    sessionData[SessionKey.Id] = newCookie.sessionId;
-    sessionData[SessionKey.ClientSig] = newCookie.signature;
+    sessionData[SessionKey.Id] = cookie.sessionId;
+    sessionData[SessionKey.ClientSig] = cookie.signature;
     sessionData[SessionKey.SignInInfo] = signInInfo;
-    sessionData[SessionKey.Expires] = Date.now() + accessToken.expires_in * 1000;
+    sessionData[SessionKey.Expires] = Date.now() + createDefaultAccessToken(3600).expires_in * 1000;
 
     return new Session(sessionData) as VerifiedSession;
 }

@@ -1,104 +1,68 @@
 import { createNewVerifiedSession } from "../utils/SessionGenerator";
-import { expect, assert } from "chai";
-import { VerifiedSession, Session } from "../../src/session/model/Session";
-import { Either } from "purify-ts";
-import { Failure } from "../../src/error/FailureType";
-import { Encoding } from "../../src/encoding/Encoding";
-import Substitute from "@fluffy-spoon/substitute";
-import { generateSessionId, generateSignature, generateRandomBytesBase64 } from "../../src/utils/CookieUtils";
-import { Cookie } from "../../src/session/model/Cookie";
-import { CookieConfig } from "../../src/config/CookieConfig";
-import { Response } from "express";
+import { expect } from "chai";
+import { Session } from "../../src/session/model/Session";
+import { generateRandomBytesBase64 } from "../../src/utils/CookieUtils";
 import { SessionKey } from "../../src/session/keys/SessionKey";
-import { IAccessToken } from '../../src/session/model/SessionInterfaces';
-import { SignInInfoKeys } from '../../src/session/keys/SignInInfoKeys';
+import { SignInInfoKeys } from "../../src/session/keys/SignInInfoKeys";
 
 describe("Session", () => {
-    const config: CookieConfig = {
-        cookieName: "__SID",
-        cookieSecret: generateRandomBytesBase64(16),
-    };
-    it("should create a verified session and it's valid", () => {
-        const session = createNewVerifiedSession(config);
-        expect(session.verify().isRight()).equals(true);
-    });
-    it("Should return Just and the data inside it should be correct when trying to access a session", () => {
-        const session = createNewVerifiedSession(config);
+    const cookieSecret = generateRandomBytesBase64(16);
+
+    describe("saving extra data", () => {
         const key = "test";
         const obj = {
             a: "a",
             b: "b"
         };
-        session.saveExtraData(key, obj);
 
-        expect(session.getExtraData().isJust()).to.eq(true);
-        session.getExtraData().map(data => expect(data[key]).to.deep.equal(obj));
+        it("should should allow retrieving saved data in unchanged form", () => {
+            const session = createNewVerifiedSession(cookieSecret);
+            session.saveExtraData(key, obj);
 
-    });
-    it("should set the dirty flag to true after saving into the session", () => {
-        const session = createNewVerifiedSession(config);
-        const key = "test";
-        const obj = {
-            a: "a",
-            b: "b"
-        };
-        session.saveExtraData(key, obj);
+            expect(session.getExtraData().isJust()).to.eq(true);
+            session.getExtraData().map(data => expect(data[key]).to.deep.equal(obj));
+        });
 
-        expect(session.isDirty()).to.eq(true);
+        it("should set the dirty flag to true after saving extra data", () => {
+            const session = createNewVerifiedSession(cookieSecret);
+            session.saveExtraData(key, obj);
 
-    });
-    it("should validate a valid session cookie and return a verified session object", () => {
-
-        const response: Response = Substitute.for<Response>();
-
-        // Generate valid sessin id, secret and signature.
-        const mockSessionId: string = generateSessionId();
-        const expectedSignature: string = generateSignature(mockSessionId, config.cookieSecret);
-
-        const cookieValue: string = mockSessionId + expectedSignature;
-
-        // Attempt to validate Cookie
-        Cookie.validateCookieString(config.cookieSecret)(cookieValue)
-            .either(
-                failure => assert.fail(failure.errorFunction(response)),
-                cookie => assert.equal(cookie.value, cookieValue)
-            );
-
-
-    });
-    it("Should show failures if session is invalid", () => {
-        const session1 = createNewVerifiedSession(config);
-        session1.data[SessionKey.SignInInfo] = null;
-
-        expect(session1.verify().isLeft()).to.equal(true);
-
-        const session2 = createNewVerifiedSession(config);
-        const signInInfo = session2.data[SessionKey.SignInInfo];
-
-        signInInfo[SignInInfoKeys.AccessToken] = null;
-        session2.data[SessionKey.SignInInfo] = signInInfo;
-
-        expect(session2.verify().isLeft()).to.equal(true);
-
-        const session3 = createNewVerifiedSession(config);
-        session3.data[SessionKey.Expires] = Date.now();
-
-        expect(session3.verify().isLeft()).to.equal(true);
-
+            expect(session.isDirty()).to.eq(true);
+        });
     });
 
-    it("should marshall and unmarshall session object correctly", () => {
+    describe("session verification", () => {
+        it("should pass and create verified session", () => {
+            const session = createNewVerifiedSession(cookieSecret);
+            expect(session.verify().isRight()).equals(true);
+        });
 
-        const rawData = {
-            a: "a",
-            b: "b",
-            c: "c"
-        };
+        it("should fail when sign in info is missing", () => {
+            const session = createNewVerifiedSession(cookieSecret);
+            delete session.data[SessionKey.SignInInfo];
 
-        const parsedSession = new Session(rawData);
+            expect(session.verify().isLeft()).to.equal(true);
+        });
 
-        expect(parsedSession.data).to.not.equal(undefined);
-        assert.deepEqual(parsedSession.data as any, rawData);
+        it("should fail when access token is missing", () => {
+            const session = createNewVerifiedSession(cookieSecret);
+            delete session.data[SessionKey.SignInInfo][SignInInfoKeys.AccessToken];
+
+            expect(session.verify().isLeft()).to.equal(true);
+        });
+
+        it("should fail when expiration time is missing", () => {
+            const session = createNewVerifiedSession(cookieSecret);
+            delete session.data[SessionKey.Expires];
+
+            expect(session.verify().isLeft()).to.equal(true);
+        });
+
+        it("should fail when expiration time elapsed", () => {
+            const session = createNewVerifiedSession(cookieSecret);
+            session.data[SessionKey.Expires] = 1;
+
+            expect(session.verify().isLeft()).to.equal(true);
+        });
     });
-
 });
