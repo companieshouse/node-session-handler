@@ -52,8 +52,6 @@ const rawData: any = {
     }
 };
 
-
-
 describe("Session Middleware", () => {
     const config: CookieConfig = {
         cookieName: "__SID",
@@ -71,7 +69,7 @@ describe("Session Middleware", () => {
 
         expect(verifiedSession.verify().isRight()).to.eq(true);
 
-        const cookie = Cookie.asCookie(verifiedSession);
+        const cookie = Cookie.createFrom(verifiedSession);
 
         redis.get(verifiedSession.data[SessionKey.Id]).returns(Promise.resolve(serializedSession));
         sessionStore.load(Arg.any()).mimicks(realSessionStore.load);

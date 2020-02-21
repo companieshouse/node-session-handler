@@ -51,7 +51,7 @@ describe("Store", () => {
             .run();
 
 
-        const validCookie = Cookie.newCookie(config.cookieSecret);
+        const validCookie = Cookie.create(config.cookieSecret);
 
         const valueFromStore = await store.load(validCookie).run();
 

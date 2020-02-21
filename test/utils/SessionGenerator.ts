@@ -1,4 +1,3 @@
-import { Encoding } from "../../src/encoding/Encoding";
 import { CookieConfig } from "../../src/config/CookieConfig";
 import { VerifiedSession, Session } from "../../src/session/model/Session";
 import { Cookie } from "../../src/session/model/Cookie";
@@ -33,30 +32,11 @@ export function getValidSessionObject(config: CookieConfig): VerifiedSession {
         .orDefaultLazy(() => ({ } as VerifiedSession));
 }
 
-export function generateValidSessionCookie(config: CookieConfig): string {
-    return Encoding.encode(new Session(getValidSessionDataJson(config)));
-}
-
-export function unmarshall(session: Session): any {
-    const obj: any = {};
-        const thisObj: any = session.data;
-        obj[SessionKey.Id] = session.data[SessionKey.Id];
-        const keys = Object.keys(thisObj).sort()
-        for (const i in keys) {
-            if (thisObj.hasOwnProperty(keys[i])) {
-                obj[keys[i]] = thisObj[keys[i]];
-
-            }
-        }
-
-        return obj;
-}
-
 export function createNewVerifiedSession(
     config: CookieConfig,
     extraData?: any): VerifiedSession {
 
-    const newCookie: Cookie = Cookie.newCookie(config.cookieSecret);
+    const newCookie: Cookie = Cookie.create(config.cookieSecret);
 
     const accessToken = createDefaultAccessToken(3600);
 

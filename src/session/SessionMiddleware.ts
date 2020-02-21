@@ -59,7 +59,7 @@ function sessionRequestHandler(config: CookieConfig, sessionStore: SessionStore)
                 },
                 async (verifiedSession: VerifiedSession) => {
                     request.session = Just(verifiedSession);
-                    response.cookie(config.cookieName, Cookie.asCookie(verifiedSession).value);
+                    response.cookie(config.cookieName, Cookie.createFrom(verifiedSession).value);
                     return await Promise.resolve();
                 }
             );
