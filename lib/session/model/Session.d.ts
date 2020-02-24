@@ -3,9 +3,10 @@ import { Failure } from "../../error/FailureType";
 import { SessionKey } from "../keys/SessionKey";
 import { ISession, ISessionValue } from "./SessionInterfaces";
 export declare class Session {
-    private isDirty;
+    private dirty;
     data: ISession;
     constructor(data?: any);
+    isDirty(): boolean;
     getValue: <T = ISessionValue>(key: SessionKey) => Maybe<T>;
     getExtraData: () => Maybe<any>;
     saveExtraData: <T>(key: string, value: T) => Session;

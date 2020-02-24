@@ -6,7 +6,7 @@ export declare class Cookie {
     readonly signature: string;
     private constructor();
     get value(): string;
-    static asCookie: (session: VerifiedSession) => Cookie;
-    static newCookie(sessionSecret: string): Cookie;
-    static validateCookieString: (sessionSecret: string) => (cookieString: string) => Either<Failure, Cookie>;
+    static create(cookieSecret: string): Cookie;
+    static createFrom(session: VerifiedSession): Cookie;
+    static validateCookieString: (cookieSecret: string) => (cookieString: string) => Either<Failure, Cookie>;
 }
