@@ -22,7 +22,6 @@ export class Session {
             this.data = data;
             this.dirty = false;
         }
-
     }
 
     public isDirty(): boolean {
