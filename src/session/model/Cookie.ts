@@ -9,15 +9,15 @@ import {
 import { SessionLengthError, SessionSecretNotSet, SignatureCheckError } from "../../error/ErrorFunctions";
 import { CookieConstants } from "../../utils/CookieConstants";
 
-const validateCookieSignature = (sessionSecret: string) => (cookieString: string): Either<Failure, Tuple<string, string>> => {
-    if (!sessionSecret) {
+const validateCookieSignature = (cookieSecret: string) => (cookieString: string): Either<Failure, Tuple<string, string>> => {
+    if (!cookieSecret) {
         return Left(Failure(SessionSecretNotSet));
     }
 
     const id = extractSessionId(cookieString);
     const sig = extractSignature(cookieString);
 
-    const expectedSig = generateSignature(id, sessionSecret);
+    const expectedSig = generateSignature(id, cookieSecret);
 
     if (sig !== expectedSig) {
         return Left(Failure(SignatureCheckError(expectedSig, sig)));
@@ -57,9 +57,9 @@ export class Cookie {
         return this.sessionId + this.signature;
     }
 
-    public static create(sessionSecret: string): Cookie {
+    public static create(cookieSecret: string): Cookie {
         const sessionId = generateSessionId();
-        const signature = generateSignature(sessionId, sessionSecret);
+        const signature = generateSignature(sessionId, cookieSecret);
         return new Cookie(sessionId, signature);
     }
 
@@ -67,10 +67,10 @@ export class Cookie {
         return new Cookie(session.data[SessionKey.Id], session.data[SessionKey.ClientSig]);
     };
 
-    public static validateCookieString = (sessionSecret: string) => (cookieString: string): Either<Failure, Cookie> => {
+    public static validateCookieString = (cookieSecret: string) => (cookieString: string): Either<Failure, Cookie> => {
         return Either.of<Failure, string>(cookieString)
             .chain(validateSessionCookieLength)
-            .chain(validateCookieSignature(sessionSecret))
+            .chain(validateCookieSignature(cookieSecret))
             .map(tuple => new Cookie(tuple[0], tuple[1]));
     };
 
