@@ -37,7 +37,6 @@ function sessionRequestHandler(config: CookieConfig, sessionStore: SessionStore)
             const validateCookieString = wrapEitherFunction(
                 Cookie.validateCookieString(config.cookieSecret));
 
-
             const loadSession: Either<Failure, VerifiedSession> =
                 await wrapValue<Failure, string>(sessionCookie)
                     .chain<Cookie>(validateCookieString)
@@ -53,23 +52,19 @@ function sessionRequestHandler(config: CookieConfig, sessionStore: SessionStore)
 
             await loadSession.either(
                 async (failure: Failure) => {
-                    // request.session = undefined
                     request.session = Nothing;
                     await handleFailure(failure).run();
                 },
                 async (verifiedSession: VerifiedSession) => {
                     request.session = Just(verifiedSession);
-                    response.cookie(config.cookieName, Cookie.createFrom(verifiedSession).value);
                     return await Promise.resolve();
                 }
             );
 
         } else {
-            // request.session = undefined
             request.session = Nothing;
         }
 
         return next();
     };
 }
-
