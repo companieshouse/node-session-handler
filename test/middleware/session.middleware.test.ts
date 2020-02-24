@@ -28,6 +28,22 @@ describe("Session Middleware", () => {
     };
     const nextFunction = Substitute.for<NextFunction>();
 
+    describe("middleware initialisation", () => {
+        it("should fail when cookie name is missing", () => {
+            [undefined, null, ""].forEach(cookieName => {
+                expect(() => SessionMiddleware({ ...config, cookieName }, undefined))
+                    .to.throw("Cookie name must be defined")
+            });
+        });
+
+        it("should fail when cookie secret is missing or too short", () => {
+            [undefined, null, "", "12345678901234567890123"].forEach(cookieSecret => {
+                expect(() => SessionMiddleware({ ...config, cookieSecret }, undefined))
+                    .to.throw("Cookie secret must be at least 24 chars long")
+            });
+        });
+    });
+
     describe("when cookie is not present", () => {
         const request = { cookies: {} } as express.Request;
 

@@ -14,13 +14,11 @@ export function SessionMiddleware(config: CookieConfig, sessionStore: SessionSto
 }
 
 function initializeRequestHandler(config: CookieConfig, store: SessionStore): RequestHandler {
-
-    if (!config.cookieSecret) {
-        throw Error("Must provide secret of at least 16 bytes long encoded in base 64 string");
+    if (!config.cookieName) {
+        throw Error("Cookie name must be defined");
     }
-
-    if (config.cookieSecret.length < 24) {
-        throw Error("Secret must be at least 16 bytes (24 characters) long  encoded in base 64 string");
+    if (!config.cookieSecret || config.cookieSecret.length < 24) {
+        throw Error("Cookie secret must be at least 24 chars long");
     }
 
     return expressAsyncHandler(sessionRequestHandler(config, store));
