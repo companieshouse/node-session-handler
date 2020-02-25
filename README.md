@@ -1,6 +1,6 @@
 # node-session-handler
 
-Module provides a way of handling Companies House sessions that have certain structure and use certain encoding.   
+Module provides a way of handling Companies House sessions.
 
 Module offers the following artifacts:
 
