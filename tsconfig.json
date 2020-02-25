@@ -9,18 +9,19 @@
         "pretty": true,
         "emitDecoratorMetadata": true,
         "experimentalDecorators": true,
-        "strictNullChecks": true,
+        "strictNullChecks": false,
         "sourceMap": true,
         "typeRoots": [
-            "src/custom.d.ts",
+            "src/index.ts",
+            "src/global.d.ts",
             "node_modules/@types"
         ]
     },
     "include": [
-        "./src"
+        "./src", "src/index.ts"
     ],
     "exclude": [
         "node_modules",
-        "**/__tests__/*"
+        "test"
     ]
 }

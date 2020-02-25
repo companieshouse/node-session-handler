@@ -1,44 +1,28 @@
-"use strict";
+import msgpack5 from "msgpack5";
 
-import msgpack from "msgpack";
-import crypto from "crypto";
-import { promisify } from "util";
-const randomBytesAsync = promisify(crypto.randomBytes);
+export class Encoding {
 
-class Encoding {
-
-    static decodeMsgpack(base: any) {
-        return msgpack.unpack(base);
-    }
-
-    static encodeMsgpack(base: any) {
-        return msgpack.pack(base);
-    }
-
-    static decodeBase64(base: any) {
-        return Buffer.from(base, "base64");
-    }
-
-    static encodeBase64(base: any) {
-        return base.toString("base64");
-    }
-
-    static generateSha1SumBase64(base: any) {
-
-        return crypto
-            .createHash("sha1")
-            .update(base)
-            .digest("base64");
-    }
-
-    static async generateRandomBytesBase64(numBytes: number) {
-
-        try {
-            return (await randomBytesAsync(numBytes)).toString("base64");
-        } catch (error) {
-            throw new Error(error);
+    public static encode = <T>(value: T): string => {
+        if (!value) {
+            throw new Error("Value to encode must be defined");
         }
-    }
-}
+        return Encoding.encodeMsgpack(value);
+    };
 
-export = Encoding;
+    private static encodeMsgpack = (data: any): string => {
+        return msgpack5().encode(JSON.stringify(data)).toString("base64");
+    };
+
+    public static decode = (value: string): any => {
+        if (!value) {
+            throw new Error("Value to decode must be defined");
+        }
+        return Encoding.decodeMsgpack(value);
+    };
+
+    private static decodeMsgpack = (data: any): any => {
+        const buffer = Buffer.from(data, "base64");
+        return JSON.parse(msgpack5().decode(buffer));
+    };
+
+}

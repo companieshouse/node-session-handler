@@ -1,45 +1,50 @@
 {
-  "name": "ch-session",
+  "name": "ch-node-session-handler",
   "version": "0.0.1",
-  "description": "PoC for session handler in Node",
+  "description": "Node.js session handler for Companies House",
   "main": "./lib/index.js",
+  "types": "./lib/index.d.ts",
   "files": [
-    "lib/**/*"
+    "lib",
+    "src"
   ],
   "scripts": {
-    "test": "mocha --recursive",
-    "test:watch": "mocha --recursive --reporter nyan --watch",
-    "lint": "eslint lib test",
-    "test-nyan": "mocha --recursive --reporter nyan",
-    "build": "tsc"
+    "build": "tsc",
+    "lint": "tslint --project ./",
+    "test": "mocha test/**/*.test.ts",
+    "preversion": "npm run lint && npm run test",
+    "version": "rm -rf lib && npm run build && git add -A lib",
+    "postversion": "git push && git push --tags"
   },
   "repository": {
     "type": "git",
     "url": "git+https://github.com/companieshouse/poc-node-session-handler.git"
   },
-  "author": "drosser@companieshouse.gov.uk",
   "license": "MIT",
   "bugs": {
     "url": "https://github.com/companieshouse/poc-node-session-handler/issues"
   },
   "homepage": "https://github.com/companieshouse/poc-node-session-handler#readme",
   "dependencies": {
-    "cookie": "~0.4.0",
-    "ioredis": "~4.14.1",
-    "moment": "~2.24.0",
-    "msgpack": "~1.0.3"
+    "crypto": "^1.0.1",
+    "express-async-handler": "^1.1.4",
+    "ioredis": "^4.14.1",
+    "msgpack5": "^1.0.3",
+    "purify-ts": "^0.14.1"
   },
   "devDependencies": {
-    "@types/cookie": "~0.3.3",
+    "@fluffy-spoon/substitute": "^1.107.0",
+    "@types/chai": "^4.2.9",
     "@types/express": "~4.17.2",
-    "@types/ioredis": "~4.14.7",
-    "@types/msgpack": "0.0.30",
-    "ch-logger": "file:../poc-js-logger",
+    "@types/ioredis": "^4.14.7",
+    "@types/mocha": "^7.0.1",
+    "@types/msgpack5": "^3.4.1",
     "chai": "~4.2.0",
     "chai-as-promised": "~7.1.1",
-    "eslint": "~6.8.0",
     "mocha": "~6.2.2",
     "sinon": "~7.5.0",
+    "ts-node": "^8.6.2",
+    "tslint": "^6.0.0",
     "typescript": "~3.7.5"
   }
 }
