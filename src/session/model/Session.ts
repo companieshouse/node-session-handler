@@ -93,10 +93,13 @@ export class VerifiedSession extends Session {
                 Failure(ExpiresMissingError)
             );
         }
+        // This time corresponds to the time precisison given by the accounts service in millis.
+        // 1sec = 1000ms;
+        const dateNowMillis = Number(Date.now().toPrecision(10));
 
-        if (expires <= Date.now()) {
+        if (expires <= dateNowMillis) {
             return Left(
-                Failure(SessionExpiredError)
+                Failure(SessionExpiredError(`Expires: ${expires}`, `Actual: ${dateNowMillis}`))
             );
         }
 

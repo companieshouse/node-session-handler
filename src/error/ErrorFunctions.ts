@@ -37,7 +37,8 @@ export const SignatureCheckError =
     (expected: string, actual: string) =>
         LogOnly(logDifference(expected, actual))(ErrorEnum._signatureCheckError);
 
-export const SessionExpiredError: ResponseHandler = LogOnly(log)(ErrorEnum._sessionExpiredError);
+export const SessionExpiredError = (expected: string, actual: string): ResponseHandler =>
+    LogOnly(logDifference(expected, actual))(ErrorEnum._sessionExpiredError);
 
 export const SessionSecretNotSet: ResponseHandler =
     (_: Response) => {

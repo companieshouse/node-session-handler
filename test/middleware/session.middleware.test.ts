@@ -59,7 +59,7 @@ describe("Session Middleware", () => {
 
     describe("when cookie is present", () => {
         const session: VerifiedSession = getValidSessionObject(config);
-        const cookie: Cookie = Cookie.createFrom(session);
+        const cookie: Cookie = Cookie.representationOf(session, config.cookieSecret);
         const request = { cookies: { [config.cookieName]: cookie.value } } as express.Request;
         const cookieArg = () => {
             return Arg.is(_ => _.value === cookie.value);

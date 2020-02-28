@@ -1,8 +1,11 @@
 import { expect } from "chai";
 import { Encoding } from "../../src/encoding/Encoding";
+import { createNewVerifiedSession } from "../utils/SessionGenerator";
+import { generateRandomBytesBase64 } from "../../src/utils/CookieUtils";
 
 const decodedData = { name: "tester", age: 21 };
-const encodedData = "unsibmFtZSI6InRlc3RlciIsImFnZSI6MjF9";
+const encodedData = "gqRuYW1lpnRlc3RlcqNhZ2UV";
+const session = createNewVerifiedSession(generateRandomBytesBase64(16))
 
 describe("Coding and decoding", () => {
     describe("encode", () => {
@@ -28,6 +31,31 @@ describe("Coding and decoding", () => {
     it("should encode and decode to the same data", () => {
         const encoded = Encoding.encode(decodedData);
         const decoded = Encoding.decode(encoded);
+
         expect(decoded).to.be.deep.equal(decodedData)
+
     });
+
+    it("should encode and decode data with nested objects", () => {
+
+        interface Car {
+            wheels: number
+        }
+
+        interface SomeInterface {
+            car: Car
+        }
+
+        session.saveExtraData("appeals", {
+            car: {
+                wheels: 4
+            }
+        } as SomeInterface)
+
+        const encodedSession = Encoding.encode(session.data);
+        const decodedSession = Encoding.decode(encodedSession);
+
+        expect(decodedSession).to.be.deep.equal(session.data);
+
+    })
 });

@@ -60,9 +60,18 @@ describe("Session", () => {
 
         it("should fail when expiration time elapsed", () => {
             const session = createNewVerifiedSession(cookieSecret);
-            session.data[SessionKey.Expires] = 1;
+            const accountsPrecisionTime = Number(Date.now().toPrecision(10)) - 1;
+            session.data[SessionKey.Expires] = accountsPrecisionTime;
 
             expect(session.verify().isLeft()).to.equal(true);
+        });
+
+        it("should succeed when expiration time is in the future", () => {
+            const session = createNewVerifiedSession(cookieSecret);
+            const accountsPrecisionTime = Number(Date.now().toPrecision(10)) + 1000;
+            session.data[SessionKey.Expires] = accountsPrecisionTime;
+
+            expect(session.verify().isRight()).to.equal(true);
         });
     });
 });
