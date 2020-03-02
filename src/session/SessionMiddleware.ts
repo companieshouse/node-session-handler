@@ -33,7 +33,8 @@ function sessionRequestHandler(config: CookieConfig, sessionStore: SessionStore)
         if (sessionCookie) {
 
             console.log("Got a session cookie.");
-            console.log(sessionCookie);
+            console.log(`REQUEST: ${request.url}`)
+            console.log(`COOKIE: ${sessionCookie}`);
 
             const validateCookieString = wrapEitherFunction(
                 Cookie.validateCookieString(config.cookieSecret));
@@ -65,6 +66,7 @@ function sessionRequestHandler(config: CookieConfig, sessionStore: SessionStore)
             );
 
         } else {
+            console.log(`REQUEST: ${request.url}`)
             console.log("No Session cookie.");
             request.session = Nothing;
         }
