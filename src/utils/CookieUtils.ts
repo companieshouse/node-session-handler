@@ -10,10 +10,18 @@ export function generateRandomBytesBase64(numBytes: number): string {
 }
 
 export function generateSignature(id: string, secret: string): string {
-    const adjustedId = id.substr(0, CookieConstants._idOctets);
+    const adjustedId = extractSessionId(id);
     const value = crypto
         .createHash("sha1")
         .update(adjustedId + secret)
         .digest("base64");
-    return value.substr(0, CookieConstants._signatureLength);
+    return value.substr(0, value.indexOf("="));
+}
+
+export function extractSessionId(sessionCookie: string): string {
+    return sessionCookie.substring(0, CookieConstants._signatureStart);
+}
+
+export function extractSignature(sessionCookie: string): string {
+    return sessionCookie.substring(CookieConstants._signatureStart);
 }

@@ -32,6 +32,9 @@ function sessionRequestHandler(config: CookieConfig, sessionStore: SessionStore)
 
         if (sessionCookie) {
 
+            console.log("Got a session cookie.");
+            console.log(sessionCookie);
+
             const validateCookieString = wrapEitherFunction(
                 Cookie.validateCookieString(config.cookieSecret));
 
@@ -43,23 +46,26 @@ function sessionRequestHandler(config: CookieConfig, sessionStore: SessionStore)
                     .chain<VerifiedSession>(session => wrapEither(session.verify()))
                     .run();
 
-            const handleFailure = (failure: Failure) => validateCookieString(sessionCookie)
-                .chain(sessionStore.delete)
-                .map(_ => response.clearCookie(config.cookieName))
-                .map(_ => failure.errorFunction(response));
-
             await loadSession.either(
                 async (failure: Failure) => {
+
+                    await validateCookieString(sessionCookie)
+                        .chain(sessionStore.delete)
+                        .map(_ => response.clearCookie(config.cookieName)).run();
+
                     request.session = Nothing;
-                    await handleFailure(failure).run();
+                    failure.errorFunction(response);
+
                 },
                 async (verifiedSession: VerifiedSession) => {
+                    console.log("Session verified");
                     request.session = Just(verifiedSession);
                     return await Promise.resolve();
                 }
             );
 
         } else {
+            console.log("No Session cookie.");
             request.session = Nothing;
         }
 
