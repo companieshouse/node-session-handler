@@ -60,7 +60,7 @@ describe("Session", () => {
 
         it("should fail when expiration time elapsed", () => {
             const session = createNewVerifiedSession(cookieSecret);
-            const accountsPrecisionTime = Number(Date.now().toPrecision(10)) - 1;
+            const accountsPrecisionTime = Number(Date.now().toPrecision(10)) / 1000 - 1;
             session.data[SessionKey.Expires] = accountsPrecisionTime;
 
             expect(session.verify().isLeft()).to.equal(true);
