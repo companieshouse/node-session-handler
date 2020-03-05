@@ -1,4 +1,4 @@
-import { Either, Left, Right, Maybe } from "purify-ts";
+import { Either, Left, Right, Maybe, Just } from "purify-ts";
 import {
     AccessTokenMissingError,
     ExpiresMissingError,
@@ -18,9 +18,13 @@ export class Session {
     public data: ISession = {};
 
     public constructor(data?: any) {
-        if (data) {
-            this.data = data;
-            this.dirty = false;
+
+        this.dirty = false;
+
+        data ? this.data = data : this.data = {};
+
+        if (!data[SessionKey.ExtraData]) {
+            data[SessionKey.ExtraData] = {};
         }
     }
 
@@ -32,13 +36,10 @@ export class Session {
         return Maybe.fromNullable(this.data[key]);
     };
 
-    public getExtraData = (): Maybe<any> => Maybe.fromNullable(this.data[SessionKey.ExtraData]);
+    public getExtraData = <T>(key: string): Maybe<T> => Maybe.fromNullable(this.data[SessionKey.ExtraData][key]);
 
-    public saveExtraData = <T>(key: string, value: T): Session => {
+    public saveExtraData = <T>(key: string, value: T): T => {
         this.dirty = true;
-        if (!this.data[SessionKey.ExtraData]) {
-            this.data[SessionKey.ExtraData] = {};
-        }
 
         const extraData = this.data[SessionKey.ExtraData];
 
@@ -46,8 +47,11 @@ export class Session {
 
         this.data[SessionKey.ExtraData] = extraData;
 
-        return this;
+        return this.data[SessionKey.ExtraData];
     };
+
+    public getExtraDataOrSet = <T>(key: string, defaultVal: T): Maybe<T> =>
+        this.getExtraData<T>(key).alt(Maybe.of(this.saveExtraData(key, defaultVal)));
 
     public verify = (): Either<Failure, VerifiedSession> => {
         return VerifiedSession.verifySession(this);

@@ -19,8 +19,8 @@ describe("Session", () => {
             const session = createNewVerifiedSession(cookieSecret);
             session.saveExtraData(key, obj);
 
-            expect(session.getExtraData().isJust()).to.eq(true);
-            session.getExtraData().map(data => expect(data[key]).to.deep.equal(obj));
+            expect(session.getExtraData(key).isJust()).to.eq(true);
+            session.getExtraData(key).map(data => expect(data).to.deep.equal(obj));
         });
 
         it("should set the dirty flag to true after saving extra data", () => {
