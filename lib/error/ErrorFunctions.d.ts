@@ -21,7 +21,7 @@ export declare type GeneralErrorHandlerFactory = (errorEnum: ErrorEnum) => (onEr
 export declare const LogOnly: (logger: Logger) => (errorEnum: ErrorEnum) => ResponseHandler;
 export declare const SessionLengthError: (expected: number, actual: number) => ResponseHandler;
 export declare const SignatureCheckError: (expected: string, actual: string) => ResponseHandler;
-export declare const SessionExpiredError: ResponseHandler;
+export declare const SessionExpiredError: (expected: string, actual: string) => ResponseHandler;
 export declare const SessionSecretNotSet: ResponseHandler;
 export declare const PromiseError: (callStack: any) => ResponseHandler;
 export declare const SessionParseError: (object: any) => ResponseHandler;
