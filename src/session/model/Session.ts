@@ -19,10 +19,13 @@ export class Session {
 
     public constructor(data?: any) {
 
-        this.dirty = false;
+        this.setDirty(true);
+        data ? this.setSessionData(data) : this.setSessionData({});
 
-        data ? this.data = data : this.data = {};
+    }
 
+    public setSessionData(data: ISession): void {
+        this.data = data;
         if (!data[SessionKey.ExtraData]) {
             data[SessionKey.ExtraData] = {};
         }
@@ -32,26 +35,25 @@ export class Session {
         return this.dirty;
     }
 
-    public getValue = <T = ISessionValue>(key: SessionKey): Maybe<T> => {
-        return Maybe.fromNullable(this.data[key]);
-    };
+    public setDirty(dirty: boolean): void {
+        this.dirty = dirty;
+    }
 
-    public getExtraData = <T>(key: string): Maybe<T> => Maybe.fromNullable(this.data[SessionKey.ExtraData][key]);
+    public get<T = ISessionValue>(key: SessionKey): T | undefined {
+        return this.data[key];
+    }
 
-    public saveExtraData = <T>(key: string, value: T): T => {
-        this.dirty = true;
+    public getExtraData<T>(key: string): T | undefined {
+        return this.data[SessionKey.ExtraData][key];
+    }
 
-        const extraData = this.data[SessionKey.ExtraData];
+    public saveExtraData<T>(key: string, val: T): void {
+        this.data[SessionKey.ExtraData][key] = val;
+    }
 
-        extraData[key] = value;
-
-        this.data[SessionKey.ExtraData] = extraData;
-
-        return this.data[SessionKey.ExtraData];
-    };
-
-    public getExtraDataOrSet = <T>(key: string, defaultVal: T): Maybe<T> =>
-        this.getExtraData<T>(key).alt(Maybe.of(this.saveExtraData(key, defaultVal)));
+    public deleteExtraData(key: string): boolean {
+        return delete this.data[SessionKey.ExtraData][key];
+    }
 
     public verify = (): Either<Failure, VerifiedSession> => {
         return VerifiedSession.verifySession(this);
