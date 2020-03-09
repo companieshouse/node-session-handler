@@ -1,4 +1,5 @@
-import { Response } from "express";
+import { Request } from "express";
+import ApplicationLogger from "ch-node-logging/lib/ApplicationLogger";
 export declare enum ErrorEnum {
     _sessionLengthError = "Encrypted session token not long enough.",
     _signatureCheckError = "Expected signature does not equal signature provided.",
@@ -12,16 +13,18 @@ export declare enum ErrorEnum {
     _noDataRetrievedError = "No data retrieved from Redis",
     _sessionParseError = "Failed to parse session object"
 }
+export declare const NAMESPACE = "ch-node-session-handler";
+export declare const appLogger: () => ApplicationLogger;
 declare type Logger = (m: string) => void;
 export declare const log: Logger;
-export declare const logDifference: <A>(expected: A, actual: A) => Logger;
-export declare type ResponseHandler = (response: Response) => void;
-export declare type ResponseErrorHandlerFactory = (logger: Logger) => (response: Response) => (errorEnum: ErrorEnum) => void;
-export declare type GeneralErrorHandlerFactory = (errorEnum: ErrorEnum) => (onError: ResponseErrorHandlerFactory) => ResponseHandler;
-export declare const LogOnly: (logger: Logger) => (errorEnum: ErrorEnum) => ResponseHandler;
+export declare const logDifference: (baseLogger: Logger) => <A>(expected: A, actual: A) => Logger;
+export declare type ResponseHandler = (request: Request) => void;
+export declare type ResponseErrorHandlerFactory = (logger: Logger) => (request: Request) => (errorEnum: ErrorEnum) => void;
+export declare const LogOnlyAdapter: (logger: Logger) => (errorEnum: ErrorEnum) => ResponseHandler;
+export declare const LogRequestAdapter: (logger: Logger, m?: string) => (errorEnum: ErrorEnum) => ResponseHandler;
 export declare const SessionLengthError: (expected: number, actual: number) => ResponseHandler;
 export declare const SignatureCheckError: (expected: string, actual: string) => ResponseHandler;
-export declare const SessionExpiredError: ResponseHandler;
+export declare const SessionExpiredError: (expected: string, actual: string) => ResponseHandler;
 export declare const SessionSecretNotSet: ResponseHandler;
 export declare const PromiseError: (callStack: any) => ResponseHandler;
 export declare const SessionParseError: (object: any) => ResponseHandler;

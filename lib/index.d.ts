@@ -5,4 +5,11 @@ import { SessionMiddleware } from "./session/SessionMiddleware";
 import { CookieConfig } from "./config/CookieConfig";
 import * as EitherUtils from "./utils/EitherAsyncUtils";
 import { Maybe, Either } from "purify-ts";
+declare global {
+    namespace Express {
+        interface Request {
+            session: Maybe<Session>;
+        }
+    }
+}
 export { Session, VerifiedSession, ISession, SessionStore, SessionMiddleware, CookieConfig, EitherUtils, Maybe, Either };

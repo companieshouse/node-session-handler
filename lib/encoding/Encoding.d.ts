@@ -1,6 +1,6 @@
 export declare class Encoding {
-    static encode: <T>(value: T) => string;
+    static encode: (data: any) => string;
     private static encodeMsgpack;
-    static decode: (value: string) => any;
+    static decode: (data: string) => any;
     private static decodeMsgpack;
 }

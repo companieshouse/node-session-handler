@@ -34,6 +34,10 @@ function sessionRequestHandler(config: CookieConfig, sessionStore: SessionStore)
 
         if (sessionCookie) {
 
+            console.log("Got a session cookie.");
+            console.log(`REQUEST: ${request.url}`)
+            console.log(`COOKIE: ${sessionCookie}`);
+
             const validateCookieString = wrapEitherFunction(
                 Cookie.validateCookieString(config.cookieSecret));
 
@@ -54,7 +58,9 @@ function sessionRequestHandler(config: CookieConfig, sessionStore: SessionStore)
                 async (failure: Failure) => {
                     appLogger().info(`Error occurred in session load sequence. Handling failure...`);
                     request.session = Nothing;
+                    failure.errorFunction(request);
                     await handleFailure(failure).run();
+
                 },
                 async (verifiedSession: VerifiedSession) => {
                     appLogger().info(`Session loaded successfully!`)
@@ -64,6 +70,8 @@ function sessionRequestHandler(config: CookieConfig, sessionStore: SessionStore)
             );
 
         } else {
+            console.log(`REQUEST: ${request.url}`)
+            console.log("No Session cookie.");
             request.session = Nothing;
         }
 

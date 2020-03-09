@@ -1,6 +1,6 @@
 import { Request } from "express";
 import { createLogger } from "ch-node-logging";
-import ApplicationLogger = require('ch-node-logging/lib/ApplicationLogger');
+import ApplicationLogger from "ch-node-logging/lib/ApplicationLogger";
 
 export enum ErrorEnum {
     _sessionLengthError = "Encrypted session token not long enough.",
@@ -24,7 +24,7 @@ export const appLogger = () => {
     if (!mAppLogger) {
         mAppLogger = createLogger(NAMESPACE);
     }
-    return mAppLogger
+    return mAppLogger;
 };
 
 type Logger = (m: string) => void;
@@ -56,12 +56,14 @@ export const SignatureCheckError =
     (expected: string, actual: string) =>
         LogRequestAdapter(logDifference(appLogger().error)(expected, actual))(ErrorEnum._signatureCheckError);
 
-export const SessionExpiredError: ResponseHandler = LogRequestAdapter(appLogger().error)(ErrorEnum._sessionExpiredError);
+export const SessionExpiredError =
+    (expected: string, actual: string) =>
+        LogRequestAdapter(logDifference(appLogger().error)(expected, actual))(ErrorEnum._sessionExpiredError);
 
-export const SessionSecretNotSet: ResponseHandler =
-    (_: Request) => {
-        appLogger().error(ErrorEnum._sessionSecretNotSet); throw Error(ErrorEnum._sessionSecretNotSet);
-    };
+export const SessionSecretNotSet: ResponseHandler = (_: Request) => {
+    LogOnlyAdapter(appLogger().error)(ErrorEnum._sessionSecretNotSet);
+    throw Error(ErrorEnum._sessionSecretNotSet);
+};
 
 export const PromiseError =
     (callStack: any): ResponseHandler =>

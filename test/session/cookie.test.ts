@@ -10,14 +10,13 @@ describe("Cookie", () => {
 
     describe("cookie creation", () => {
         it("should build cookie from session data", () => {
-            const sessionId = "id";
-            const signature = "signature";
+            const sessionId = generateSessionId();
+            const signature = generateSignature(sessionId, cookieSecret);
 
             const session: VerifiedSession = createNewVerifiedSession(cookieSecret);
             session.data[SessionKey.Id] = sessionId;
-            session.data[SessionKey.ClientSig] = signature;
 
-            const cookie = Cookie.createFrom(session);
+            const cookie = Cookie.representationOf(session, cookieSecret);
             expect(cookie.sessionId).to.be.equal(sessionId);
             expect(cookie.signature).to.be.equal(signature);
         })
