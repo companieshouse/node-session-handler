@@ -71,7 +71,7 @@ export class Cookie {
         return Either.of<Failure, string>(cookieString)
             .chain(validateSessionCookieLength)
             .chain(validateCookieSignature(cookieSecret))
-            .map(tuple => new Cookie(tuple[0], tuple[1]));
+            .map(tuple => new Cookie(tuple[0], tuple[1]))
     };
 
 }

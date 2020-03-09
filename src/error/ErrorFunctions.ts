@@ -1,4 +1,6 @@
-import { Response } from "express";
+import { Request } from "express";
+import { createLogger } from "ch-node-logging";
+import ApplicationLogger = require('ch-node-logging/lib/ApplicationLogger');
 
 export enum ErrorEnum {
     _sessionLengthError = "Encrypted session token not long enough.",
@@ -14,55 +16,69 @@ export enum ErrorEnum {
     _sessionParseError = "Failed to parse session object"
 }
 
+export const NAMESPACE = "ch-node-session-handler";
+
+let mAppLogger: ApplicationLogger;
+
+export const appLogger = () => {
+    if (!mAppLogger) {
+        mAppLogger = createLogger(NAMESPACE);
+    }
+    return mAppLogger
+};
+
 type Logger = (m: string) => void;
 export const log: Logger = (message: string) => console.log(message);
-export const logDifference = <A>(expected: A, actual: A): Logger => (message: string) =>
-    log(`${message}\nExpected: ${expected}\nActual: ${actual}`);
+export const logDifference = (baseLogger: Logger) => <A>(expected: A, actual: A): Logger => (message: string) =>
+    baseLogger(`${message}\nExpected: ${expected}\nActual: ${actual}`);
 
-export type ResponseHandler = (response: Response) => void;
-export type ResponseErrorHandlerFactory = (logger: Logger) => (response: Response) => (errorEnum: ErrorEnum) => void;
-export type GeneralErrorHandlerFactory =
-    (errorEnum: ErrorEnum) => (onError: ResponseErrorHandlerFactory) => ResponseHandler;
+export type ResponseHandler = (request: Request) => void;
+export type ResponseErrorHandlerFactory = (logger: Logger) => (request: Request) => (errorEnum: ErrorEnum) => void;
 
-export const LogOnly = (logger: Logger) => (errorEnum: ErrorEnum): ResponseHandler => {
-    return (response: Response) => {
+export const LogOnlyAdapter = (logger: Logger) => (errorEnum: ErrorEnum): ResponseHandler => {
+    return (response: Request) => {
         logger(errorEnum);
+    };
+};
+
+export const LogRequestAdapter = (logger: Logger, m?: string) => (errorEnum: ErrorEnum): ResponseHandler => {
+    return (request: Request) => {
+        appLogger().errorRequest(request, errorEnum);
+        logger(m);
+
     };
 };
 export const SessionLengthError =
     (expected: number, actual: number) =>
-        LogOnly(logDifference(expected, actual))(ErrorEnum._sessionLengthError);
+        LogRequestAdapter(logDifference(appLogger().error)(expected, actual))(ErrorEnum._sessionLengthError);
 
 export const SignatureCheckError =
     (expected: string, actual: string) =>
-        LogOnly(logDifference(expected, actual))(ErrorEnum._signatureCheckError);
+        LogRequestAdapter(logDifference(appLogger().error)(expected, actual))(ErrorEnum._signatureCheckError);
 
-export const SessionExpiredError: ResponseHandler = LogOnly(log)(ErrorEnum._sessionExpiredError);
+export const SessionExpiredError: ResponseHandler = LogRequestAdapter(appLogger().error)(ErrorEnum._sessionExpiredError);
 
 export const SessionSecretNotSet: ResponseHandler =
-    (_: Response) => {
-        log(ErrorEnum._sessionSecretNotSet); throw Error(ErrorEnum._sessionSecretNotSet);
+    (_: Request) => {
+        appLogger().error(ErrorEnum._sessionSecretNotSet); throw Error(ErrorEnum._sessionSecretNotSet);
     };
 
 export const PromiseError =
     (callStack: any): ResponseHandler =>
-        (_: Response) => {
-            log(`Error: ${ErrorEnum._promiseError}.\n${callStack}`);
-        };
+        LogRequestAdapter(appLogger().error, `Error: ${ErrorEnum._promiseError}.\n${callStack}`)(ErrorEnum._promiseError);
+
 export const SessionParseError =
     (object: any): ResponseHandler =>
-        (_: Response) => {
-            log(`Error: ${ErrorEnum._sessionParseError}. Received: ${object}`);
-        };
+        LogRequestAdapter(appLogger().error, `Error: ${ErrorEnum._sessionParseError}. Received: ${object}`)(ErrorEnum._promiseError);
 
-export const SignInInfoMissingError: ResponseHandler = LogOnly(log)(ErrorEnum._signInfoMissingError);
+export const SignInInfoMissingError: ResponseHandler = LogRequestAdapter(appLogger().info)(ErrorEnum._signInfoMissingError);
 
-export const AccessTokenMissingError: ResponseHandler = LogOnly(log)(ErrorEnum._accessTokenMissingError);
+export const AccessTokenMissingError: ResponseHandler = LogRequestAdapter(log)(ErrorEnum._accessTokenMissingError);
 
-export const ExpiresMissingError: ResponseHandler = LogOnly(log)(ErrorEnum._expiresInMissingError);
+export const ExpiresMissingError: ResponseHandler = LogRequestAdapter(log)(ErrorEnum._expiresInMissingError);
 
 export const NoDataRetrievedError = (key: string): ResponseHandler =>
-    (_: Response) => log(`${ErrorEnum._noDataRetrievedError} using key: ${key}`);
+    LogRequestAdapter(appLogger().error, `${ErrorEnum._noDataRetrievedError} using key: ${key}`)(ErrorEnum._noDataRetrievedError);
 
 export const StoringError = (err: string, key: string, value: string): ResponseHandler =>
-    (_: Response) => log(`${err}\n${ErrorEnum._storeError} using key: ${key} and value ${value}`);
+    LogRequestAdapter(appLogger().error, `${ErrorEnum._storeError} using key: ${key}`)(ErrorEnum._storeError);

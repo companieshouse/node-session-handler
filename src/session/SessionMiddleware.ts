@@ -7,6 +7,7 @@ import { CookieConfig } from "../config/CookieConfig";
 import { wrapEitherFunction, wrapValue, wrapEither } from "../utils/EitherAsyncUtils";
 import { Cookie } from "./model/Cookie";
 import expressAsyncHandler from "express-async-handler";
+import { appLogger } from "../error/ErrorFunctions"
 
 
 export function SessionMiddleware(config: CookieConfig, sessionStore: SessionStore): RequestHandler {
@@ -29,6 +30,7 @@ function sessionRequestHandler(config: CookieConfig, sessionStore: SessionStore)
     return async (request: Request, response: Response, next: NextFunction): Promise<any> => {
 
         const sessionCookie = request.cookies[config.cookieName];
+        appLogger().debug(`Sesssion Cookie: ${sessionCookie}`)
 
         if (sessionCookie) {
 
@@ -46,14 +48,16 @@ function sessionRequestHandler(config: CookieConfig, sessionStore: SessionStore)
             const handleFailure = (failure: Failure) => validateCookieString(sessionCookie)
                 .chain(sessionStore.delete)
                 .map(_ => response.clearCookie(config.cookieName))
-                .map(_ => failure.errorFunction(response));
+                .map(_ => failure.errorFunction(request));
 
             await loadSession.either(
                 async (failure: Failure) => {
+                    appLogger().info(`Error occurred in session load sequence. Handling failure...`);
                     request.session = Nothing;
                     await handleFailure(failure).run();
                 },
                 async (verifiedSession: VerifiedSession) => {
+                    appLogger().info(`Session loaded successfully!`)
                     request.session = Just(verifiedSession);
                     return await Promise.resolve();
                 }
