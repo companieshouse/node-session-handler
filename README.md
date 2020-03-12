@@ -8,6 +8,20 @@ Module offers the following artifacts:
 - `SessionStore` that is responsible for reading and writing session data from / to database taking care of data encoding / decoding
 - `SessionMiddleware` that provides easy to use express.js middleware reading session based on the request cookie 
 
+## Prerequisite
+
+Module requires `request.cookies` map to be populated with an object keyed by the cookie names. It can be achieved by use of [cookie-parser](https://www.npmjs.com/package/cookie-parser) module.
+
+In short run `npm install cookie-parser` command to install dependency and add the following snipped to the application to apply cookie parsing middleware:
+
+```$typescript
+import * as cookieParser from 'cookie-parser'
+...
+app.use(cookieParser())
+```
+
+Note: Cookie parsing must happen before request is passed to session middleware. 
+
 ## How to use it
 
 Since build artifacts are stored in the repository (no NPM registry in used just yet) to bring this module as dependency please add the following fragment to `package.json`: 
