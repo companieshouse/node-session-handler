@@ -43,7 +43,7 @@ describe("Store", () => {
         it("should write to cache using session id and encode data before write", async () => {
             const redis = Substitute.for<Redis>();
             // @ts-ignore
-            redis.set(cookie.sessionId, encodedData).returns(Promise.resolve("OK"));
+            redis.set(cookie.sessionId, encodedData, "EX", 3600).returns(Promise.resolve("OK"));
 
             const result = await new SessionStore(redis).store<Data>(cookie, data).run();
             result.either(
@@ -52,13 +52,13 @@ describe("Store", () => {
             );
 
             // @ts-ignore
-            redis.received().set(cookie.sessionId, Arg.any());
+            redis.received().set(cookie.sessionId, Arg.any(), "EX", 3600);
         });
 
         it("should return failure when write failed", async () => {
             const redis = Substitute.for<Redis>();
             // @ts-ignore
-            redis.set(cookie.sessionId, encodedData).returns(Promise.reject("Some error"));
+            redis.set(cookie.sessionId, encodedData, "EX", 3600).returns(Promise.reject("Some error"));
 
             const result = await new SessionStore(redis).store<Data>(cookie, data).run();
             expect(result.isLeft()).to.equal(true);

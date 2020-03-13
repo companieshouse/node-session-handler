@@ -28,8 +28,8 @@ export class SessionStore {
             .chain(decode);
     };
 
-    public store = <T>(cookie: Cookie, value: T): EitherAsync<Failure, string> => {
-        return this.redisWrapper.set(cookie.sessionId, Encoding.encode(value));
+    public store = <T>(cookie: Cookie, value: T, timeToLiveInSeconds: number = 3600): EitherAsync<Failure, string> => {
+        return this.redisWrapper.set(cookie.sessionId, Encoding.encode(value), timeToLiveInSeconds);
     };
 
     public delete = (cookie: Cookie): EitherAsync<Failure, number> => {
@@ -42,9 +42,9 @@ class RedisWrapper {
 
     public constructor(private readonly client: Redis) { }
 
-    public set = (key: string, value: string): EitherAsync<Failure, string> => {
+    public set = (key: string, value: string, timeToLiveInSeconds: number): EitherAsync<Failure, string> => {
 
-        const promise = this.client.set(key, value)
+        const promise = this.client.set(key, value, timeToLiveInSeconds ? "EX" : undefined, timeToLiveInSeconds)
             .then(r => Right(r))
             .catch(err => Left(Failure(StoringError(err, key, value))));
 
