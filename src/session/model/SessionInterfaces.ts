@@ -1,8 +1,7 @@
+import { AccessTokenKeys } from "../keys/AccessTokenKeys";
 import { SessionKey } from "../keys/SessionKey";
 import { SignInInfoKeys } from "../keys/SignInInfoKeys";
 import { UserProfileKeys } from "../keys/UserProfileKeys";
-import { AccessTokenKeys } from "../keys/AccessTokenKeys";
-
 
 export type ISessionValue = ISignInInfo | IUserProfile | IAccessToken | string | number;
 
@@ -17,14 +16,14 @@ export type ISession = {
     [SessionKey.Pst]?: string,
     [SessionKey.SignInInfo]?: ISignInInfo,
     [SessionKey.ExtraData]?: any
-}
+};
 
 export type ISignInInfo = {
     [SignInInfoKeys.AccessToken]?: IAccessToken,
     [SignInInfoKeys.AdminPermissions]?: string,
     [SignInInfoKeys.SignedIn]?: number,
     [SignInInfoKeys.UserProfile]?: IUserProfile,
-}
+};
 
 export type IUserProfile = {
     [UserProfileKeys.Email]?: string,
@@ -33,13 +32,14 @@ export type IUserProfile = {
     [UserProfileKeys.Locale]?: string,
     [UserProfileKeys.Scope]?: string,
     [UserProfileKeys.Surname]?: string,
-}
-
+    [UserProfileKeys.Permissions]?: {
+        [Key: string]: any;
+    }
+};
 
 export type IAccessToken = {
     [AccessTokenKeys.AccessToken]?: string,
     [AccessTokenKeys.ExpiresIn]?: number,
     [AccessTokenKeys.RefreshToken]?: string,
     [AccessTokenKeys.TokenType]?: string,
-}
-
+};
