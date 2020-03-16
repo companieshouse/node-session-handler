@@ -1,5 +1,3 @@
-import { Either } from "purify-ts";
-import { Failure } from "../../error/FailureType";
 import { Session } from "../..";
 export declare class Cookie {
     readonly sessionId: string;
@@ -8,5 +6,5 @@ export declare class Cookie {
     get value(): string;
     static create(cookieSecret: string): Cookie;
     static representationOf(session: Session, cookieSecret: string): Cookie;
-    static validateCookieString: (cookieSecret: string) => (cookieString: string) => Either<Failure, Cookie>;
+    static validateCookieString: (cookieSecret: string, cookieString: string) => Cookie;
 }

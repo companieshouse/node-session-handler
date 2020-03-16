@@ -1,11 +1,4 @@
 import { Encoding } from "../../encoding/Encoding";
-import { EitherAsync, Right, Left } from "purify-ts";
-import { Failure } from "../../error/FailureType";
-import {
-    wrapValue,
-    wrapFunction,
-    wrapPromise,
-} from "../../utils/EitherAsyncUtils";
 import { PromiseError, NoDataRetrievedError, StoringError } from "../../error/ErrorFunctions";
 import { Redis } from "ioredis";
 import { Cookie } from "../model/Cookie";
@@ -21,23 +14,32 @@ export class SessionStore {
         this.redisWrapper = new RedisWrapper(redis);
     }
 
-    public load = (cookie: Cookie): EitherAsync<Failure, ISession> => {
+    public load = async (cookie: Cookie): Promise<string> => {
 
-        const decode = wrapFunction<Failure, ISession, string>(Encoding.decode);
-
-        return wrapValue<Failure, Cookie>(cookie)
-            .map(_ => _.sessionId)
-            .chain(this.redisWrapper.get)
-            .chain(decode);
+        try {
+            return Encoding.decode(await this.redisWrapper.get(cookie.sessionId));
+        } catch (err) {
+            console.error(err);
+        }
     };
 
-    public store = (cookie: Cookie, value: ISession, timeToLiveInSeconds: number = 3600): EitherAsync<Failure, string> => {
-        value[SessionKey.Expires] = getSecondsSinceEpoch() + timeToLiveInSeconds;
-        return this.redisWrapper.set(cookie.sessionId, Encoding.encode(value), timeToLiveInSeconds);
+    public store = async (cookie: Cookie, value: ISession, timeToLiveInSeconds: number = 3600): Promise<string> => {
+
+        try {
+            value[SessionKey.Expires] = getSecondsSinceEpoch() + timeToLiveInSeconds;
+            return this.redisWrapper.set(cookie.sessionId, Encoding.encode(value), timeToLiveInSeconds);
+        } catch (err) {
+            console.error(err);
+        }
     };
 
-    public delete = (cookie: Cookie): EitherAsync<Failure, number> => {
-        return this.redisWrapper.del(cookie.sessionId);
+    public delete = async (cookie: Cookie): Promise<number> => {
+
+        try {
+            return this.redisWrapper.del(cookie.sessionId);
+        } catch (err) {
+            console.error(err);
+        }
     };
 
 }
@@ -46,40 +48,38 @@ class RedisWrapper {
 
     public constructor(private readonly client: Redis) { }
 
-    public set = (key: string, value: string, timeToLiveInSeconds: number): EitherAsync<Failure, string> => {
+    public set = async (key: string, value: string, timeToLiveInSeconds: number): Promise<string> => {
 
         const promise = this.client.set(key, value, "EX", timeToLiveInSeconds)
-            .then(r => Right(r))
-            .catch(err => Left(Failure(StoringError(err, key, value))));
+            .catch(err => StoringError(err, key, value));
 
-        return wrapPromise<Failure, string>(promise);
+        return promise;
     };
 
-    public get = (key: string): EitherAsync<Failure, string> => {
+    public get = async (key: string): Promise<string> => {
 
         const checkIfResultEmpty = (result: string) => {
 
             if (!result) {
-                return Left(Failure(NoDataRetrievedError(key)));
+                return (NoDataRetrievedError(key));
             }
 
-            return Right(result);
+            return result;
 
         };
 
         const promise = () => this.client.get(key)
             .then(checkIfResultEmpty)
-            .catch(err => Left<Failure, string>(Failure(PromiseError(err))));
+            .catch(PromiseError);
 
-        return wrapPromise(promise());
+        return promise();
     };
 
-    public del = (key: string): EitherAsync<Failure, number> => {
+    public del = async (key: string): Promise<number> => {
 
         const promise = this.client.del(key)
-            .then(r => Right(r))
-            .catch(err => Left(Failure(PromiseError(err))));
+            .catch(PromiseError);
 
-        return wrapPromise(promise);
+        return promise;
     };
 }

@@ -32,15 +32,19 @@ Since build artifacts are stored in the repository (no NPM registry in used just
 
 ### Session
 
-Session class represents bag of session data with the following accessor methods:
+The session class is a wrapper around the raw session `data: ISession` (as retrieved from accounts after signing in). 
 
-- `Session.getValue(key: SessionKey)` allowing to reach for certain top level elements of the session
-- `Session.getExtraData()` allowing to retrieve session data populated by the applications
-- `Session.saveExtraData(key: string, value: T)` allowing to amend session data used by the applications
+To keep the `ISession` type consistent, we added an extra field called `extra_data` (`SessionKey.ExtraData`) to store any data that apps my need in the session making session itself extensible. Although we recommend making use of that field for such data, such practice is not enforced in any way.
 
-Enumerated type `SessionKey` mentioned above lists all keys for common top level properties such as `SessionKey.Id`, `SessionKey.SignInInfo`, `SessionKey.ExtraData` and more, helping to avoid typo errors.
+The class provides these methods:
 
-A `SessionKey.ExtraData` key plays special role here as it allows applications to put their data into session making session itself extensible. 
+- `get<T = ISessionValue>(key: SessionKey): T | undefined` this method uses the keys defined in the enum `SessionKey` to retrieve values from the session data. The type `ISessionValue` represents all possible types than can be retrieved from the session.
+- `getExtraData<T>(key: string): T | undefined` allowing to retrieve session data populated by the applications
+- `saveExtraData<T>(key: string, val: T): void` allowing to amend session data used by the applications. Note: this replaces the existing value (if present).
+- `deleteExtraData(key: string): boolean` deletes a key from the session data populated by an application (if exists).
+- `verify = (): void` ensures that the session is valid i.e. contains the right fields and it's not expired.
+
+**Note:** some values can only be retrieved using `session.data[string]` method, as such we provide the SessionKey(s) for convinience and to help avoid typo errors
 
 ### SessionStore
 

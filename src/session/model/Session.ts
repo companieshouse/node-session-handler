@@ -1,4 +1,3 @@
-import { Either, Left, Right, Maybe } from "purify-ts";
 import {
     AccessTokenMissingError,
     ExpiresMissingError,
@@ -6,7 +5,6 @@ import {
     SignInInfoMissingError,
     SessionParseError
 } from "../../error/ErrorFunctions";
-import { Failure } from "../../error/FailureType";
 import { SessionKey } from "../keys/SessionKey";
 import { ISession, ISessionValue } from "./SessionInterfaces";
 import { SignInInfoKeys } from "../keys/SignInInfoKeys";
@@ -18,9 +16,16 @@ export class Session {
     public data: ISession = {};
 
     public constructor(data?: any) {
-        if (data) {
-            this.data = data;
-            this.dirty = false;
+
+        this.setDirty(true);
+        data ? this.setSessionData(data) : this.setSessionData({});
+
+    }
+
+    public setSessionData(data: ISession): void {
+        this.data = data;
+        if (!data[SessionKey.ExtraData]) {
+            data[SessionKey.ExtraData] = {};
         }
     }
 
@@ -28,82 +33,57 @@ export class Session {
         return this.dirty;
     }
 
-    public getValue = <T = ISessionValue>(key: SessionKey): Maybe<T> => {
-        return Maybe.fromNullable(this.data[key]);
-    };
-
-    public getExtraData = (): Maybe<any> => Maybe.fromNullable(this.data[SessionKey.ExtraData]);
-
-    public saveExtraData = <T>(key: string, value: T): Session => {
-        this.dirty = true;
-        if (!this.data[SessionKey.ExtraData]) {
-            this.data[SessionKey.ExtraData] = {};
-        }
-
-        const extraData = this.data[SessionKey.ExtraData];
-
-        extraData[key] = value;
-
-        this.data[SessionKey.ExtraData] = extraData;
-
-        return this;
-    };
-
-    public verify = (): Either<Failure, VerifiedSession> => {
-        return VerifiedSession.verifySession(this);
-    };
-
-    public static createInstance = (object: any): Either<Failure, Session> => {
-        if (object) {
-            return Right(new Session(object));
-        }
-        return Left(Failure(SessionParseError(object)));
-    };
-}
-
-export class VerifiedSession extends Session {
-
-    private constructor(session: Session) {
-        super();
-        this.data = session.data;
+    public setDirty(dirty: boolean): void {
+        this.dirty = dirty;
     }
 
-    public static verifySession(session: Session): Either<Failure, VerifiedSession> {
+    public get<T = ISessionValue>(key: SessionKey): T | undefined {
+        return this.data[key];
+    }
 
-        const signInInfo = session.data[SessionKey.SignInInfo];
+    public getExtraData<T>(key: string): T | undefined {
+        return this.data[SessionKey.ExtraData][key];
+    }
+
+    public saveExtraData<T>(key: string, val: T): void {
+        this.data[SessionKey.ExtraData][key] = val;
+    }
+
+    public deleteExtraData(key: string): boolean {
+        return delete this.data[SessionKey.ExtraData][key];
+    }
+
+    public verify = (): void => {
+        const signInInfo = this.data[SessionKey.SignInInfo];
 
         if (!signInInfo) {
-            return Left(
-                Failure(SignInInfoMissingError)
-            );
+            throw SignInInfoMissingError()
         }
 
         const accessToken = signInInfo[SignInInfoKeys.AccessToken];
 
         if (!accessToken || !accessToken[AccessTokenKeys.AccessToken]) {
-            return Left(
-                Failure(AccessTokenMissingError)
-            );
+            throw AccessTokenMissingError();
         }
 
-        const expires = session.data[SessionKey.Expires];
+        const expires = this.data[SessionKey.Expires];
 
         if (!expires) {
-            return Left(
-                Failure(ExpiresMissingError)
-            );
+            throw ExpiresMissingError();
         }
         // This time corresponds to the time precisison given by the accounts service in seconds.
         const dateNowMillis = Number(Date.now().toPrecision(10)) / 1000;
 
         if (expires <= dateNowMillis) {
-            return Left(
-                Failure(SessionExpiredError(`Expires: ${expires}`, `Actual: ${dateNowMillis}`))
-            );
+            throw SessionExpiredError(`Expires: ${expires}`, `Actual: ${dateNowMillis}`);
         }
 
-        return Right(new VerifiedSession(session));
+    };
 
-    }
-
+    public static createInstance = (object: any): Session => {
+        if (object) {
+            return new Session(object);
+        }
+        throw SessionParseError(object);
+    };
 }

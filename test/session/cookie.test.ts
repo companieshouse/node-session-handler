@@ -2,7 +2,6 @@ import { expect } from "chai";
 import { createNewVerifiedSession } from "../utils/SessionGenerator"
 import { generateRandomBytesBase64, generateSessionId, generateSignature } from "../../src/utils/CookieUtils";
 import { Cookie } from "../../src/session/model/Cookie";
-import { VerifiedSession } from "../../src/session/model/Session";
 import { SessionKey } from "../../src/session/keys/SessionKey";
 
 describe("Cookie", () => {
@@ -13,7 +12,7 @@ describe("Cookie", () => {
             const sessionId = generateSessionId();
             const signature = generateSignature(sessionId, cookieSecret);
 
-            const session: VerifiedSession = createNewVerifiedSession(cookieSecret);
+            const session = createNewVerifiedSession(cookieSecret);
             session.data[SessionKey.Id] = sessionId;
 
             const cookie = Cookie.representationOf(session, cookieSecret);
@@ -27,11 +26,8 @@ describe("Cookie", () => {
             const sessionId: string = generateSessionId();
             const signature: string = generateSignature(sessionId, cookieSecret);
 
-            const result = Cookie.validateCookieString(cookieSecret)(sessionId + signature);
-            expect(result.isRight()).to.eq(true);
-            result.ifRight(cookie => {
-                expect(cookie.value).is.equal(sessionId + signature);
-            });
+            const result = Cookie.validateCookieString(cookieSecret, sessionId + signature);
+            expect(result.value).to.deep.eq(sessionId + signature);
         });
 
         it("should fail if cookie string is too short", () => {
@@ -41,8 +37,7 @@ describe("Cookie", () => {
             const invalidSignature = "asdkfasd";
 
             [invalidSessionId + validSignature, validSessionId + invalidSignature, invalidSessionId + invalidSignature].forEach(cookie => {
-                const result = Cookie.validateCookieString(cookieSecret)(cookie);
-                expect(result.isLeft()).to.eq(true);
+                expect(() => Cookie.validateCookieString(cookieSecret, cookie)).to.throw();
             });
         });
 
@@ -53,8 +48,7 @@ describe("Cookie", () => {
             const sessionId: string = generateSessionId();
             const signature: string = generateSignature(sessionId, cookieCreationSecret);
 
-            const result = Cookie.validateCookieString(cookieVerificationSecret)(sessionId + signature);
-            expect(result.isLeft()).to.eq(true);
+            expect(() => Cookie.validateCookieString(cookieVerificationSecret, sessionId + signature)).to.throw();
         });
     });
 });

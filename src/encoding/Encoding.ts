@@ -1,5 +1,4 @@
 import msgpack5 from "msgpack5";
-import { log } from "../error/ErrorFunctions";
 
 export class Encoding {
 

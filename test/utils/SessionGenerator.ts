@@ -1,5 +1,5 @@
 import { CookieConfig } from "../../src/config/CookieConfig";
-import { Session, VerifiedSession } from "../../src/session/model/Session";
+import { Session } from "../../src/session/model/Session";
 import { Cookie } from "../../src/session/model/Cookie";
 import { SessionKey } from "../../src/session/keys/SessionKey";
 import { SignInInfoKeys } from "../../src/session/keys/SignInInfoKeys";
@@ -27,12 +27,11 @@ export function getValidSessionDataJson(config: CookieConfig): ISession {
     };
 }
 
-export function getValidSessionObject(config: CookieConfig): VerifiedSession {
-    return new Session(getValidSessionDataJson(config)).verify()
-        .orDefaultLazy(() => ({ } as VerifiedSession));
+export function getValidSessionObject(config: CookieConfig): Session {
+    return new Session(getValidSessionDataJson(config));
 }
 
-export function createNewVerifiedSession(cookieSecret: string, extraData?: any): VerifiedSession {
+export function createNewVerifiedSession(cookieSecret: string, extraData?: any): Session {
     const cookie: Cookie = Cookie.create(cookieSecret);
 
     const signInInfo = {
@@ -47,7 +46,7 @@ export function createNewVerifiedSession(cookieSecret: string, extraData?: any):
     sessionData[SessionKey.SignInInfo] = signInInfo;
     sessionData[SessionKey.Expires] = Date.now() + createDefaultAccessToken(3600).expires_in * 1000;
 
-    return new Session(sessionData) as VerifiedSession;
+    return new Session(sessionData);
 }
 
 export const createDefaultAccessToken = (expiryPeriod: number): IAccessToken => {
