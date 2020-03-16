@@ -54,10 +54,15 @@ describe("Store", () => {
 
             // @ts-ignore
             redis.received().set(cookie.sessionId, Arg.is(encodedDataArg => {
+                function assertTimeIsOffNotMoreThanFiveSecondsFromNow(expires: number): boolean {
+                    const secondsSinceEpoch = new Date().getTime() / 1000;
+                    return secondsSinceEpoch + 3600 - expires < 5
+                }
+
                 const decodedSession: ISession = Encoding.decode(encodedDataArg);
                 return JSON.stringify(decodedSession[SessionKey.ExtraData]) === JSON.stringify(data[SessionKey.ExtraData])
                     && decodedSession[SessionKey.Expires] != null
-                    &&(new Date().getTime() / 1000) + 3600 - decodedSession[SessionKey.Expires] < 5
+                    && assertTimeIsOffNotMoreThanFiveSecondsFromNow(decodedSession[SessionKey.Expires])
             }), "EX", 3600);
         });
 
