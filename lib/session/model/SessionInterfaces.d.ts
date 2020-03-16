@@ -1,7 +1,7 @@
+import { AccessTokenKeys } from "../keys/AccessTokenKeys";
 import { SessionKey } from "../keys/SessionKey";
 import { SignInInfoKeys } from "../keys/SignInInfoKeys";
 import { UserProfileKeys } from "../keys/UserProfileKeys";
-import { AccessTokenKeys } from "../keys/AccessTokenKeys";
 export declare type ISessionValue = ISignInInfo | IUserProfile | IAccessToken | string | number;
 export declare type ISession = {
     [SessionKey.Id]?: string;
@@ -28,6 +28,9 @@ export declare type IUserProfile = {
     [UserProfileKeys.Locale]?: string;
     [UserProfileKeys.Scope]?: string;
     [UserProfileKeys.Surname]?: string;
+    [UserProfileKeys.Permissions]?: {
+        [Key: string]: any;
+    };
 };
 export declare type IAccessToken = {
     [AccessTokenKeys.AccessToken]?: string;
