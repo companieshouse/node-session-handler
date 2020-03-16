@@ -7,6 +7,7 @@ import { generateRandomBytesBase64 } from "../../src/utils/CookieUtils";
 import { Encoding } from "../../src/encoding/Encoding";
 import { ISession } from "../../src";
 import { SessionKey } from "../../src/session/keys/SessionKey";
+import { getSecondsSinceEpoch } from "../../src/utils/TimeUtils";
 
 describe("Store", () => {
     const cookie = Cookie.create(generateRandomBytesBase64(16));
@@ -54,15 +55,10 @@ describe("Store", () => {
 
             // @ts-ignore
             redis.received().set(cookie.sessionId, Arg.is(encodedDataArg => {
-                function assertTimeIsOffNotMoreThanFiveSecondsFromNow(expires: number): boolean {
-                    const secondsSinceEpoch = new Date().getTime() / 1000;
-                    return secondsSinceEpoch + 3600 - expires < 5
-                }
-
                 const decodedSession: ISession = Encoding.decode(encodedDataArg);
                 return JSON.stringify(decodedSession[SessionKey.ExtraData]) === JSON.stringify(data[SessionKey.ExtraData])
                     && decodedSession[SessionKey.Expires] != null
-                    && assertTimeIsOffNotMoreThanFiveSecondsFromNow(decodedSession[SessionKey.Expires])
+                    && decodedSession[SessionKey.Expires] === getSecondsSinceEpoch() + 3600;
             }), "EX", 3600);
         });
 

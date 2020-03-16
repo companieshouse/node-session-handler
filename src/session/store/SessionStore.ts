@@ -11,10 +11,7 @@ import { Redis } from "ioredis";
 import { Cookie } from "../model/Cookie";
 import { ISession } from "../..";
 import { SessionKey } from "../keys/SessionKey";
-
-function calculateSecondsSinceEpoch(): number {
-    return new Date().getTime() / 1000;
-}
+import { getSecondsSinceEpoch } from "../../utils/TimeUtils";
 
 export class SessionStore {
 
@@ -35,7 +32,7 @@ export class SessionStore {
     };
 
     public store = (cookie: Cookie, value: ISession, timeToLiveInSeconds: number = 3600): EitherAsync<Failure, string> => {
-        value[SessionKey.Expires] = calculateSecondsSinceEpoch() + timeToLiveInSeconds;
+        value[SessionKey.Expires] = getSecondsSinceEpoch() + timeToLiveInSeconds;
         return this.redisWrapper.set(cookie.sessionId, Encoding.encode(value), timeToLiveInSeconds);
     };
 
