@@ -9,6 +9,12 @@ import {
 import { PromiseError, NoDataRetrievedError, StoringError } from "../../error/ErrorFunctions";
 import { Redis } from "ioredis";
 import { Cookie } from "../model/Cookie";
+import { ISession } from "../..";
+import { SessionKey } from "../keys/SessionKey";
+
+function calculateSecondsSinceEpoch(): number {
+    return new Date().getTime() / 1000;
+}
 
 export class SessionStore {
 
@@ -18,9 +24,9 @@ export class SessionStore {
         this.redisWrapper = new RedisWrapper(redis);
     }
 
-    public load = <T>(cookie: Cookie): EitherAsync<Failure, T> => {
+    public load = (cookie: Cookie): EitherAsync<Failure, ISession> => {
 
-        const decode = wrapFunction<Failure, T, string>(Encoding.decode);
+        const decode = wrapFunction<Failure, ISession, string>(Encoding.decode);
 
         return wrapValue<Failure, Cookie>(cookie)
             .map(_ => _.sessionId)
@@ -28,7 +34,8 @@ export class SessionStore {
             .chain(decode);
     };
 
-    public store = <T>(cookie: Cookie, value: T, timeToLiveInSeconds: number = 3600): EitherAsync<Failure, string> => {
+    public store = (cookie: Cookie, value: ISession, timeToLiveInSeconds: number = 3600): EitherAsync<Failure, string> => {
+        value[SessionKey.Expires] = calculateSecondsSinceEpoch() + timeToLiveInSeconds;
         return this.redisWrapper.set(cookie.sessionId, Encoding.encode(value), timeToLiveInSeconds);
     };
 
@@ -44,7 +51,7 @@ class RedisWrapper {
 
     public set = (key: string, value: string, timeToLiveInSeconds: number): EitherAsync<Failure, string> => {
 
-        const promise = this.client.set(key, value, timeToLiveInSeconds ? "EX" : undefined, timeToLiveInSeconds)
+        const promise = this.client.set(key, value, "EX", timeToLiveInSeconds)
             .then(r => Right(r))
             .catch(err => Left(Failure(StoringError(err, key, value))));
 
