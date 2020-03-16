@@ -7,6 +7,6 @@ export declare class SessionStore {
     private readonly redisWrapper;
     constructor(redis: Redis);
     load: <T>(cookie: Cookie) => EitherAsync<Failure, T>;
-    store: <T>(cookie: Cookie, value: T) => EitherAsync<Failure, string>;
+    store: <T>(cookie: Cookie, value: T, timeToLiveInSeconds?: number) => EitherAsync<Failure, string>;
     delete: (cookie: Cookie) => EitherAsync<Failure, number>;
 }
