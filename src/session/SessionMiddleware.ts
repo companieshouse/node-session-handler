@@ -7,6 +7,7 @@ import { CookieConfig } from "../config/CookieConfig";
 import { wrapEitherFunction, wrapValue, wrapEither } from "../utils/EitherAsyncUtils";
 import { Cookie } from "./model/Cookie";
 import expressAsyncHandler from "express-async-handler";
+import { ISession } from "./model/SessionInterfaces";
 
 
 export function SessionMiddleware(config: CookieConfig, sessionStore: SessionStore): RequestHandler {
@@ -42,7 +43,7 @@ function sessionRequestHandler(config: CookieConfig, sessionStore: SessionStore)
             const loadSession: Either<Failure, VerifiedSession> =
                 await wrapValue<Failure, string>(sessionCookie)
                     .chain<Cookie>(validateCookieString)
-                    .chain<Cookie>(sessionStore.load)
+                    .chain<ISession>(sessionStore.load)
                     .chain<Session>(wrapEitherFunction(Session.createInstance))
                     .chain<VerifiedSession>(session => wrapEither(session.verify()))
                     .run();

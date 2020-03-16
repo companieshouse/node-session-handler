@@ -1,27 +1,29 @@
 import { assert, expect } from "chai";
-import { Substitute, Arg } from "@fluffy-spoon/substitute";
+import { Arg, Substitute } from "@fluffy-spoon/substitute";
 import { Redis } from "ioredis";
 import { SessionStore } from "../../src/session/store/SessionStore";
 import { Cookie } from "../../src/session/model/Cookie";
 import { generateRandomBytesBase64 } from "../../src/utils/CookieUtils";
 import { Encoding } from "../../src/encoding/Encoding";
-
-type Data = Record<string, any>
+import { ISession } from "../../src";
+import { SessionKey } from "../../src/session/keys/SessionKey";
+import { getSecondsSinceEpoch } from "../../src/utils/TimeUtils";
 
 describe("Store", () => {
     const cookie = Cookie.create(generateRandomBytesBase64(16));
-    const data: Data = {
-        name: "Mark",
-        age: 18
+    const data: ISession = {
+        [SessionKey.ExtraData]: {
+            name: "Mark",
+            age: 18
+        }
     };
-    const encodedData = Encoding.encode(data);
 
     describe("data loading", () => {
         it("should read from cache using session id and decode data after read", async () => {
             const redis = Substitute.for<Redis>();
-            redis.get(cookie.sessionId).returns(Promise.resolve(encodedData));
+            redis.get(cookie.sessionId).returns(Promise.resolve(Encoding.encode(data)));
 
-            const result = await new SessionStore(redis).load<Data>(cookie).run();
+            const result = await new SessionStore(redis).load(cookie).run();
             result.either(
                 _ => assert.fail(),
                 response => expect(response).to.be.deep.equal(data)
@@ -34,33 +36,38 @@ describe("Store", () => {
             const redis = Substitute.for<Redis>();
             redis.get(cookie.sessionId).returns(Promise.reject("Some error"));
 
-            const result = await new SessionStore(redis).load<Data>(cookie).run();
+            const result = await new SessionStore(redis).load(cookie).run();
             expect(result.isLeft()).to.equal(true);
         });
     });
 
     describe("data storing", () => {
-        it("should write to cache using session id and encode data before write", async () => {
+        it("should reset session expiry time and write to cache using session id and encode data before write", async () => {
             const redis = Substitute.for<Redis>();
             // @ts-ignore
-            redis.set(cookie.sessionId, encodedData, "EX", 3600).returns(Promise.resolve("OK"));
+            redis.set(cookie.sessionId, Arg.any(), "EX", 3600).returns(Promise.resolve("OK"));
 
-            const result = await new SessionStore(redis).store<Data>(cookie, data).run();
+            const result = await new SessionStore(redis).store(cookie, data).run();
             result.either(
                 _ => assert.fail(),
                 response => expect(response).to.be.equal("OK")
             );
 
             // @ts-ignore
-            redis.received().set(cookie.sessionId, Arg.any(), "EX", 3600);
+            redis.received().set(cookie.sessionId, Arg.is(encodedDataArg => {
+                const decodedSession: ISession = Encoding.decode(encodedDataArg);
+                return JSON.stringify(decodedSession[SessionKey.ExtraData]) === JSON.stringify(data[SessionKey.ExtraData])
+                    && decodedSession[SessionKey.Expires] != null
+                    && decodedSession[SessionKey.Expires] === getSecondsSinceEpoch() + 3600;
+            }), "EX", 3600);
         });
 
         it("should return failure when write failed", async () => {
             const redis = Substitute.for<Redis>();
             // @ts-ignore
-            redis.set(cookie.sessionId, encodedData, "EX", 3600).returns(Promise.reject("Some error"));
+            redis.set(cookie.sessionId, Arg.any(), "EX", 3600).returns(Promise.reject("Some error"));
 
-            const result = await new SessionStore(redis).store<Data>(cookie, data).run();
+            const result = await new SessionStore(redis).store(cookie, data).run();
             expect(result.isLeft()).to.equal(true);
         });
     });
