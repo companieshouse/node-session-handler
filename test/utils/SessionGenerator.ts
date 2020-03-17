@@ -7,7 +7,6 @@ import { IAccessToken, ISession } from "../../src/session/model/SessionInterface
 import { AccessTokenKeys } from "../../src/session/keys/AccessTokenKeys";
 import { generateRandomBytesBase64, generateSessionId, generateSignature } from "../../src/utils/CookieUtils";
 
-
 export function getValidSessionDataJson(config: CookieConfig): ISession {
     const mockSessionId = generateSessionId();
     const expectedSignature = generateSignature(mockSessionId, config.cookieSecret);
@@ -55,6 +54,6 @@ export const createDefaultAccessToken = (expiryPeriod: number): IAccessToken => 
         [AccessTokenKeys.AccessToken]: generateRandomBytesBase64(64),
         [AccessTokenKeys.ExpiresIn]: expiryPeriod,
         [AccessTokenKeys.RefreshToken]: null,
-        [AccessTokenKeys.TokenType]: "temp",
+        [AccessTokenKeys.TokenType]: "temp"
     };
 };

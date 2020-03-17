@@ -1,5 +1,5 @@
 import { expect } from "chai";
-import { createNewVerifiedSession } from "../utils/SessionGenerator"
+import { createNewVerifiedSession } from "../utils/SessionGenerator";
 import { generateRandomBytesBase64, generateSessionId, generateSignature } from "../../src/utils/CookieUtils";
 import { Cookie } from "../../src/session/model/Cookie";
 import { VerifiedSession } from "../../src/session/model/Session";
@@ -19,7 +19,7 @@ describe("Cookie", () => {
             const cookie = Cookie.representationOf(session, cookieSecret);
             expect(cookie.sessionId).to.be.equal(sessionId);
             expect(cookie.signature).to.be.equal(signature);
-        })
+        });
     });
 
     describe("cookie validation", () => {

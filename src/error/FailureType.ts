@@ -7,4 +7,3 @@ export const Failure = (errorFunction: ResponseHandler): Failure => {
         errorFunction
     };
 };
-

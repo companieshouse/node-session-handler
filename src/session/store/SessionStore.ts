@@ -4,7 +4,7 @@ import { Failure } from "../../error/FailureType";
 import {
     wrapValue,
     wrapFunction,
-    wrapPromise,
+    wrapPromise
 } from "../../utils/EitherAsyncUtils";
 import { PromiseError, NoDataRetrievedError, StoringError } from "../../error/ErrorFunctions";
 import { Redis } from "ioredis";

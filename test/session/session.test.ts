@@ -1,9 +1,8 @@
-import { createNewVerifiedSession } from "../utils/SessionGenerator";
-import { expect } from "chai";
-import { Session } from "../../src/session/model/Session";
-import { generateRandomBytesBase64 } from "../../src/utils/CookieUtils";
 import { SessionKey } from "../../src/session/keys/SessionKey";
 import { SignInInfoKeys } from "../../src/session/keys/SignInInfoKeys";
+import { createNewVerifiedSession } from "../utils/SessionGenerator";
+import { expect } from "chai";
+import { generateRandomBytesBase64 } from "../../src/utils/CookieUtils";
 
 describe("Session", () => {
     const cookieSecret = generateRandomBytesBase64(16);

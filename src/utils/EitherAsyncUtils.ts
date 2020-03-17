@@ -4,7 +4,6 @@ import { EitherAsync, Either } from "purify-ts";
  * to the EitherAsync type allowing them to be chained and mapped.
  */
 
-
 /**
  * Takes an Either value and converts it an EitherAsync value.
  * @param either the value to wrap.
