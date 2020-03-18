@@ -1,3 +1,4 @@
+/* eslint-disable prefer-promise-reject-errors */
 import { Arg, Substitute } from "@fluffy-spoon/substitute";
 import { assert, expect } from "chai";
 

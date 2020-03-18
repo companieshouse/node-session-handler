@@ -1,3 +1,4 @@
+/* eslint-disable @typescript-eslint/no-magic-numbers */
 export enum CookieConstants {
     _idOctets = (7 * 3),
     _signatureStart = (_idOctets * 4) / 3,

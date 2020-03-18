@@ -1,11 +1,13 @@
-import { CookieConfig } from "../../src/config/CookieConfig";
+import { IAccessToken, ISession } from "../../src/session/model/SessionInterfaces";
 import { Session, VerifiedSession } from "../../src/session/model/Session";
+import { generateRandomBytesBase64, generateSessionId, generateSignature } from "../../src/utils/CookieUtils";
+
+import { AccessTokenKeys } from "../../src/session/keys/AccessTokenKeys";
 import { Cookie } from "../../src/session/model/Cookie";
+/* eslint-disable @typescript-eslint/no-magic-numbers */
+import { CookieConfig } from "../../src/config/CookieConfig";
 import { SessionKey } from "../../src/session/keys/SessionKey";
 import { SignInInfoKeys } from "../../src/session/keys/SignInInfoKeys";
-import { IAccessToken, ISession } from "../../src/session/model/SessionInterfaces";
-import { AccessTokenKeys } from "../../src/session/keys/AccessTokenKeys";
-import { generateRandomBytesBase64, generateSessionId, generateSignature } from "../../src/utils/CookieUtils";
 
 export function getValidSessionDataJson(config: CookieConfig): ISession {
     const mockSessionId = generateSessionId();

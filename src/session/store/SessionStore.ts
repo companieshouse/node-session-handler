@@ -1,15 +1,17 @@
-import { Encoding } from "../../encoding/Encoding";
-import { EitherAsync, Right, Left } from "purify-ts";
-import { Failure } from "../../error/FailureType";
+import { EitherAsync, Left, Right } from "purify-ts";
+import { NoDataRetrievedError, PromiseError, StoringError } from "../../error/ErrorFunctions";
 import {
-    wrapValue,
     wrapFunction,
-    wrapPromise
+    wrapPromise,
+    wrapValue
 } from "../../utils/EitherAsyncUtils";
-import { PromiseError, NoDataRetrievedError, StoringError } from "../../error/ErrorFunctions";
-import { Redis } from "ioredis";
+
 import { Cookie } from "../model/Cookie";
+/* eslint-disable @typescript-eslint/no-magic-numbers */
+import { Encoding } from "../../encoding/Encoding";
+import { Failure } from "../../error/FailureType";
 import { ISession } from "../..";
+import { Redis } from "ioredis";
 import { SessionKey } from "../keys/SessionKey";
 import { getSecondsSinceEpoch } from "../../utils/TimeUtils";
 
@@ -44,7 +46,7 @@ export class SessionStore {
 
 class RedisWrapper {
 
-    public constructor(private readonly client: Redis) { }
+    public constructor(private readonly client: Redis) { } // eslint-disable-line no-useless-constructor
 
     public set = (key: string, value: string, timeToLiveInSeconds: number): EitherAsync<Failure, string> => {
 
