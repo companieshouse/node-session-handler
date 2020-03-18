@@ -1,17 +1,19 @@
-import { expect } from "chai";
-import { Session, VerifiedSession } from "../../src/session/model/Session";
+import * as express from "express";
+
+import { Arg, Substitute, SubstituteOf } from "@fluffy-spoon/substitute";
+import { Either, Left, Maybe } from "purify-ts"; // eslint-disable-line @typescript-eslint/no-unused-vars
+import { Session, VerifiedSession } from "../../src/session/model/Session"; // eslint-disable-line @typescript-eslint/no-unused-vars
+import { wrapEither, wrapValue } from "../../src/utils/EitherAsyncUtils";
+
+import { Cookie } from "../../src/session/model/Cookie";
+import { CookieConfig } from "../../src/config/CookieConfig";
+import { Failure } from "../../src/error/FailureType";
+import { NextFunction } from "express";
 import { SessionMiddleware } from "../../src/session/SessionMiddleware";
 import { SessionStore } from "../../src/session/store/SessionStore";
-import { Arg, Substitute, SubstituteOf } from "@fluffy-spoon/substitute";
-import * as express from "express";
-import { NextFunction } from "express";
-import { CookieConfig } from "../../src/config/CookieConfig";
-import { getValidSessionObject } from "../utils/SessionGenerator";
-import { Cookie } from "../../src/session/model/Cookie";
-import { Either, Left, Maybe } from "purify-ts";
+import { expect } from "chai";
 import { generateRandomBytesBase64 } from "../../src/utils/CookieUtils";
-import { Failure } from "../../src/error/FailureType";
-import { wrapEither, wrapValue } from "../../src/utils/EitherAsyncUtils";
+import { getValidSessionObject } from "../utils/SessionGenerator";
 
 declare global {
     namespace Express {
@@ -24,7 +26,7 @@ declare global {
 describe("Session Middleware", () => {
     const config: CookieConfig = {
         cookieName: "__SID",
-        cookieSecret: generateRandomBytesBase64(16),
+        cookieSecret: generateRandomBytesBase64(16)
     };
     const nextFunction = Substitute.for<NextFunction>();
 
@@ -32,14 +34,14 @@ describe("Session Middleware", () => {
         it("should fail when cookie name is missing", () => {
             [undefined, null, ""].forEach(cookieName => {
                 expect(() => SessionMiddleware({ ...config, cookieName }, undefined))
-                    .to.throw("Cookie name must be defined")
+                    .to.throw("Cookie name must be defined");
             });
         });
 
         it("should fail when cookie secret is missing or too short", () => {
             [undefined, null, "", "12345678901234567890123"].forEach(cookieSecret => {
                 expect(() => SessionMiddleware({ ...config, cookieSecret }, undefined))
-                    .to.throw("Cookie secret must be at least 24 chars long")
+                    .to.throw("Cookie secret must be at least 24 chars long");
             });
         });
     });
@@ -77,7 +79,7 @@ describe("Session Middleware", () => {
 
         it("should delete session alongside cookie and set the session object to Nothing if session load fails", async () => {
             const sessionStore = Substitute.for<SessionStore>();
-            sessionStore.load(cookieArg()).returns(wrapEither(Left(Failure(_ => console.log("Fail")))));
+            sessionStore.load(cookieArg()).returns(wrapEither(Left(Failure(() => console.log("Fail")))));
             sessionStore.delete(cookieArg()).returns(wrapValue(1));
 
             const response: SubstituteOf<express.Response> = Substitute.for<express.Response>();

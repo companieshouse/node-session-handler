@@ -1,12 +1,13 @@
-import { CookieConfig } from "../../src/config/CookieConfig";
-import { Session, VerifiedSession } from "../../src/session/model/Session";
-import { Cookie } from "../../src/session/model/Cookie";
-import { SessionKey } from "../../src/session/keys/SessionKey";
-import { SignInInfoKeys } from "../../src/session/keys/SignInInfoKeys";
 import { IAccessToken, ISession } from "../../src/session/model/SessionInterfaces";
-import { AccessTokenKeys } from "../../src/session/keys/AccessTokenKeys";
+import { Session, VerifiedSession } from "../../src/session/model/Session";
 import { generateRandomBytesBase64, generateSessionId, generateSignature } from "../../src/utils/CookieUtils";
 
+import { AccessTokenKeys } from "../../src/session/keys/AccessTokenKeys";
+import { Cookie } from "../../src/session/model/Cookie";
+/* eslint-disable @typescript-eslint/no-magic-numbers */
+import { CookieConfig } from "../../src/config/CookieConfig";
+import { SessionKey } from "../../src/session/keys/SessionKey";
+import { SignInInfoKeys } from "../../src/session/keys/SignInInfoKeys";
 
 export function getValidSessionDataJson(config: CookieConfig): ISession {
     const mockSessionId = generateSessionId();
@@ -55,6 +56,6 @@ export const createDefaultAccessToken = (expiryPeriod: number): IAccessToken => 
         [AccessTokenKeys.AccessToken]: generateRandomBytesBase64(64),
         [AccessTokenKeys.ExpiresIn]: expiryPeriod,
         [AccessTokenKeys.RefreshToken]: null,
-        [AccessTokenKeys.TokenType]: "temp",
+        [AccessTokenKeys.TokenType]: "temp"
     };
 };

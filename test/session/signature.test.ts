@@ -1,5 +1,5 @@
 import { Cookie } from "../../src/session/model/Cookie";
-import { expect } from 'chai';
+import { expect } from "chai";
 
 describe("Signature Test", () => {
     it("should validate the cookie signature", () => {

@@ -25,7 +25,7 @@ export type GeneralErrorHandlerFactory =
     (errorEnum: ErrorEnum) => (onError: ResponseErrorHandlerFactory) => ResponseHandler;
 
 export const LogOnly = (logger: Logger) => (errorEnum: ErrorEnum): ResponseHandler => {
-    return (response: Response) => {
+    return () => {
         logger(errorEnum);
     };
 };
@@ -41,18 +41,18 @@ export const SessionExpiredError = (expected: string, actual: string): ResponseH
     LogOnly(logDifference(expected, actual))(ErrorEnum._sessionExpiredError);
 
 export const SessionSecretNotSet: ResponseHandler =
-    (_: Response) => {
+    () => {
         log(ErrorEnum._sessionSecretNotSet); throw Error(ErrorEnum._sessionSecretNotSet);
     };
 
 export const PromiseError =
     (callStack: any): ResponseHandler =>
-        (_: Response) => {
+        () => {
             log(`Error: ${ErrorEnum._promiseError}.\n${callStack}`);
         };
 export const SessionParseError =
     (object: any): ResponseHandler =>
-        (_: Response) => {
+        () => {
             log(`Error: ${ErrorEnum._sessionParseError}. Received: ${object}`);
         };
 
@@ -63,7 +63,7 @@ export const AccessTokenMissingError: ResponseHandler = LogOnly(log)(ErrorEnum._
 export const ExpiresMissingError: ResponseHandler = LogOnly(log)(ErrorEnum._expiresInMissingError);
 
 export const NoDataRetrievedError = (key: string): ResponseHandler =>
-    (_: Response) => log(`${ErrorEnum._noDataRetrievedError} using key: ${key}`);
+    () => log(`${ErrorEnum._noDataRetrievedError} using key: ${key}`);
 
 export const StoringError = (err: string, key: string, value: string): ResponseHandler =>
-    (_: Response) => log(`${err}\n${ErrorEnum._storeError} using key: ${key} and value ${value}`);
+    () => log(`${err}\n${ErrorEnum._storeError} using key: ${key} and value ${value}`);

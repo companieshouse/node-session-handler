@@ -1,12 +1,14 @@
-import { assert, expect } from "chai";
+/* eslint-disable prefer-promise-reject-errors */
 import { Arg, Substitute } from "@fluffy-spoon/substitute";
-import { Redis } from "ioredis";
-import { SessionStore } from "../../src/session/store/SessionStore";
+import { assert, expect } from "chai";
+
 import { Cookie } from "../../src/session/model/Cookie";
-import { generateRandomBytesBase64 } from "../../src/utils/CookieUtils";
 import { Encoding } from "../../src/encoding/Encoding";
 import { ISession } from "../../src";
+import { Redis } from "ioredis";
 import { SessionKey } from "../../src/session/keys/SessionKey";
+import { SessionStore } from "../../src/session/store/SessionStore";
+import { generateRandomBytesBase64 } from "../../src/utils/CookieUtils";
 import { getSecondsSinceEpoch } from "../../src/utils/TimeUtils";
 
 describe("Store", () => {
@@ -25,7 +27,7 @@ describe("Store", () => {
 
             const result = await new SessionStore(redis).load(cookie).run();
             result.either(
-                _ => assert.fail(),
+                () => assert.fail(),
                 response => expect(response).to.be.deep.equal(data)
             );
 
@@ -49,16 +51,16 @@ describe("Store", () => {
 
             const result = await new SessionStore(redis).store(cookie, data).run();
             result.either(
-                _ => assert.fail(),
+                () => assert.fail(),
                 response => expect(response).to.be.equal("OK")
             );
 
             // @ts-ignore
             redis.received().set(cookie.sessionId, Arg.is(encodedDataArg => {
                 const decodedSession: ISession = Encoding.decode(encodedDataArg);
-                return JSON.stringify(decodedSession[SessionKey.ExtraData]) === JSON.stringify(data[SessionKey.ExtraData])
-                    && decodedSession[SessionKey.Expires] != null
-                    && decodedSession[SessionKey.Expires] === getSecondsSinceEpoch() + 3600;
+                return JSON.stringify(decodedSession[SessionKey.ExtraData]) === JSON.stringify(data[SessionKey.ExtraData]) &&
+                    decodedSession[SessionKey.Expires] != null &&
+                    decodedSession[SessionKey.Expires] === getSecondsSinceEpoch() + 3600;
             }), "EX", 3600);
         });
 
@@ -79,7 +81,7 @@ describe("Store", () => {
 
             const result = await new SessionStore(redis).delete(cookie).run();
             result.either(
-                _ => assert.fail(),
+                () => assert.fail(),
                 response => expect(response).to.be.equal(1)
             );
 
@@ -93,6 +95,6 @@ describe("Store", () => {
 
             const result = await new SessionStore(redis).delete(cookie).run();
             expect(result.isLeft()).to.equal(true);
-        })
-    })
+        });
+    });
 });

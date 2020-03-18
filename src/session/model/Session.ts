@@ -1,16 +1,18 @@
-import { Either, Left, Right, Maybe } from "purify-ts";
 import {
     AccessTokenMissingError,
     ExpiresMissingError,
     SessionExpiredError,
-    SignInInfoMissingError,
-    SessionParseError
+    SessionParseError,
+    SignInInfoMissingError
 } from "../../error/ErrorFunctions";
+/* eslint-disable @typescript-eslint/no-magic-numbers */
+import { Either, Left, Maybe, Right } from "purify-ts";
+import { ISession, ISessionValue } from "./SessionInterfaces";
+
+import { AccessTokenKeys } from "../keys/AccessTokenKeys";
 import { Failure } from "../../error/FailureType";
 import { SessionKey } from "../keys/SessionKey";
-import { ISession, ISessionValue } from "./SessionInterfaces";
 import { SignInInfoKeys } from "../keys/SignInInfoKeys";
-import { AccessTokenKeys } from "../keys/AccessTokenKeys";
 
 export class Session {
 

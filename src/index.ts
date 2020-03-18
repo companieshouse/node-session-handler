@@ -3,7 +3,7 @@ import { ISession } from "./session/model/SessionInterfaces";
 import { SessionStore } from "./session/store/SessionStore";
 import { SessionMiddleware } from "./session/SessionMiddleware";
 import { CookieConfig } from "./config/CookieConfig";
-import * as EitherUtils from "./utils/EitherAsyncUtils"
+import * as EitherUtils from "./utils/EitherAsyncUtils";
 import { Maybe, Either } from "purify-ts";
 declare global {
     namespace Express {
@@ -12,4 +12,4 @@ declare global {
         }
     }
 }
-export { Session, VerifiedSession, ISession, SessionStore, SessionMiddleware, CookieConfig, EitherUtils, Maybe, Either};
+export { Session, VerifiedSession, ISession, SessionStore, SessionMiddleware, CookieConfig, EitherUtils, Maybe, Either };

@@ -1,16 +1,16 @@
 import { Either, Left, Right, Tuple } from "purify-ts";
-import { Failure } from "../../error/FailureType";
-import { VerifiedSession } from "./Session";
-import { SessionKey } from "../keys/SessionKey";
-import {
-    generateSignature,
-    generateSessionId,
-    extractSignature,
-    extractSessionId
-} from "../../utils/CookieUtils";
 import { SessionLengthError, SessionSecretNotSet, SignatureCheckError } from "../../error/ErrorFunctions";
+import {
+    extractSessionId,
+    extractSignature,
+    generateSessionId,
+    generateSignature
+} from "../../utils/CookieUtils";
+
 import { CookieConstants } from "../../utils/CookieConstants";
+import { Failure } from "../../error/FailureType";
 import { Session } from "../..";
+import { SessionKey } from "../keys/SessionKey";
 
 const validateCookieSignature = (cookieSecret: string) => (cookieString: string): Either<Failure, Tuple<string, string>> => {
     if (!cookieSecret) {
@@ -60,7 +60,7 @@ export class Cookie {
     public static representationOf(session: Session, cookieSecret: string): Cookie {
         const id = session.data[SessionKey.Id];
         return new Cookie(id, generateSignature(id, cookieSecret));
-    };
+    }
 
     public static validateCookieString = (cookieSecret: string) => (cookieString: string): Either<Failure, Cookie> => {
         return Either.of<Failure, string>(cookieString)
