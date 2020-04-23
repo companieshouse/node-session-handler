@@ -18,12 +18,12 @@ export class SessionStore {
         return Encoding.decode(await this.redisWrapper.get(cookie.sessionId));
     };
 
-    public store = async (cookie: Cookie, value: ISession, timeToLiveInSeconds: number = 3600): Promise<string> => {
+    public store = async (cookie: Cookie, value: ISession, timeToLiveInSeconds: number = 3600): Promise<void> => {
         value[SessionKey.Expires] = getSecondsSinceEpoch() + timeToLiveInSeconds;
         return this.redisWrapper.set(cookie.sessionId, Encoding.encode(value), timeToLiveInSeconds);
     };
 
-    public delete = async (cookie: Cookie): Promise<number> => {
+    public delete = async (cookie: Cookie): Promise<void> => {
         return this.redisWrapper.del(cookie.sessionId);
     };
 }
@@ -32,9 +32,10 @@ class RedisWrapper {
 
     public constructor(private readonly client: Redis) { }
 
-    public set = async (key: string, value: string, timeToLiveInSeconds: number): Promise<string> => {
+    public set = async (key: string, value: string, timeToLiveInSeconds: number): Promise<void> => {
 
         return this.client.set(key, value, "EX", timeToLiveInSeconds)
+            .then(() => { return })
             .catch(err => {
                 throw new StoringError(key, value, err)
             });
@@ -56,9 +57,10 @@ class RedisWrapper {
             });
     };
 
-    public del = async (key: string): Promise<number> => {
+    public del = async (key: string): Promise<void> => {
 
         return this.client.del(key)
+            .then(() => { return })
             .catch(err => {
                 throw new DeletionError(key, err)
             });

@@ -75,7 +75,7 @@ describe("Session Middleware", () => {
         it("should delete session alongside cookie and set the session object to undefined if session load fails", async () => {
             const sessionStore = Substitute.for<SessionStore>();
             sessionStore.load(cookieArg()).returns(new Promise((_, rej) => rej("")));
-            sessionStore.delete(cookieArg()).returns(new Promise<number>((res, _) => res(1)));
+            sessionStore.delete(cookieArg()).returns(new Promise<void>((res, _) => res()));
 
             const response: SubstituteOf<express.Response> = Substitute.for<express.Response>();
             await SessionMiddleware(config, sessionStore)(request, response, nextFunction);
