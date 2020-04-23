@@ -1,5 +1,5 @@
 import { expect } from "chai";
-import { createNewVerifiedSession } from "../utils/SessionGenerator"
+import { createSession } from "../utils/SessionGenerator"
 import { generateRandomBytesBase64, generateSessionId, generateSignature } from "../../src/utils/CookieUtils";
 import { Cookie } from "../../src/session/model/Cookie";
 import { SessionKey } from "../../src/session/keys/SessionKey";
@@ -12,7 +12,7 @@ describe("Cookie", () => {
             const sessionId = generateSessionId();
             const signature = generateSignature(sessionId, cookieSecret);
 
-            const session = createNewVerifiedSession(cookieSecret);
+            const session = createSession(cookieSecret);
             session.data[SessionKey.Id] = sessionId;
 
             const cookie = Cookie.representationOf(session, cookieSecret);

@@ -6,9 +6,8 @@ import { Arg, Substitute, SubstituteOf } from "@fluffy-spoon/substitute";
 import * as express from "express";
 import { NextFunction } from "express";
 import { CookieConfig } from "../../src/config/CookieConfig";
-import { getValidSessionObject } from "../utils/SessionGenerator";
+import { createSession } from "../utils/SessionGenerator";
 import { Cookie } from "../../src/session/model/Cookie";
-import { Either, Left, Maybe } from "purify-ts";
 import { generateRandomBytesBase64 } from "../../src/utils/CookieUtils";
 
 
@@ -57,7 +56,7 @@ describe("Session Middleware", () => {
     });
 
     describe("when cookie is present", () => {
-        const session: Session = getValidSessionObject(config);
+        const session: Session = createSession(config.cookieSecret);
         const cookie: Cookie = Cookie.representationOf(session, config.cookieSecret);
         const request = { cookies: { [config.cookieName]: cookie.value } } as express.Request;
         const cookieArg = () => {

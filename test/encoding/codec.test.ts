@@ -1,11 +1,11 @@
 import { expect } from "chai";
 import { Encoding } from "../../src/encoding/Encoding";
-import { createNewVerifiedSession } from "../utils/SessionGenerator";
+import { createSession } from "../utils/SessionGenerator";
 import { generateRandomBytesBase64 } from "../../src/utils/CookieUtils";
 
 const decodedData = { name: "tester", age: 21 };
 const encodedData = "gqRuYW1lpnRlc3RlcqNhZ2UV";
-const session = createNewVerifiedSession(generateRandomBytesBase64(16))
+const session = createSession(generateRandomBytesBase64(16))
 
 describe("Coding and decoding", () => {
     describe("encode", () => {
