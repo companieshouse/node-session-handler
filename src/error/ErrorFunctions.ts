@@ -6,9 +6,6 @@ export enum ErrorEnum {
     _signInfoMissingError = "Sign-in information missing.",
     _accessTokenMissingError = "Access Token missing",
     _expiresInMissingError = "Expires in field missing",
-    _storeError = "Store error",
-    _promiseError = "Promise error",
-    _noDataRetrievedError = "No data retrieved from Redis",
     _sessionParseError = "Failed to parse session object"
 }
 
@@ -28,9 +25,6 @@ export const SessionExpiredError = (expected: string, actual: string) => Differe
 
 export const SessionSecretNotSetError = () => new Error(ErrorEnum._sessionSecretNotSet);
 
-export const PromiseError = (callStack: any) => {
-    throw new Error(`Error: ${ErrorEnum._promiseError}.\n${callStack}`);
-};
 export const SessionParseError = (object: any) => new Error(`Error: ${ErrorEnum._sessionParseError}. Received: ${object}`);
 
 export const SignInInfoMissingError = () => new Error(ErrorEnum._signInfoMissingError);
@@ -38,11 +32,3 @@ export const SignInInfoMissingError = () => new Error(ErrorEnum._signInfoMissing
 export const AccessTokenMissingError = () => new Error(ErrorEnum._accessTokenMissingError);
 
 export const ExpiresMissingError = () => new Error(ErrorEnum._expiresInMissingError);
-
-export const NoDataRetrievedError = (key: string) => {
-    throw new Error(`${ErrorEnum._noDataRetrievedError} using key: ${key}`);
-};
-
-export const StoringError = (err: string, key: string, value: string) => {
-    throw new Error(`${err}\n${ErrorEnum._storeError} using key: ${key} and value ${value}`);
-};

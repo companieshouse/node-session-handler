@@ -1,10 +1,10 @@
-import { Encoding } from "../../encoding/Encoding";
-import { PromiseError, NoDataRetrievedError, StoringError } from "../../error/ErrorFunctions";
 import { Redis } from "ioredis";
-import { Cookie } from "../model/Cookie";
-import { ISession } from "../..";
-import { SessionKey } from "../keys/SessionKey";
+import { DeletionError, NoDataRetrievedError, RetrievalError, StoringError } from "./Errors";
+import { ISession } from "../model/SessionInterfaces";
+import { Encoding } from "../../encoding/Encoding";
 import { getSecondsSinceEpoch } from "../../utils/TimeUtils";
+import { SessionKey } from "../keys/SessionKey";
+import { Cookie } from "../model/Cookie";
 
 export class SessionStore {
 
@@ -15,33 +15,17 @@ export class SessionStore {
     }
 
     public load = async (cookie: Cookie): Promise<string> => {
-
-        try {
-            return Encoding.decode(await this.redisWrapper.get(cookie.sessionId));
-        } catch (err) {
-            console.error(err);
-        }
+        return Encoding.decode(await this.redisWrapper.get(cookie.sessionId));
     };
 
     public store = async (cookie: Cookie, value: ISession, timeToLiveInSeconds: number = 3600): Promise<string> => {
-
-        try {
-            value[SessionKey.Expires] = getSecondsSinceEpoch() + timeToLiveInSeconds;
-            return this.redisWrapper.set(cookie.sessionId, Encoding.encode(value), timeToLiveInSeconds);
-        } catch (err) {
-            console.error(err);
-        }
+        value[SessionKey.Expires] = getSecondsSinceEpoch() + timeToLiveInSeconds;
+        return this.redisWrapper.set(cookie.sessionId, Encoding.encode(value), timeToLiveInSeconds);
     };
 
     public delete = async (cookie: Cookie): Promise<number> => {
-
-        try {
-            return this.redisWrapper.del(cookie.sessionId);
-        } catch (err) {
-            console.error(err);
-        }
+        return this.redisWrapper.del(cookie.sessionId);
     };
-
 }
 
 class RedisWrapper {
@@ -50,36 +34,33 @@ class RedisWrapper {
 
     public set = async (key: string, value: string, timeToLiveInSeconds: number): Promise<string> => {
 
-        const promise = this.client.set(key, value, "EX", timeToLiveInSeconds)
-            .catch(err => StoringError(err, key, value));
-
-        return promise;
+        return this.client.set(key, value, "EX", timeToLiveInSeconds)
+            .catch(err => {
+                throw new StoringError(key, value, err)
+            });
     };
 
     public get = async (key: string): Promise<string> => {
 
         const checkIfResultEmpty = (result: string) => {
-
             if (!result) {
-                return (NoDataRetrievedError(key));
+                throw new NoDataRetrievedError(key);
             }
-
             return result;
-
         };
 
-        const promise = () => this.client.get(key)
+        return this.client.get(key)
             .then(checkIfResultEmpty)
-            .catch(PromiseError);
-
-        return promise();
+            .catch(err => {
+                throw new RetrievalError(key, err)
+            });
     };
 
     public del = async (key: string): Promise<number> => {
 
-        const promise = this.client.del(key)
-            .catch(PromiseError);
-
-        return promise;
+        return this.client.del(key)
+            .catch(err => {
+                throw new DeletionError(key, err)
+            });
     };
 }
