@@ -1,4 +1,3 @@
-import { SessionKey } from "../keys/SessionKey";
 import {
     generateSignature,
     generateSessionId,
@@ -7,26 +6,23 @@ import {
 } from "../../utils/CookieUtils";
 import { CookieSecretNotSetError, InvalidCookieLengthError, InvalidCookieSignatureError } from "./CookieErrors";
 import { CookieConstants } from "../../utils/CookieConstants";
-import { Session } from "../..";
+
+const validateSessionCookieLength = (sessionCookie: string): void => {
+    if (sessionCookie.length < CookieConstants._cookieValueLength) {
+        throw new InvalidCookieLengthError(sessionCookie.length);
+    }
+};
 
 const validateCookieSignature = (cookieSecret: string, cookieString: string): void => {
     if (!cookieSecret) {
         throw new CookieSecretNotSetError();
     }
 
-    const sig = extractSignature(cookieString);
+    const actualSignature = extractSignature(cookieString);
+    const expectedSignature = generateSignature(cookieString, cookieSecret);
 
-    const expectedSig = generateSignature(cookieString, cookieSecret);
-
-    if (sig !== expectedSig) {
-        throw new InvalidCookieSignatureError(sig, expectedSig);
-    }
-
-};
-
-const validateSessionCookieLength = (sessionCookie: string): void => {
-    if (sessionCookie.length < CookieConstants._cookieValueLength) {
-        throw new InvalidCookieLengthError(sessionCookie.length);
+    if (actualSignature !== expectedSignature) {
+        throw new InvalidCookieSignatureError(actualSignature, expectedSignature);
     }
 };
 
@@ -49,11 +45,6 @@ export class Cookie {
         const sessionId = generateSessionId();
         const signature = generateSignature(sessionId, cookieSecret);
         return new Cookie(sessionId, signature);
-    }
-
-    public static representationOf(session: Session, cookieSecret: string): Cookie {
-        const id = session.data[SessionKey.Id];
-        return new Cookie(id, generateSignature(id, cookieSecret));
     }
 
     public static validateCookieString(cookieSecret: string, cookieString: string): Cookie {

@@ -1,26 +1,10 @@
 import { expect } from "chai";
 import { extractSignature } from "../../src/utils/CookieUtils";
-import { createSession } from "../utils/SessionGenerator"
 import { generateRandomBytesBase64, generateSessionId, generateSignature } from "../../src/utils/CookieUtils";
 import { Cookie } from "../../src/session/model/Cookie";
-import { SessionKey } from "../../src/session/keys/SessionKey";
 
 describe("Cookie", () => {
     const cookieSecret = generateRandomBytesBase64(16);
-
-    describe("cookie creation", () => {
-        it("should build cookie from session data", () => {
-            const sessionId = generateSessionId();
-            const signature = generateSignature(sessionId, cookieSecret);
-
-            const session = createSession(cookieSecret);
-            session.data[SessionKey.Id] = sessionId;
-
-            const cookie = Cookie.representationOf(session, cookieSecret);
-            expect(cookie.sessionId).to.be.equal(sessionId);
-            expect(cookie.signature).to.be.equal(signature);
-        })
-    });
 
     describe("cookie validation", () => {
         it("should pass if cookie signature is correct", () => {

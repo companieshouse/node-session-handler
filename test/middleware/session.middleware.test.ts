@@ -1,14 +1,14 @@
+import { Arg, Substitute, SubstituteOf } from "@fluffy-spoon/substitute";
 import { expect } from "chai";
+import * as express from "express";
+import { NextFunction } from "express";
+import { SessionKey } from "../../src/session/keys/SessionKey";
+import { CookieConfig } from "../../src/config/CookieConfig";
 import { Session } from "../../src/session/model/Session";
 import { SessionMiddleware } from "../../src/session/SessionMiddleware";
 import { SessionStore } from "../../src/session/store/SessionStore";
-import { Arg, Substitute, SubstituteOf } from "@fluffy-spoon/substitute";
-import * as express from "express";
-import { NextFunction } from "express";
-import { CookieConfig } from "../../src/config/CookieConfig";
-import { createSession } from "../utils/SessionGenerator";
-import { Cookie } from "../../src/session/model/Cookie";
 import { generateRandomBytesBase64 } from "../../src/utils/CookieUtils";
+import { createSession } from "../utils/SessionGenerator";
 
 
 declare global {
@@ -57,10 +57,9 @@ describe("Session Middleware", () => {
 
     describe("when cookie is present", () => {
         const session: Session = createSession(config.cookieSecret);
-        const cookie: Cookie = Cookie.representationOf(session, config.cookieSecret);
-        const request = { cookies: { [config.cookieName]: cookie.value } } as express.Request;
+        const request = { cookies: { [config.cookieName]: "" + session.get(SessionKey.Id) + session.get(SessionKey.ClientSig) } } as express.Request;
         const cookieArg = () => {
-            return Arg.is(_ => _.value === cookie.value);
+            return Arg.is(_ => _.value === "" + session.get(SessionKey.Id) + session.get(SessionKey.ClientSig));
         };
 
         it("should load a session and insert the session object in the request", async () => {
