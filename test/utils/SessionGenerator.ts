@@ -7,7 +7,7 @@ import { IAccessToken } from "../../src/session/model/SessionInterfaces";
 import { generateRandomBytesBase64 } from "../../src/utils/CookieUtils";
 
 export function createSession(cookieSecret: string, extraData?: any): Session {
-    const cookie: Cookie = Cookie.create(cookieSecret);
+    const cookie: Cookie = Cookie.createNew(cookieSecret);
     const expiryTimeInSeconds = 3600
 
     const sessionData = extraData ? extraData : {};

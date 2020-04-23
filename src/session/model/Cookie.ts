@@ -13,7 +13,7 @@ const validateSessionCookieLength = (sessionCookie: string): void => {
     }
 };
 
-const validateCookieSignature = (cookieSecret: string, cookieString: string): void => {
+export const validateCookieSignature = (cookieString: string, cookieSecret: string): void => {
     if (!cookieSecret) {
         throw new CookieSecretNotSetError();
     }
@@ -41,15 +41,14 @@ export class Cookie {
         return this.sessionId + this.signature;
     }
 
-    public static create(cookieSecret: string): Cookie {
+    public static createNew(cookieSecret: string): Cookie {
         const sessionId = generateSessionId();
         const signature = generateSignature(sessionId, cookieSecret);
         return new Cookie(sessionId, signature);
     }
 
-    public static validateCookieString(cookieSecret: string, cookieString: string): Cookie {
+    public static createFrom(cookieString: string): Cookie {
         validateSessionCookieLength(cookieString);
-        validateCookieSignature(cookieSecret, cookieString);
         return new Cookie(extractSessionId(cookieString), extractSignature(cookieString))
     }
 

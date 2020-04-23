@@ -11,7 +11,7 @@ import { generateRandomBytesBase64 } from "../../src/utils/CookieUtils";
 import { getSecondsSinceEpoch } from "../../src/utils/TimeUtils";
 
 describe("Store", () => {
-    const cookie = Cookie.create(generateRandomBytesBase64(16));
+    const cookie = Cookie.createNew(generateRandomBytesBase64(16));
     const data: ISession = {
         [SessionKey.ExtraData]: {
             name: "Mark",

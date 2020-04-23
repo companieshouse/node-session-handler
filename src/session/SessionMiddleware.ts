@@ -2,9 +2,8 @@ import { Request, Response, NextFunction, RequestHandler } from "express";
 import { SessionStore } from "./store/SessionStore";
 import { Session } from "./model/Session";
 import { CookieConfig } from "../config/CookieConfig";
-import { Cookie } from "./model/Cookie";
+import { Cookie, validateCookieSignature } from "./model/Cookie";
 import expressAsyncHandler from "express-async-handler";
-import { ISession } from "./model/SessionInterfaces";
 
 export function SessionMiddleware(config: CookieConfig, sessionStore: SessionStore): RequestHandler {
     return initializeRequestHandler(config, sessionStore);
@@ -34,8 +33,9 @@ function sessionRequestHandler(config: CookieConfig, sessionStore: SessionStore)
             console.log(`COOKIE: ${sessionCookie}`);
 
             try {
+                validateCookieSignature(sessionCookie, config.cookieSecret)
 
-                const cookie = Cookie.validateCookieString(config.cookieSecret, sessionCookie);
+                const cookie = Cookie.createFrom(sessionCookie);
                 const sessionData = await sessionStore.load(cookie);
                 const session = Session.createInstance(sessionData);
                 session.verify();
@@ -48,7 +48,7 @@ function sessionRequestHandler(config: CookieConfig, sessionStore: SessionStore)
                 delete request.session;
 
                 try {
-                    const cookie = Cookie.validateCookieString(config.cookieSecret, sessionCookie);
+                    const cookie = Cookie.createFrom(sessionCookie);
                     sessionStore.delete(cookie);
                 } catch (_) {
                     console.error(_);
