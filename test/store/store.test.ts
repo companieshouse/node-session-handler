@@ -5,7 +5,7 @@ import { ISession } from "../../src";
 import { Encoding } from "../../src/encoding/Encoding";
 import { SessionKey } from "../../src/session/keys/SessionKey";
 import { Cookie } from "../../src/session/model/Cookie";
-import { DeletionError, RetrievalError, StoringError } from "../../src/session/store/Errors";
+import { DeletionError, RetrievalError, StoringError } from "../../src/session/store/SessionStoreErrors";
 import { SessionStore } from "../../src/session/store/SessionStore";
 import { generateRandomBytesBase64 } from "../../src/utils/CookieUtils";
 import { getSecondsSinceEpoch } from "../../src/utils/TimeUtils";

@@ -1,5 +1,5 @@
 import { Redis } from "ioredis";
-import { DeletionError, NoDataRetrievedError, RetrievalError, StoringError } from "./Errors";
+import { DeletionError, NoDataRetrievedError, RetrievalError, StoringError } from "./SessionStoreErrors";
 import { ISession } from "../model/SessionInterfaces";
 import { Encoding } from "../../encoding/Encoding";
 import { getSecondsSinceEpoch } from "../../utils/TimeUtils";

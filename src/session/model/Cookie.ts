@@ -5,13 +5,13 @@ import {
     extractSignature,
     extractSessionId
 } from "../../utils/CookieUtils";
-import { SessionLengthError, SessionSecretNotSetError, SignatureCheckError } from "../../error/ErrorFunctions";
+import { CookieSecretNotSetError, InvalidCookieLengthError, InvalidCookieSignatureError } from "./CookieErrors";
 import { CookieConstants } from "../../utils/CookieConstants";
 import { Session } from "../..";
 
 const validateCookieSignature = (cookieSecret: string, cookieString: string): void => {
     if (!cookieSecret) {
-        throw SessionSecretNotSetError();
+        throw new CookieSecretNotSetError();
     }
 
     const sig = extractSignature(cookieString);
@@ -19,14 +19,14 @@ const validateCookieSignature = (cookieSecret: string, cookieString: string): vo
     const expectedSig = generateSignature(cookieString, cookieSecret);
 
     if (sig !== expectedSig) {
-        throw SignatureCheckError(expectedSig, sig);
+        throw new InvalidCookieSignatureError(sig, expectedSig);
     }
 
 };
 
 const validateSessionCookieLength = (sessionCookie: string): void => {
     if (sessionCookie.length < CookieConstants._cookieValueLength) {
-        throw SessionLengthError(CookieConstants._cookieValueLength, sessionCookie.length);
+        throw new InvalidCookieLengthError(sessionCookie.length);
     }
 };
 
@@ -54,12 +54,12 @@ export class Cookie {
     public static representationOf(session: Session, cookieSecret: string): Cookie {
         const id = session.data[SessionKey.Id];
         return new Cookie(id, generateSignature(id, cookieSecret));
-    };
+    }
 
-    public static validateCookieString = (cookieSecret: string, cookieString: string): Cookie => {
+    public static validateCookieString(cookieSecret: string, cookieString: string): Cookie {
         validateSessionCookieLength(cookieString);
         validateCookieSignature(cookieSecret, cookieString);
         return new Cookie(extractSessionId(cookieString), extractSignature(cookieString))
-    };
+    }
 
 }
