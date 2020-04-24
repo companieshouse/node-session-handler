@@ -46,7 +46,7 @@ describe("Coding and decoding", () => {
             car: Car
         }
 
-        session.saveExtraData("appeals", {
+        session.setExtraData("appeals", {
             car: {
                 wheels: 4
             }

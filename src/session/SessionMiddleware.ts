@@ -37,7 +37,7 @@ function sessionRequestHandler(config: CookieConfig, sessionStore: SessionStore)
 
                 const cookie = Cookie.createFrom(sessionCookie);
                 const sessionData = await sessionStore.load(cookie);
-                const session = Session.createInstance(sessionData);
+                const session = new Session(sessionData);
                 session.verify();
                 request.session = session;
 

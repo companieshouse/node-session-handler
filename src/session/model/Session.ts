@@ -1,10 +1,4 @@
-import {
-    AccessTokenMissingError,
-    ExpiresMissingError,
-    SessionExpiredError,
-    SignInInfoMissingError,
-    SessionParseError
-} from "../../error/ErrorFunctions";
+import { IncompleteSessionDataError, SessionExpiredError } from "./SessionErrors";
 import { SessionKey } from "../keys/SessionKey";
 import { ISession, ISessionValue } from "./SessionInterfaces";
 import { SignInInfoKeys } from "../keys/SignInInfoKeys";
@@ -12,30 +6,7 @@ import { AccessTokenKeys } from "../keys/AccessTokenKeys";
 
 export class Session {
 
-    private dirty: boolean;
-    public data: ISession = {};
-
-    public constructor(data?: any) {
-
-        this.setDirty(true);
-        data ? this.setSessionData(data) : this.setSessionData({});
-
-    }
-
-    public setSessionData(data: ISession): void {
-        this.data = data;
-        if (!data[SessionKey.ExtraData]) {
-            data[SessionKey.ExtraData] = {};
-        }
-    }
-
-    public isDirty(): boolean {
-        return this.dirty;
-    }
-
-    public setDirty(dirty: boolean): void {
-        this.dirty = dirty;
-    }
+    public constructor(public data: ISession = {}) {}
 
     public get<T = ISessionValue>(key: SessionKey): T | undefined {
         return this.data[key];
@@ -45,8 +16,11 @@ export class Session {
         return this.data[SessionKey.ExtraData][key];
     }
 
-    public saveExtraData<T>(key: string, val: T): void {
-        this.data[SessionKey.ExtraData][key] = val;
+    public setExtraData<T>(key: string, value: T): void {
+        if (this.data[SessionKey.ExtraData] == null) {
+            this.data[SessionKey.ExtraData] = {}
+        }
+        this.data[SessionKey.ExtraData][key] = value;
     }
 
     public deleteExtraData(key: string): boolean {
@@ -55,35 +29,24 @@ export class Session {
 
     public verify = (): void => {
         const signInInfo = this.data[SessionKey.SignInInfo];
-
         if (!signInInfo) {
-            throw SignInInfoMissingError()
+            throw new IncompleteSessionDataError(SessionKey.SignInInfo);
         }
 
         const accessToken = signInInfo[SignInInfoKeys.AccessToken];
-
         if (!accessToken || !accessToken[AccessTokenKeys.AccessToken]) {
-            throw AccessTokenMissingError();
+            throw new IncompleteSessionDataError(SessionKey.SignInInfo, SignInInfoKeys.AccessToken);
         }
 
         const expires = this.data[SessionKey.Expires];
-
         if (!expires) {
-            throw ExpiresMissingError();
+            throw new IncompleteSessionDataError(SessionKey.Expires);
         }
-        // This time corresponds to the time precisison given by the accounts service in seconds.
+
+        // This time corresponds to the time precision given by the accounts service in seconds.
         const dateNowMillis = Number(Date.now().toPrecision(10)) / 1000;
-
         if (expires <= dateNowMillis) {
-            throw SessionExpiredError(`Expires: ${expires}`, `Actual: ${dateNowMillis}`);
+            throw new SessionExpiredError(expires, dateNowMillis);
         }
-
-    };
-
-    public static createInstance = (object: any): Session => {
-        if (object) {
-            return new Session(object);
-        }
-        throw SessionParseError(object);
     };
 }
