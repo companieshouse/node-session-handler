@@ -34,7 +34,7 @@ Since build artifacts are stored in the repository (no NPM registry in used just
 
 The session class is a wrapper around the raw session `data: ISession` (as retrieved from accounts after signing in). 
 
-To keep the `ISession` type consistent, we added an extra field called `extra_data` (`SessionKey.ExtraData`) to store any data that apps might need in the session making session itself extensible. Although we recommend making use of that extension point, such practice is not enforced in any way.
+To keep the `ISession` type consistent, we added an extra field called `extra_data` (`SessionKey.ExtraData`) to store any data that apps might need in the session making session itself extensible.
 
 The class provides these methods:
 
