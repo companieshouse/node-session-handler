@@ -29,7 +29,7 @@ describe("Store", () => {
             redis.received().get(cookie.sessionId);
         });
 
-        it("should throw error when read failed",  async () => {
+        it("should throw error when read failed", async () => {
             const redis = Substitute.for<Redis>();
             redis.get(cookie.sessionId).returns(Promise.reject("Some error"));
 
