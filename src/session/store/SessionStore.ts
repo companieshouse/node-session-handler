@@ -14,7 +14,7 @@ export class SessionStore {
         this.redisWrapper = new RedisWrapper(redis);
     }
 
-    public load = async (cookie: Cookie): Promise<any> => {
+    public load = async (cookie: Cookie): Promise<ISession> => {
         return Encoding.decode(await this.redisWrapper.get(cookie.sessionId));
     };
 
