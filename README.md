@@ -27,7 +27,7 @@ Note: Cookie parsing must happen before request is passed to session middleware.
 Since build artifacts are stored in the repository (no NPM registry in used just yet) to bring this module as dependency please add the following fragment to `package.json`: 
 
 ```$json
-"ch-node-session-handler": "git+ssh://git@github.com/companieshouse/node-session-handler.git#master"
+"ch-node-session-handler": "git+ssh://git@github.com/companieshouse/node-session-handler.git#2.0.0"
 ```
 
 ### Session
