@@ -47,8 +47,8 @@ export class Session {
 
         // This time corresponds to the time precision given by the accounts service in seconds.
         const dateNowMilliseconds = Number(Date.now().toPrecision(10)) / 1000;
-        if (expires <= dateNowMillis) {
-            throw new SessionExpiredError(expires, dateNowMillis);
+        if (expires <= dateNowMilliseconds) {
+            throw new SessionExpiredError(expires, dateNowMilliseconds);
         }
     };
 }
