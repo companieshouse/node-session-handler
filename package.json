@@ -1,6 +1,6 @@
 {
   "name": "ch-node-session-handler",
-  "version": "0.0.1",
+  "version": "1.0.0",
   "description": "Node.js session handler for Companies House",
   "main": "./lib/index.js",
   "types": "./lib/index.d.ts",
@@ -18,13 +18,13 @@
   },
   "repository": {
     "type": "git",
-    "url": "git+https://github.com/companieshouse/poc-node-session-handler.git"
+    "url": "git+https://github.com/companieshouse/node-session-handler.git"
   },
   "license": "MIT",
   "bugs": {
-    "url": "https://github.com/companieshouse/poc-node-session-handler/issues"
+    "url": "https://github.com/companieshouse/node-session-handler/issues"
   },
-  "homepage": "https://github.com/companieshouse/poc-node-session-handler#readme",
+  "homepage": "https://github.com/companieshouse/node-session-handler#readme",
   "dependencies": {
     "crypto": "^1.0.1",
     "express-async-handler": "^1.1.4",
