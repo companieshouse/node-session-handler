@@ -8,7 +8,7 @@ import { Session } from "../../src/session/model/Session";
 import { SessionMiddleware } from "../../src/session/SessionMiddleware";
 import { SessionStore } from "../../src/session/store/SessionStore";
 import { generateRandomBytesBase64 } from "../../src/utils/CookieUtils";
-import { createSession } from "../utils/SessionGenerator";
+import { createSession, createSessionData } from "../utils/SessionGenerator";
 
 
 declare global {
@@ -56,7 +56,8 @@ describe("Session Middleware", () => {
     });
 
     describe("when cookie is present", () => {
-        const session: Session = createSession(config.cookieSecret);
+        const sessionData = createSessionData(config.cookieSecret)
+        const session: Session = new Session(sessionData);
         const request = { cookies: { [config.cookieName]: "" + session.get(SessionKey.Id) + session.get(SessionKey.ClientSig) } } as express.Request;
         const cookieArg = () => {
             return Arg.is(_ => _.value === "" + session.get(SessionKey.Id) + session.get(SessionKey.ClientSig));
@@ -64,17 +65,18 @@ describe("Session Middleware", () => {
 
         it("should load a session and insert the session object in the request", async () => {
             const sessionStore = Substitute.for<SessionStore>();
-            sessionStore.load(cookieArg()).returns(new Promise<any>((res, rej) => res(session.data)));
+            sessionStore.load(cookieArg()).returns(Promise.resolve(sessionData));
 
             await SessionMiddleware(config, sessionStore)(request, Substitute.for<express.Response>(), nextFunction);
 
-            expect(request.session.data).to.be.deep.equal(session.data);
+            // @ts-ignore
+            expect(request.session.data).to.be.deep.equal(sessionData);
         });
 
         it("should delete session alongside cookie and set the session object to undefined if session load fails", async () => {
             const sessionStore = Substitute.for<SessionStore>();
-            sessionStore.load(cookieArg()).returns(new Promise((_, rej) => rej("")));
-            sessionStore.delete(cookieArg()).returns(new Promise<void>((res, _) => res()));
+            sessionStore.load(cookieArg()).returns(Promise.reject(""));
+            sessionStore.delete(cookieArg()).returns(Promise.resolve());
 
             const response: SubstituteOf<express.Response> = Substitute.for<express.Response>();
             await SessionMiddleware(config, sessionStore)(request, response, nextFunction);

@@ -44,8 +44,6 @@ The class provides these methods:
 - `deleteExtraData(key: string): boolean` - deletes a key from the session data populated by an application (if exists)
 - `verify = (): void` - ensures that the session is valid i.e. contains the right fields, and it's not expired
 
-**Note:** some values can only be retrieved using `session.data[string]` method, as such we provide the SessionKey(s) for convenience and to help avoid typo errors
-
 ### SessionStore
 
 Session store offers a way to load `SessionStore.load`, store `SessionStore.store` and delete `SessionStore.delete` session from database without worrying about data encoding or decoding. 

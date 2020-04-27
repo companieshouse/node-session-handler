@@ -1,11 +1,11 @@
 import { expect } from "chai";
+import { SessionKey } from "../../src/session/keys/SessionKey";
 import { Encoding } from "../../src/encoding/Encoding";
-import { createSession } from "../utils/SessionGenerator";
+import { createSessionData } from "../utils/SessionGenerator";
 import { generateRandomBytesBase64 } from "../../src/utils/CookieUtils";
 
 const decodedData = { name: "tester", age: 21 };
 const encodedData = "gqRuYW1lpnRlc3RlcqNhZ2UV";
-const session = createSession(generateRandomBytesBase64(16))
 
 describe("Coding and decoding", () => {
     describe("encode", () => {
@@ -33,29 +33,19 @@ describe("Coding and decoding", () => {
         const decoded = Encoding.decode(encoded);
 
         expect(decoded).to.be.deep.equal(decodedData)
-
     });
 
     it("should encode and decode data with nested objects", () => {
-
-        interface Car {
-            wheels: number
-        }
-
-        interface SomeInterface {
-            car: Car
-        }
-
-        session.setExtraData("appeals", {
+        const sessionData = createSessionData(generateRandomBytesBase64(16))
+        sessionData[SessionKey.ExtraData] = {
             car: {
                 wheels: 4
             }
-        } as SomeInterface)
+        }
 
-        const encodedSession = Encoding.encode(session.data);
-        const decodedSession = Encoding.decode(encodedSession);
+        const encoded = Encoding.encode(sessionData);
+        const decoded = Encoding.decode(encoded);
 
-        expect(decodedSession).to.be.deep.equal(session.data);
-
+        expect(decoded).to.be.deep.equal(sessionData);
     })
 });

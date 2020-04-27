@@ -7,6 +7,10 @@ import { IAccessToken } from "../../src/session/model/SessionInterfaces";
 import { generateRandomBytesBase64 } from "../../src/utils/CookieUtils";
 
 export function createSession(cookieSecret: string, extraData?: any): Session {
+    return new Session(createSessionData(cookieSecret, extraData));
+}
+
+export function createSessionData(cookieSecret: string, extraData?: any): any {
     const cookie: Cookie = Cookie.createNew(cookieSecret);
     const expiryTimeInSeconds = 3600
 
@@ -19,7 +23,7 @@ export function createSession(cookieSecret: string, extraData?: any): Session {
     };
     sessionData[SessionKey.Expires] = Date.now() + expiryTimeInSeconds * 1000;
 
-    return new Session(sessionData);
+    return sessionData;
 }
 
 const createDefaultAccessToken = (expiryPeriod: number): IAccessToken => {

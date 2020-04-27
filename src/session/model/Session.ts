@@ -6,7 +6,7 @@ import { AccessTokenKeys } from "../keys/AccessTokenKeys";
 
 export class Session {
 
-    public constructor(public data: ISession = {}) {}
+    public constructor(private data: ISession = {}) {}
 
     public get<T = ISessionValue>(key: SessionKey): T | undefined {
         return this.data[key];
