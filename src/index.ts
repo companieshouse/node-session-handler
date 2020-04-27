@@ -13,4 +13,4 @@ declare global {
     }
 }
 
-export { Session, ISession, SessionStore, SessionMiddleware, CookieConfig};
+export { Session, ISession, SessionStore, SessionMiddleware, CookieConfig };
