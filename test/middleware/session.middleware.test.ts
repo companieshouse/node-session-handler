@@ -8,7 +8,7 @@ import { Session } from "../../src/session/model/Session";
 import { SessionMiddleware } from "../../src/session/SessionMiddleware";
 import { SessionStore } from "../../src/session/store/SessionStore";
 import { generateRandomBytesBase64 } from "../../src/utils/CookieUtils";
-import { createSession, createSessionData } from "../utils/SessionGenerator";
+import { createSessionData } from "../utils/SessionGenerator";
 
 
 declare global {
