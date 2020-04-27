@@ -6,7 +6,12 @@ import { AccessTokenKeys } from "../keys/AccessTokenKeys";
 
 export class Session {
 
-    public constructor(private data: ISession = {}) {}
+    public constructor(public data: Readonly<ISession> = {}) {
+        if (this.data[SessionKey.ExtraData] == null) {
+            // @ts-ignore - ignores read only flag to initiate extra data
+            this.data[SessionKey.ExtraData] = {}
+        }
+    }
 
     public get<T = ISessionValue>(key: SessionKey): T | undefined {
         return this.data[key];
@@ -17,9 +22,6 @@ export class Session {
     }
 
     public setExtraData<T>(key: string, value: T): void {
-        if (this.data[SessionKey.ExtraData] == null) {
-            this.data[SessionKey.ExtraData] = {}
-        }
         this.data[SessionKey.ExtraData][key] = value;
     }
 

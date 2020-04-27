@@ -8,8 +8,7 @@ import { Session } from "../../src/session/model/Session";
 import { SessionMiddleware } from "../../src/session/SessionMiddleware";
 import { SessionStore } from "../../src/session/store/SessionStore";
 import { generateRandomBytesBase64 } from "../../src/utils/CookieUtils";
-import { createSessionData } from "../utils/SessionGenerator";
-
+import { createSession, createSessionData } from "../utils/SessionGenerator";
 
 declare global {
     namespace Express {
@@ -56,8 +55,7 @@ describe("Session Middleware", () => {
     });
 
     describe("when cookie is present", () => {
-        const sessionData = createSessionData(config.cookieSecret)
-        const session: Session = new Session(sessionData);
+        const session: Session = createSession(config.cookieSecret);
         const request = { cookies: { [config.cookieName]: "" + session.get(SessionKey.Id) + session.get(SessionKey.ClientSig) } } as express.Request;
         const cookieArg = () => {
             return Arg.is(_ => _.value === "" + session.get(SessionKey.Id) + session.get(SessionKey.ClientSig));
@@ -65,12 +63,11 @@ describe("Session Middleware", () => {
 
         it("should load a session and insert the session object in the request", async () => {
             const sessionStore = Substitute.for<SessionStore>();
-            sessionStore.load(cookieArg()).returns(Promise.resolve(sessionData));
+            sessionStore.load(cookieArg()).returns(Promise.resolve(session.data));
 
             await SessionMiddleware(config, sessionStore)(request, Substitute.for<express.Response>(), nextFunction);
 
-            // @ts-ignore
-            expect(request.session.data).to.be.deep.equal(sessionData);
+            expect(request.session.data).to.be.deep.equal(session.data);
         });
 
         it("should delete session alongside cookie and set the session object to undefined if session load fails", async () => {
