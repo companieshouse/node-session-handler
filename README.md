@@ -27,20 +27,22 @@ Note: Cookie parsing must happen before request is passed to session middleware.
 Since build artifacts are stored in the repository (no NPM registry in used just yet) to bring this module as dependency please add the following fragment to `package.json`: 
 
 ```$json
-"ch-node-session-handler": "git+ssh://git@github.com/companieshouse/node-session-handler.git#master"
+"ch-node-session-handler": "git+ssh://git@github.com/companieshouse/node-session-handler.git#2.0.0"
 ```
 
 ### Session
 
-Session class represents bag of session data with the following accessor methods:
+The session class is a wrapper around the raw session `data: ISession` (as retrieved from accounts after signing in). 
 
-- `Session.getValue(key: SessionKey)` allowing to reach for certain top level elements of the session
-- `Session.getExtraData()` allowing to retrieve session data populated by the applications
-- `Session.saveExtraData(key: string, value: T)` allowing to amend session data used by the applications
+To keep the `ISession` type consistent, we added an extra field called `extra_data` (`SessionKey.ExtraData`) to store any data that apps might need in the session making session itself extensible.
 
-Enumerated type `SessionKey` mentioned above lists all keys for common top level properties such as `SessionKey.Id`, `SessionKey.SignInInfo`, `SessionKey.ExtraData` and more, helping to avoid typo errors.
+The class provides these methods:
 
-A `SessionKey.ExtraData` key plays special role here as it allows applications to put their data into session making session itself extensible. 
+- `get<T = ISessionValue>(key: SessionKey): T | undefined` - allows retrieving session data for keys defined in the `SessionKey` enum that represents all possible types than can be retrieved from the session
+- `getExtraData<T>(key: string): T | undefined` - allows retrieving session data populated by the applications
+- `setExtraData<T>(key: string, val: T): void` - allows amending session data used by the applications by replacing existing value (if present)
+- `deleteExtraData(key: string): boolean` - deletes a key from the session data populated by an application (if exists)
+- `verify = (): void` - ensures that the session is valid i.e. contains the right fields, and it's not expired
 
 ### SessionStore
 

@@ -1,17 +1,10 @@
-import { Encoding } from "../../encoding/Encoding";
-import { EitherAsync, Right, Left } from "purify-ts";
-import { Failure } from "../../error/FailureType";
-import {
-    wrapValue,
-    wrapFunction,
-    wrapPromise,
-} from "../../utils/EitherAsyncUtils";
-import { PromiseError, NoDataRetrievedError, StoringError } from "../../error/ErrorFunctions";
 import { Redis } from "ioredis";
-import { Cookie } from "../model/Cookie";
-import { ISession } from "../..";
-import { SessionKey } from "../keys/SessionKey";
+import { DeletionError, NoDataRetrievedError, RetrievalError, StoringError } from "./SessionStoreErrors";
+import { ISession } from "../model/SessionInterfaces";
+import { Encoding } from "../../encoding/Encoding";
 import { getSecondsSinceEpoch } from "../../utils/TimeUtils";
+import { SessionKey } from "../keys/SessionKey";
+import { Cookie } from "../model/Cookie";
 
 export class SessionStore {
 
@@ -21,65 +14,55 @@ export class SessionStore {
         this.redisWrapper = new RedisWrapper(redis);
     }
 
-    public load = (cookie: Cookie): EitherAsync<Failure, ISession> => {
-
-        const decode = wrapFunction<Failure, ISession, string>(Encoding.decode);
-
-        return wrapValue<Failure, Cookie>(cookie)
-            .map(_ => _.sessionId)
-            .chain(this.redisWrapper.get)
-            .chain(decode);
+    public load = async (cookie: Cookie): Promise<ISession> => {
+        return Encoding.decode(await this.redisWrapper.get(cookie.sessionId));
     };
 
-    public store = (cookie: Cookie, value: ISession, timeToLiveInSeconds: number = 3600): EitherAsync<Failure, string> => {
+    public store = async (cookie: Cookie, value: ISession, timeToLiveInSeconds: number = 3600): Promise<void> => {
         value[SessionKey.Expires] = getSecondsSinceEpoch() + timeToLiveInSeconds;
         return this.redisWrapper.set(cookie.sessionId, Encoding.encode(value), timeToLiveInSeconds);
     };
 
-    public delete = (cookie: Cookie): EitherAsync<Failure, number> => {
+    public delete = async (cookie: Cookie): Promise<void> => {
         return this.redisWrapper.del(cookie.sessionId);
     };
-
 }
 
 class RedisWrapper {
 
     public constructor(private readonly client: Redis) { }
 
-    public set = (key: string, value: string, timeToLiveInSeconds: number): EitherAsync<Failure, string> => {
+    public set = async (key: string, value: string, timeToLiveInSeconds: number): Promise<void> => {
 
-        const promise = this.client.set(key, value, "EX", timeToLiveInSeconds)
-            .then(r => Right(r))
-            .catch(err => Left(Failure(StoringError(err, key, value))));
-
-        return wrapPromise<Failure, string>(promise);
+        return this.client.set(key, value, "EX", timeToLiveInSeconds)
+            .then(() => { return })
+            .catch(err => {
+                throw new StoringError(key, value, err)
+            });
     };
 
-    public get = (key: string): EitherAsync<Failure, string> => {
+    public get = async (key: string): Promise<string> => {
 
         const checkIfResultEmpty = (result: string) => {
-
             if (!result) {
-                return Left(Failure(NoDataRetrievedError(key)));
+                throw new NoDataRetrievedError(key);
             }
-
-            return Right(result);
-
+            return result;
         };
 
-        const promise = () => this.client.get(key)
+        return this.client.get(key)
             .then(checkIfResultEmpty)
-            .catch(err => Left<Failure, string>(Failure(PromiseError(err))));
-
-        return wrapPromise(promise());
+            .catch(err => {
+                throw new RetrievalError(key, err)
+            });
     };
 
-    public del = (key: string): EitherAsync<Failure, number> => {
+    public del = async (key: string): Promise<void> => {
 
-        const promise = this.client.del(key)
-            .then(r => Right(r))
-            .catch(err => Left(Failure(PromiseError(err))));
-
-        return wrapPromise(promise);
+        return this.client.del(key)
+            .then(() => { return })
+            .catch(err => {
+                throw new DeletionError(key, err)
+            });
     };
 }

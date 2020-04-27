@@ -1,22 +1,19 @@
-import { expect } from "chai";
-import { Session, VerifiedSession } from "../../src/session/model/Session";
-import { SessionMiddleware } from "../../src/session/SessionMiddleware";
-import { SessionStore } from "../../src/session/store/SessionStore";
 import { Arg, Substitute, SubstituteOf } from "@fluffy-spoon/substitute";
+import { expect } from "chai";
 import * as express from "express";
 import { NextFunction } from "express";
+import { SessionKey } from "../../src/session/keys/SessionKey";
 import { CookieConfig } from "../../src/config/CookieConfig";
-import { getValidSessionObject } from "../utils/SessionGenerator";
-import { Cookie } from "../../src/session/model/Cookie";
-import { Either, Left, Maybe } from "purify-ts";
+import { Session } from "../../src/session/model/Session";
+import { SessionMiddleware } from "../../src/session/SessionMiddleware";
+import { SessionStore } from "../../src/session/store/SessionStore";
 import { generateRandomBytesBase64 } from "../../src/utils/CookieUtils";
-import { Failure } from "../../src/error/FailureType";
-import { wrapEither, wrapValue } from "../../src/utils/EitherAsyncUtils";
+import { createSession, createSessionData } from "../utils/SessionGenerator";
 
 declare global {
     namespace Express {
         export interface Request {
-            session: Maybe<Session>;
+            session?: Session;
         }
     }
 }
@@ -52,38 +49,36 @@ describe("Session Middleware", () => {
 
             await SessionMiddleware(config, sessionStore)(request, Substitute.for<express.Response>(), nextFunction);
 
-            expect(request.session.isNothing()).to.eq(true);
+            expect(request.session).to.eq(undefined);
             sessionStore.didNotReceive().load(Arg.any());
         });
     });
 
     describe("when cookie is present", () => {
-        const session: VerifiedSession = getValidSessionObject(config);
-        const cookie: Cookie = Cookie.representationOf(session, config.cookieSecret);
-        const request = { cookies: { [config.cookieName]: cookie.value } } as express.Request;
+        const session: Session = createSession(config.cookieSecret);
+        const request = { cookies: { [config.cookieName]: "" + session.get(SessionKey.Id) + session.get(SessionKey.ClientSig) } } as express.Request;
         const cookieArg = () => {
-            return Arg.is(_ => _.value === cookie.value);
+            return Arg.is(_ => _.value === "" + session.get(SessionKey.Id) + session.get(SessionKey.ClientSig));
         };
 
         it("should load a session and insert the session object in the request", async () => {
             const sessionStore = Substitute.for<SessionStore>();
-            sessionStore.load(cookieArg()).returns(wrapEither(Either.of(session.data)));
+            sessionStore.load(cookieArg()).returns(Promise.resolve(session.data));
 
             await SessionMiddleware(config, sessionStore)(request, Substitute.for<express.Response>(), nextFunction);
 
-            expect(request.session.isJust()).to.equal(true);
-            expect(request.session.extract().data).to.be.deep.equal(session.data);
+            expect(request.session.data).to.be.deep.equal(session.data);
         });
 
-        it("should delete session alongside cookie and set the session object to Nothing if session load fails", async () => {
+        it("should delete session alongside cookie and set the session object to undefined if session load fails", async () => {
             const sessionStore = Substitute.for<SessionStore>();
-            sessionStore.load(cookieArg()).returns(wrapEither(Left(Failure(_ => console.log("Fail")))));
-            sessionStore.delete(cookieArg()).returns(wrapValue(1));
+            sessionStore.load(cookieArg()).returns(Promise.reject(""));
+            sessionStore.delete(cookieArg()).returns(Promise.resolve());
 
             const response: SubstituteOf<express.Response> = Substitute.for<express.Response>();
             await SessionMiddleware(config, sessionStore)(request, response, nextFunction);
 
-            expect(request.session.isNothing()).to.eq(true);
+            expect(request.session).to.eq(undefined);
             sessionStore.received().delete(cookieArg() as any);
             response.received().clearCookie(config.cookieName);
         });

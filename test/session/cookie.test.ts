@@ -1,49 +1,17 @@
 import { expect } from "chai";
-import { createNewVerifiedSession } from "../utils/SessionGenerator"
+import { extractSignature } from "../../src/utils/CookieUtils";
 import { generateRandomBytesBase64, generateSessionId, generateSignature } from "../../src/utils/CookieUtils";
-import { Cookie } from "../../src/session/model/Cookie";
-import { VerifiedSession } from "../../src/session/model/Session";
-import { SessionKey } from "../../src/session/keys/SessionKey";
+import { Cookie, validateCookieSignature } from "../../src/session/model/Cookie";
 
 describe("Cookie", () => {
     const cookieSecret = generateRandomBytesBase64(16);
 
-    describe("cookie creation", () => {
-        it("should build cookie from session data", () => {
-            const sessionId = generateSessionId();
-            const signature = generateSignature(sessionId, cookieSecret);
-
-            const session: VerifiedSession = createNewVerifiedSession(cookieSecret);
-            session.data[SessionKey.Id] = sessionId;
-
-            const cookie = Cookie.representationOf(session, cookieSecret);
-            expect(cookie.sessionId).to.be.equal(sessionId);
-            expect(cookie.signature).to.be.equal(signature);
-        })
-    });
-
-    describe("cookie validation", () => {
+    describe("cookie signature validation", () => {
         it("should pass if cookie signature is correct", () => {
             const sessionId: string = generateSessionId();
             const signature: string = generateSignature(sessionId, cookieSecret);
 
-            const result = Cookie.validateCookieString(cookieSecret)(sessionId + signature);
-            expect(result.isRight()).to.eq(true);
-            result.ifRight(cookie => {
-                expect(cookie.value).is.equal(sessionId + signature);
-            });
-        });
-
-        it("should fail if cookie string is too short", () => {
-            const validSessionId: string = generateSessionId();
-            const validSignature: string = generateSignature(validSessionId, cookieSecret);
-            const invalidSessionId: string = "jasdfasd";
-            const invalidSignature = "asdkfasd";
-
-            [invalidSessionId + validSignature, validSessionId + invalidSignature, invalidSessionId + invalidSignature].forEach(cookie => {
-                const result = Cookie.validateCookieString(cookieSecret)(cookie);
-                expect(result.isLeft()).to.eq(true);
-            });
+            expect(() => validateCookieSignature(sessionId + signature, cookieSecret)).to.not.throw();
         });
 
         it("should fail if cookie signature is wrong", () => {
@@ -53,8 +21,31 @@ describe("Cookie", () => {
             const sessionId: string = generateSessionId();
             const signature: string = generateSignature(sessionId, cookieCreationSecret);
 
-            const result = Cookie.validateCookieString(cookieVerificationSecret)(sessionId + signature);
-            expect(result.isLeft()).to.eq(true);
+            const actualSignature = extractSignature(sessionId + signature);
+            const expectedSignature = generateSignature(sessionId + signature, cookieVerificationSecret);
+            expect(() => validateCookieSignature(sessionId + signature, cookieVerificationSecret))
+                .to.throw(`Cookie signature is invalid - it is ${actualSignature} while it should be ${expectedSignature}`);
         });
     });
+
+    describe("cookie creation", () => {
+        it("should return cookie instance from cookie string", () => {
+            const sessionId: string = generateSessionId();
+            const signature: string = generateSignature(sessionId, cookieSecret);
+
+            expect(Cookie.createFrom(sessionId + signature).value).to.be.equal(sessionId + signature);
+        })
+
+        it("should fail if cookie string is too short", () => {
+            const validSessionId: string = generateSessionId();
+            const validSignature: string = generateSignature(validSessionId, cookieSecret);
+            const invalidSessionId: string = "jasdfasd";
+            const invalidSignature = "asdkfasd";
+
+            [invalidSessionId + validSignature, validSessionId + invalidSignature, invalidSessionId + invalidSignature].forEach(cookie => {
+                expect(() => Cookie.createFrom(cookie))
+                    .to.throw(`Cookie string is not long enough - it is ${cookie.length} characters long while it should have 55 characters`);
+            });
+        });
+    })
 });

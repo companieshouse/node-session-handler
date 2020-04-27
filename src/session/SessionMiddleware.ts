@@ -1,14 +1,9 @@
 import { Request, Response, NextFunction, RequestHandler } from "express";
 import { SessionStore } from "./store/SessionStore";
-import { Failure } from "../error/FailureType";
-import { Either, Just, Nothing } from "purify-ts";
-import { VerifiedSession, Session } from "./model/Session";
+import { Session } from "./model/Session";
 import { CookieConfig } from "../config/CookieConfig";
-import { wrapEitherFunction, wrapValue, wrapEither } from "../utils/EitherAsyncUtils";
-import { Cookie } from "./model/Cookie";
+import { Cookie, validateCookieSignature } from "./model/Cookie";
 import expressAsyncHandler from "express-async-handler";
-import { ISession } from "./model/SessionInterfaces";
-
 
 export function SessionMiddleware(config: CookieConfig, sessionStore: SessionStore): RequestHandler {
     return initializeRequestHandler(config, sessionStore);
@@ -34,42 +29,37 @@ function sessionRequestHandler(config: CookieConfig, sessionStore: SessionStore)
         if (sessionCookie) {
 
             console.log("Got a session cookie.");
-            console.log(`REQUEST: ${request.url}`)
+            console.log(`REQUEST: ${request.url}`);
             console.log(`COOKIE: ${sessionCookie}`);
 
-            const validateCookieString = wrapEitherFunction(
-                Cookie.validateCookieString(config.cookieSecret));
+            try {
+                validateCookieSignature(sessionCookie, config.cookieSecret)
 
-            const loadSession: Either<Failure, VerifiedSession> =
-                await wrapValue<Failure, string>(sessionCookie)
-                    .chain<Cookie>(validateCookieString)
-                    .chain<ISession>(sessionStore.load)
-                    .chain<Session>(wrapEitherFunction(Session.createInstance))
-                    .chain<VerifiedSession>(session => wrapEither(session.verify()))
-                    .run();
+                const cookie = Cookie.createFrom(sessionCookie);
+                const sessionData = await sessionStore.load(cookie);
+                const session = new Session(sessionData);
+                session.verify();
+                request.session = session;
 
-            await loadSession.either(
-                async (failure: Failure) => {
+            } catch (err) {
 
-                    await validateCookieString(sessionCookie)
-                        .chain(sessionStore.delete)
-                        .map(_ => response.clearCookie(config.cookieName)).run();
+                console.error(err);
+                response.clearCookie(config.cookieName);
+                delete request.session;
 
-                    request.session = Nothing;
-                    failure.errorFunction(response);
-
-                },
-                async (verifiedSession: VerifiedSession) => {
-                    console.log("Session verified");
-                    request.session = Just(verifiedSession);
-                    return await Promise.resolve();
+                try {
+                    const cookie = Cookie.createFrom(sessionCookie);
+                    sessionStore.delete(cookie);
+                } catch (_) {
+                    console.error(_);
                 }
-            );
+
+            }
 
         } else {
-            console.log(`REQUEST: ${request.url}`)
+            console.log(`REQUEST: ${request.url}`);
             console.log("No Session cookie.");
-            request.session = Nothing;
+            delete request.session;
         }
 
         return next();
