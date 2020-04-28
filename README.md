@@ -86,4 +86,4 @@ Tests in turn can be run via `npm test` command.
 At this point no NPM registry is in use and built packages are stored directly in the repository.
 
 For that reason every source code change should be compiled using `npm run build` command and build artifacts in `lib` directory should be committed alongside initial code change.  
-Test
+Test 2
