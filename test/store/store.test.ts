@@ -78,6 +78,7 @@ describe("Store", () => {
     describe("deleting storing", () => {
         it("should delete from cache using session id", async () => {
             const redis = Substitute.for<Redis>();
+            // @ts-ignore - cause Substitute library does not work well with overloaded methods
             redis.del(Arg.any()).returns(Promise.resolve(1));
 
             await new SessionStore(redis).delete(cookie);
