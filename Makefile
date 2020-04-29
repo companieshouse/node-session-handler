@@ -10,6 +10,13 @@ lint:
 build:	package-install lint
 	npm run build
 
+.PHONY: test
+test: test-unit
+
 .PHONY: test-unit
 test-unit:
-	npm run test
+	npm run test:coverage
+
+.PHONY: sonar
+sonar:
+	npm run analyse-code
