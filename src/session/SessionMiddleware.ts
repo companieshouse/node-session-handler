@@ -4,6 +4,7 @@ import { Session } from "./model/Session";
 import { CookieConfig } from "../config/CookieConfig";
 import { Cookie, validateCookieSignature } from "./model/Cookie";
 import expressAsyncHandler from "express-async-handler";
+import { loggerInstance } from "../Logger";
 
 export function SessionMiddleware(config: CookieConfig, sessionStore: SessionStore): RequestHandler {
     return initializeRequestHandler(config, sessionStore);
@@ -28,9 +29,7 @@ function sessionRequestHandler(config: CookieConfig, sessionStore: SessionStore)
 
         if (sessionCookie) {
 
-            console.log("Got a session cookie.");
-            console.log(`REQUEST: ${request.url}`);
-            console.log(`COOKIE: ${sessionCookie}`);
+            loggerInstance().info(`Session cookie - REQUEST: ${request.url} - COOKIE: ${sessionCookie}`);
 
             try {
                 validateCookieSignature(sessionCookie, config.cookieSecret)
@@ -43,22 +42,21 @@ function sessionRequestHandler(config: CookieConfig, sessionStore: SessionStore)
 
             } catch (err) {
 
-                console.error(err);
+                loggerInstance().error(err);
                 response.clearCookie(config.cookieName);
                 delete request.session;
 
                 try {
                     const cookie = Cookie.createFrom(sessionCookie);
                     sessionStore.delete(cookie);
-                } catch (_) {
-                    console.error(_);
+                } catch (err) {
+                    loggerInstance().error(err);
                 }
 
             }
 
         } else {
-            console.log(`REQUEST: ${request.url}`);
-            console.log("No Session cookie.");
+            loggerInstance().info(`No session cookie - REQUEST: ${request.url}`);
             delete request.session;
         }
 
