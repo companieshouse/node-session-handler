@@ -26,7 +26,6 @@
   },
   "homepage": "https://github.com/companieshouse/node-session-handler#readme",
   "dependencies": {
-    "cookie-parser": "^1.4.5",
     "crypto": "^1.0.1",
     "express-async-handler": "^1.1.4",
     "ch-logging": "git+ssh://git@github.com/companieshouse/ch-structured-logging-node.git#a3e0dcc57f91f63803e02ceef2cc5e4038de9a19",
