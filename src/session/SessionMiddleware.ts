@@ -32,8 +32,7 @@ function sessionRequestHandler(config: CookieConfig, sessionStore: SessionStore)
             loggerInstance().info(`Session cookie - REQUEST: ${request.url} - COOKIE: ${sessionCookie}`);
 
             try {
-                validateCookieSignature(sessionCookie, config.cookieSecret)
-
+                validateCookieSignature(sessionCookie, config.cookieSecret);
                 const cookie = Cookie.createFrom(sessionCookie);
                 const sessionData = await sessionStore.load(cookie);
                 const session = new Session(sessionData);
