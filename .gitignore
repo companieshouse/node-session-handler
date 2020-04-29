@@ -210,4 +210,7 @@ dist
 # TernJS port file
 .tern-port
 
-
+# SonarQube
+coverage-report
+.nyc_output/
+.scannerwork/
