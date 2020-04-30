@@ -29,7 +29,7 @@ function sessionRequestHandler(config: CookieConfig, sessionStore: SessionStore)
 
         if (sessionCookie) {
 
-            loggerInstance().info(`Session cookie - REQUEST: ${request.url} - COOKIE: ${sessionCookie}`);
+            loggerInstance().info(`Session cookie ${sessionCookie} found in request: ${request.url}`);
 
             try {
                 validateCookieSignature(sessionCookie, config.cookieSecret);
@@ -38,12 +38,14 @@ function sessionRequestHandler(config: CookieConfig, sessionStore: SessionStore)
                 const session = new Session(sessionData);
                 session.verify();
                 request.session = session;
+                loggerInstance().debug(`Session successfully loaded from cookie ${sessionCookie}`)
 
             } catch (err) {
 
-                loggerInstance().error(err);
+                loggerInstance().error(`Session loading failed from cookie ${sessionCookie} due to error: ${err}`);
                 response.clearCookie(config.cookieName);
                 delete request.session;
+
 
                 try {
                     const cookie = Cookie.createFrom(sessionCookie);
@@ -55,7 +57,7 @@ function sessionRequestHandler(config: CookieConfig, sessionStore: SessionStore)
             }
 
         } else {
-            loggerInstance().info(`No session cookie - REQUEST: ${request.url}`);
+            loggerInstance().info(`Session cookie ${sessionCookie} not found in request ${request.url}`);
             delete request.session;
         }
 
