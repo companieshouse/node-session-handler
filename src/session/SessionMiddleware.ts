@@ -45,7 +45,7 @@ function sessionRequestHandler(config: CookieConfig, sessionStore: SessionStore)
     }
 
     return async (request: Request, response: Response, next: NextFunction): Promise<any> => {
-        const sessionCookie = request.cookies[config.cookieName];
+        const sessionCookie: string = request.cookies[config.cookieName];
 
         onHeaders(response, () => {
             if (request.session) {
@@ -58,7 +58,9 @@ function sessionRequestHandler(config: CookieConfig, sessionStore: SessionStore)
                     encode: String
                 })
             } else {
-                response.clearCookie(config.cookieName);
+                if (sessionCookie) {
+                    response.clearCookie(config.cookieName);
+                }
             }
         });
 

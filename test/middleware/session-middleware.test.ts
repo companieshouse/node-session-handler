@@ -1,16 +1,14 @@
-import { Substitute, SubstituteOf } from "@fluffy-spoon/substitute";
+import { Arg, Substitute, SubstituteOf } from "@fluffy-spoon/substitute";
 import { expect } from "chai";
-import cookieParser from "cookie-parser"
-import express, { Response } from "express";
-import request from "supertest"
+import { Request, Response } from "express";
+import { NextFunction } from "express";
+import { SessionKey } from "../../src/session/keys/SessionKey";
 import { CookieConfig } from "../../src/config/CookieConfig";
-
-import { Cookie } from "../../src/session/model/Cookie";
 import { Session } from "../../src/session/model/Session";
 import { SessionMiddleware } from "../../src/session/SessionMiddleware";
 import { SessionStore } from "../../src/session/store/SessionStore";
 import { generateRandomBytesBase64 } from "../../src/utils/CookieUtils";
-import { createSessionData } from "../utils/SessionGenerator";
+import { createSession } from "../utils/SessionGenerator";
 
 declare global {
     namespace Express {
@@ -20,64 +18,76 @@ declare global {
     }
 }
 
-const config: CookieConfig = {
-    cookieName: "__SID",
-    cookieDomain: "localhost",
-    cookieSecret: generateRandomBytesBase64(16)
-};
+describe("Session Middleware", () => {
+    const config: CookieConfig = {
+        cookieName: "__SID",
+        cookieDomain: "localhost",
+        cookieSecret: generateRandomBytesBase64(16),
+    };
+    const requestMetadata = { url: "/test-url", path: "/test-url", method: "GET" }
+    const nextFunction = Substitute.for<NextFunction>();
 
-const createApp = (sessionStore: SessionStore): express.Application => {
-    const app = express()
-    app.use(cookieParser())
-    app.use(SessionMiddleware(config, sessionStore))
-    return app
-}
+    describe("middleware initialisation", () => {
+        it("should fail when cookie name is missing", () => {
+            [undefined, null, ""].forEach(cookieName => {
+                expect(() => SessionMiddleware({ ...config, cookieName }, undefined))
+                    .to.throw("Cookie name must be defined")
+            });
+        });
 
-describe("Session middleware", () => {
+        it("should fail when cookie secret is missing or too short", () => {
+            [undefined, null, "", "12345678901234567890123"].forEach(cookieSecret => {
+                expect(() => SessionMiddleware({ ...config, cookieSecret }, undefined))
+                    .to.throw("Cookie secret must be at least 24 chars long")
+            });
+        });
+    });
+
     describe("when cookie is not present", () => {
-        it("should delete cookie", async () => {
-            const app = createApp(Substitute.for<SessionStore>());
-            await request(app)
-                .get("/")
-                .expect((response: Response) => {
-                    expect(response.get("Set-Cookie")[0]).to.be.equal("__SID=; Path=/; Expires=Thu, 01 Jan 1970 00:00:00 GMT")
-                })
-        })
-    })
+        const request = {
+            ...requestMetadata,
+            cookies: {}
+        } as Request;
+
+        it("should not try to load a session and delete session object from the request", async () => {
+            const sessionStore = Substitute.for<SessionStore>();
+
+            await SessionMiddleware(config, sessionStore)(request, Substitute.for<Response>(), nextFunction);
+
+            expect(request.session).to.eq(undefined);
+            sessionStore.didNotReceive().load(Arg.any());
+        });
+    });
 
     describe("when cookie is present", () => {
-        it("should reset cookie if session load succeeded", async () => {
-            const cookie: Cookie = Cookie.createNew(config.cookieSecret);
+        const session: Session = createSession(config.cookieSecret);
+        const request = {
+            ...requestMetadata,
+            cookies: { [config.cookieName]: "" + session.get(SessionKey.Id) + session.get(SessionKey.ClientSig) }
+        } as Request;
+        const cookieArg = () => {
+            return Arg.is(_ => _.value === "" + session.get(SessionKey.Id) + session.get(SessionKey.ClientSig));
+        };
 
-            const sessionStore: SubstituteOf<SessionStore> = Substitute.for<SessionStore>();
-            sessionStore.load(cookie).resolves(createSessionData(config.cookieSecret));
+        it("should load a session and insert session object in the request", async () => {
+            const sessionStore = Substitute.for<SessionStore>();
+            sessionStore.load(cookieArg()).returns(Promise.resolve(session.data));
 
-            const app = createApp(sessionStore);
-            await request(app)
-                .get("/")
-                .set("Cookie", [`${config.cookieName}=${cookie.value}`])
-                .expect((response: Response) => {
-                    expect(response.get("Set-Cookie")[0]).to.be.satisfy((value: string) => {
-                        return value.startsWith(`__SID=${cookie.value}; Max-Age=3600; Domain=localhost; Path=/; Expires=`)
-                            && value.endsWith("; HttpOnly; Secure")
-                    })
-                })
-        })
+            await SessionMiddleware(config, sessionStore)(request, Substitute.for<Response>(), nextFunction);
 
-        it("should delete cookie if session load fails", async () => {
-            const cookie: Cookie = Cookie.createNew(config.cookieSecret);
+            expect(request.session.data).to.be.deep.equal(session.data);
+        });
 
-            const sessionStore: SubstituteOf<SessionStore> = Substitute.for<SessionStore>();
-            sessionStore.load(cookie).rejects("Unexpected error in session loading");
+        it("should delete session and delete session object from the request if session load fails", async () => {
+            const sessionStore = Substitute.for<SessionStore>();
+            sessionStore.load(cookieArg()).returns(Promise.reject(""));
+            sessionStore.delete(cookieArg()).returns(Promise.resolve());
 
-            const app = createApp(sessionStore);
-            await request(app)
-                .get("/")
-                .set("Cookie", [`${config.cookieName}=${cookie.value}`])
-                .expect((response: Response) => {
-                    expect(response.get("Set-Cookie")[0]).to.be.equal("__SID=; Path=/; Expires=Thu, 01 Jan 1970 00:00:00 GMT")
-                })
-        })
-    })
+            const response: SubstituteOf<Response> = Substitute.for<Response>();
+            await SessionMiddleware(config, sessionStore)(request, response, nextFunction);
 
-})
+            expect(request.session).to.eq(undefined);
+            sessionStore.received().delete(cookieArg() as any);
+        });
+    });
+});
