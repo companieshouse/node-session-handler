@@ -64,7 +64,13 @@ Express.js applications wishing to introduce session handling should register mi
 ```$javascript
 
 const sessionStore = new SessionStore(new Redis(`redis://${process.env.CACHE_SERVER}`))
-const middleware = SessionMiddleware({ cookieName: '__SID', cookieSecret: process.env.COOKIE_SECRET }, sessionStore)
+const middleware = SessionMiddleware({
+    cookieName: process.env.COOKIE_NAME,
+    cookieDomain: process.env.COOKIE_DOMAIN,
+    cookieSecureFlag: process.env.COOKIE_SECURE_ONLY,
+    cookieTimeToLiveInSeconds: process.env.DEFAULT_SESSION_EXPIRATION,
+    cookieSecret: process.env.COOKIE_SECRET
+}, sessionStore)
 
 app.use(middleware)
 ```

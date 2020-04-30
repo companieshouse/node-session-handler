@@ -48,9 +48,17 @@ function sessionRequestHandler(config: CookieConfig, sessionStore: SessionStore)
         const sessionCookie = request.cookies[config.cookieName];
 
         onHeaders(response, () => {
-            if (!request.session) {
+            if (request.session) {
+                response.cookie(config.cookieName, sessionCookie, {
+                    domain: config.cookieDomain,
+                    path: "/",
+                    httpOnly: true,
+                    secure: config.cookieSecureFlag || true,
+                    maxAge: (config.cookieTimeToLiveInSeconds || 3600) * 1000,
+                    encode: String
+                })
+            } else {
                 response.clearCookie(config.cookieName);
-                return;
             }
         });
 
