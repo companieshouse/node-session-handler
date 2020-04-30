@@ -29,7 +29,7 @@ function sessionRequestHandler(config: CookieConfig, sessionStore: SessionStore)
 
         if (sessionCookie) {
 
-            loggerInstance().info(`Session cookie ${sessionCookie} found in request: ${request.url}`);
+            loggerInstance().infoRequest(request,`Session cookie ${sessionCookie} found in request: ${request.url}`);
 
             try {
                 validateCookieSignature(sessionCookie, config.cookieSecret);
@@ -57,7 +57,7 @@ function sessionRequestHandler(config: CookieConfig, sessionStore: SessionStore)
             }
 
         } else {
-            loggerInstance().info(`Session cookie ${sessionCookie} not found in request ${request.url}`);
+            loggerInstance().infoRequest(request,`Session cookie ${sessionCookie} not found in request ${request.url}`);
             delete request.session;
         }
 
