@@ -91,7 +91,7 @@ describe("Session Middleware", () => {
             response.received().clearCookie(config.cookieName);
         });
 
-        it("should silently log error that happened when session was about to be deleted after session load that failed", async () => {
+        it("should silently ignore error that happened when session was being deleted after session load failed", async () => {
             const sessionStore = Substitute.for<SessionStore>();
             sessionStore.load(cookieArg()).returns(Promise.reject("Unexpected error in session loading"));
             sessionStore.delete(cookieArg()).returns(Promise.reject("Unexpected error in session deletion"));
