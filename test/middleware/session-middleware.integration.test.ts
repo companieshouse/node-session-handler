@@ -37,8 +37,7 @@ describe("Session middleware", () => {
     describe("cookie in response", () => {
         describe("when cookie is not present", () => {
             it("should do nothing to cookie", async () => {
-                const app = createApp(Substitute.for<SessionStore>());
-                await request(app)
+                await request(createApp(Substitute.for<SessionStore>()))
                     .get("/")
                     .expect((response: Response) => {
                         expect(response.get("Set-Cookie")).to.be.equal(undefined)
@@ -53,8 +52,7 @@ describe("Session middleware", () => {
                 const sessionStore: SubstituteOf<SessionStore> = Substitute.for<SessionStore>();
                 sessionStore.load(cookie).resolves(createSessionData(config.cookieSecret));
 
-                const app = createApp(sessionStore);
-                await request(app)
+                await request(createApp(sessionStore))
                     .get("/")
                     .set("Cookie", [`${config.cookieName}=${cookie.value}`])
                     .expect((response: Response) => {
@@ -71,8 +69,7 @@ describe("Session middleware", () => {
                 const sessionStore: SubstituteOf<SessionStore> = Substitute.for<SessionStore>();
                 sessionStore.load(cookie).rejects("Unexpected error in session loading");
 
-                const app = createApp(sessionStore);
-                await request(app)
+                await request(createApp(sessionStore))
                     .get("/")
                     .set("Cookie", [`${config.cookieName}=${cookie.value}`])
                     .expect((response: Response) => {
