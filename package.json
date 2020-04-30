@@ -28,24 +28,31 @@
   },
   "homepage": "https://github.com/companieshouse/node-session-handler#readme",
   "dependencies": {
+    "ch-logging": "git+ssh://git@github.com/companieshouse/ch-structured-logging-node.git#a3e0dcc57f91f63803e02ceef2cc5e4038de9a19",
     "crypto": "^1.0.1",
     "express-async-handler": "^1.1.4",
-    "ch-logging": "git+ssh://git@github.com/companieshouse/ch-structured-logging-node.git#a3e0dcc57f91f63803e02ceef2cc5e4038de9a19",
     "ioredis": "^4.16.3",
-    "msgpack5": "^4.2.1"
+    "msgpack5": "^4.2.1",
+    "on-headers": "^1.0.2"
   },
   "devDependencies": {
     "@fluffy-spoon/substitute": "^1.133.0",
     "@types/chai": "^4.2.11",
+    "@types/cookie-parser": "^1.4.2",
     "@types/express": "^4.17.6",
     "@types/ioredis": "^4.16.0",
     "@types/mocha": "^7.0.2",
     "@types/msgpack5": "^3.4.1",
+    "@types/on-headers": "^1.0.0",
+    "@types/supertest": "^2.0.8",
     "chai": "^4.2.0",
     "chai-as-promised": "^7.1.1",
+    "cookie-parser": "^1.4.5",
+    "express": "^4.17.1",
     "mocha": "^7.1.2",
     "nyc": "^15.0.1",
     "sonarqube-scanner": "^2.6.0",
+    "supertest": "^4.0.2",
     "ts-node": "^8.9.1",
     "tslint": "^6.1.2",
     "typescript": "^3.8.3"

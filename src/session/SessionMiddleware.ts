@@ -1,16 +1,13 @@
-import { Request, Response, NextFunction, RequestHandler } from "express";
-import { SessionStore } from "./store/SessionStore";
-import { Session } from "./model/Session";
-import { CookieConfig } from "../config/CookieConfig";
-import { Cookie, validateCookieSignature } from "./model/Cookie";
+import { NextFunction, Request, RequestHandler, Response } from "express";
 import expressAsyncHandler from "express-async-handler";
+import onHeaders from "on-headers"
+import { CookieConfig } from "../config/CookieConfig";
 import { loggerInstance } from "../Logger";
+import { Cookie, validateCookieSignature } from "./model/Cookie";
+import { Session } from "./model/Session";
+import { SessionStore } from "./store/SessionStore";
 
 export function SessionMiddleware(config: CookieConfig, sessionStore: SessionStore): RequestHandler {
-    return initializeRequestHandler(config, sessionStore);
-}
-
-function initializeRequestHandler(config: CookieConfig, store: SessionStore): RequestHandler {
     if (!config.cookieName) {
         throw Error("Cookie name must be defined");
     }
@@ -18,43 +15,48 @@ function initializeRequestHandler(config: CookieConfig, store: SessionStore): Re
         throw Error("Cookie secret must be at least 24 chars long");
     }
 
-    return expressAsyncHandler(sessionRequestHandler(config, store));
+    return expressAsyncHandler(sessionRequestHandler(config, sessionStore));
 }
 
 function sessionRequestHandler(config: CookieConfig, sessionStore: SessionStore): RequestHandler {
+    async function loadSession (sessionCookie: string): Promise<Session | undefined> {
+        let cookie: Cookie;
+        try {
+            validateCookieSignature(sessionCookie, config.cookieSecret);
+            cookie = Cookie.createFrom(sessionCookie);
+            const sessionData = await sessionStore.load(cookie);
+            const session = new Session(sessionData);
+            session.verify();
 
-    return async (request: Request, response: Response, next: NextFunction): Promise<any> => {
-
-        const sessionCookie = request.cookies[config.cookieName];
-
-        if (sessionCookie) {
-
-            loggerInstance().infoRequest(request, `Session cookie ${sessionCookie} found in request: ${request.url}`);
-
-            try {
-                validateCookieSignature(sessionCookie, config.cookieSecret);
-                const cookie = Cookie.createFrom(sessionCookie);
-                const sessionData = await sessionStore.load(cookie);
-                const session = new Session(sessionData);
-                session.verify();
-                request.session = session;
-                loggerInstance().debug(`Session successfully loaded from cookie ${sessionCookie}`)
-
-            } catch (err) {
-
-                loggerInstance().error(`Session loading failed from cookie ${sessionCookie} due to error: ${err}`);
-                response.clearCookie(config.cookieName);
-                delete request.session;
-
+            loggerInstance().debug(`Session successfully loaded from cookie ${sessionCookie}`);
+            return session;
+        } catch (sessionLoadingError) {
+            if (cookie) {
                 try {
-                    const cookie = Cookie.createFrom(sessionCookie);
-                    sessionStore.delete(cookie);
-                } catch (err) {
-                    loggerInstance().error(err);
+                    await sessionStore.delete(cookie);
+                } catch (sessionDeletionError) {
+                    loggerInstance().error(sessionDeletionError);
                 }
-
             }
 
+            loggerInstance().error(`Session loading failed from cookie ${sessionCookie} due to error: ${sessionLoadingError}`);
+            return undefined;
+        }
+    }
+
+    return async (request: Request, response: Response, next: NextFunction): Promise<any> => {
+        const sessionCookie = request.cookies[config.cookieName];
+
+        onHeaders(response, () => {
+            if (!request.session) {
+                response.clearCookie(config.cookieName);
+                return;
+            }
+        });
+
+        if (sessionCookie) {
+            loggerInstance().infoRequest(request, `Session cookie ${sessionCookie} found in request: ${request.url}`);
+            request.session = await loadSession(sessionCookie);
         } else {
             loggerInstance().infoRequest(request, `Session cookie not found in request ${request.url}`);
             delete request.session;

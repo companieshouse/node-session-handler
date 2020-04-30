@@ -77,7 +77,7 @@ describe("Session Middleware", () => {
             expect(request.session.data).to.be.deep.equal(session.data);
         });
 
-        it("should delete session alongside cookie and set the session object to undefined if session load fails", async () => {
+        it("should delete session and set the session object to undefined if session load fails", async () => {
             const sessionStore = Substitute.for<SessionStore>();
             sessionStore.load(cookieArg()).returns(Promise.reject(""));
             sessionStore.delete(cookieArg()).returns(Promise.resolve());
@@ -87,7 +87,6 @@ describe("Session Middleware", () => {
 
             expect(request.session).to.eq(undefined);
             sessionStore.received().delete(cookieArg() as any);
-            response.received().clearCookie(config.cookieName);
         });
     });
 });
