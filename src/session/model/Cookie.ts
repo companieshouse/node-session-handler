@@ -6,7 +6,6 @@ import {
 } from "../../utils/CookieUtils";
 import { CookieSecretNotSetError, InvalidCookieLengthError, InvalidCookieSignatureError } from "./CookieErrors";
 import { CookieConstants } from "../../utils/CookieConstants";
-import { loggerInstance } from "../../Logger";
 
 const validateSessionCookieLength = (sessionCookie: string): void => {
     if (sessionCookie.length < CookieConstants._cookieValueLength) {
@@ -45,8 +44,6 @@ export class Cookie {
     public static createNew(cookieSecret: string): Cookie {
         const sessionId = generateSessionId();
         const signature = generateSignature(sessionId, cookieSecret);
-
-        loggerInstance().debug(`Creating cookie - SESSION ID: ${sessionId}`);
         return new Cookie(sessionId, signature);
     }
 

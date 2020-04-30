@@ -3,7 +3,6 @@ import { SessionKey } from "../keys/SessionKey";
 import { ISession, ISessionValue } from "./SessionInterfaces";
 import { SignInInfoKeys } from "../keys/SignInInfoKeys";
 import { AccessTokenKeys } from "../keys/AccessTokenKeys";
-import { loggerInstance } from "../../Logger";
 
 export class Session {
 
@@ -53,7 +52,5 @@ export class Session {
         if (expires <= dateNowMilliseconds) {
             throw new SessionExpiredError(expires, dateNowMilliseconds);
         }
-
-        loggerInstance().debug("Session Verified");
     };
 }
