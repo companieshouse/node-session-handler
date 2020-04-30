@@ -46,7 +46,6 @@ function sessionRequestHandler(config: CookieConfig, sessionStore: SessionStore)
                 response.clearCookie(config.cookieName);
                 delete request.session;
 
-
                 try {
                     const cookie = Cookie.createFrom(sessionCookie);
                     sessionStore.delete(cookie);
