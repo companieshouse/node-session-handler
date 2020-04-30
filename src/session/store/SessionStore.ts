@@ -5,6 +5,7 @@ import { Encoding } from "../../encoding/Encoding";
 import { getSecondsSinceEpoch } from "../../utils/TimeUtils";
 import { SessionKey } from "../keys/SessionKey";
 import { Cookie } from "../model/Cookie";
+import { loggerInstance } from "../../Logger";
 
 export class SessionStore {
 
@@ -15,15 +16,18 @@ export class SessionStore {
     }
 
     public load = async (cookie: Cookie): Promise<ISession> => {
+        loggerInstance().debug(`Loading from session store - COOKIE ID: ${cookie.sessionId}`);
         return Encoding.decode(await this.redisWrapper.get(cookie.sessionId));
     };
 
     public store = async (cookie: Cookie, value: ISession, timeToLiveInSeconds: number = 3600): Promise<void> => {
+        loggerInstance().debug(`Storing in session store - COOKIE ID: ${cookie.sessionId}`);
         value[SessionKey.Expires] = getSecondsSinceEpoch() + timeToLiveInSeconds;
         return this.redisWrapper.set(cookie.sessionId, Encoding.encode(value), timeToLiveInSeconds);
     };
 
     public delete = async (cookie: Cookie): Promise<void> => {
+        loggerInstance().debug(`Deleting from session store - COOKIE ID: ${cookie.sessionId}`);
         return this.redisWrapper.del(cookie.sessionId);
     };
 }

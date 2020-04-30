@@ -30,7 +30,9 @@ export class Session {
     }
 
     public verify = (): void => {
+
         const signInInfo = this.data[SessionKey.SignInInfo];
+
         if (!signInInfo) {
             throw new IncompleteSessionDataError(SessionKey.SignInInfo);
         }

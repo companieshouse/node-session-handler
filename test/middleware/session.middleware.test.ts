@@ -1,6 +1,6 @@
 import { Arg, Substitute, SubstituteOf } from "@fluffy-spoon/substitute";
 import { expect } from "chai";
-import * as express from "express";
+import { Request, Response } from "express";
 import { NextFunction } from "express";
 import { SessionKey } from "../../src/session/keys/SessionKey";
 import { CookieConfig } from "../../src/config/CookieConfig";
@@ -8,7 +8,7 @@ import { Session } from "../../src/session/model/Session";
 import { SessionMiddleware } from "../../src/session/SessionMiddleware";
 import { SessionStore } from "../../src/session/store/SessionStore";
 import { generateRandomBytesBase64 } from "../../src/utils/CookieUtils";
-import { createSession, createSessionData } from "../utils/SessionGenerator";
+import { createSession } from "../utils/SessionGenerator";
 
 declare global {
     namespace Express {
@@ -23,6 +23,7 @@ describe("Session Middleware", () => {
         cookieName: "__SID",
         cookieSecret: generateRandomBytesBase64(16),
     };
+    const requestMetadata = { url: "/test-url", path: "/test-url", method: "GET" }
     const nextFunction = Substitute.for<NextFunction>();
 
     describe("middleware initialisation", () => {
@@ -42,12 +43,15 @@ describe("Session Middleware", () => {
     });
 
     describe("when cookie is not present", () => {
-        const request = { cookies: {} } as express.Request;
+        const request = {
+            ...requestMetadata,
+            cookies: {}
+        } as Request;
 
         it("should not try to load a session and set session object to Nothing", async () => {
             const sessionStore = Substitute.for<SessionStore>();
 
-            await SessionMiddleware(config, sessionStore)(request, Substitute.for<express.Response>(), nextFunction);
+            await SessionMiddleware(config, sessionStore)(request, Substitute.for<Response>(), nextFunction);
 
             expect(request.session).to.eq(undefined);
             sessionStore.didNotReceive().load(Arg.any());
@@ -56,7 +60,10 @@ describe("Session Middleware", () => {
 
     describe("when cookie is present", () => {
         const session: Session = createSession(config.cookieSecret);
-        const request = { cookies: { [config.cookieName]: "" + session.get(SessionKey.Id) + session.get(SessionKey.ClientSig) } } as express.Request;
+        const request = {
+            ...requestMetadata,
+            cookies: { [config.cookieName]: "" + session.get(SessionKey.Id) + session.get(SessionKey.ClientSig) }
+        } as Request;
         const cookieArg = () => {
             return Arg.is(_ => _.value === "" + session.get(SessionKey.Id) + session.get(SessionKey.ClientSig));
         };
@@ -65,7 +72,7 @@ describe("Session Middleware", () => {
             const sessionStore = Substitute.for<SessionStore>();
             sessionStore.load(cookieArg()).returns(Promise.resolve(session.data));
 
-            await SessionMiddleware(config, sessionStore)(request, Substitute.for<express.Response>(), nextFunction);
+            await SessionMiddleware(config, sessionStore)(request, Substitute.for<Response>(), nextFunction);
 
             expect(request.session.data).to.be.deep.equal(session.data);
         });
@@ -75,7 +82,7 @@ describe("Session Middleware", () => {
             sessionStore.load(cookieArg()).returns(Promise.reject(""));
             sessionStore.delete(cookieArg()).returns(Promise.resolve());
 
-            const response: SubstituteOf<express.Response> = Substitute.for<express.Response>();
+            const response: SubstituteOf<Response> = Substitute.for<Response>();
             await SessionMiddleware(config, sessionStore)(request, response, nextFunction);
 
             expect(request.session).to.eq(undefined);

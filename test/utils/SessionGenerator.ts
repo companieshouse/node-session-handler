@@ -12,7 +12,7 @@ export function createSession(cookieSecret: string, extraData?: any): Session {
 
 export function createSessionData(cookieSecret: string, extraData?: any): any {
     const cookie: Cookie = Cookie.createNew(cookieSecret);
-    const expiryTimeInSeconds = 3600
+    const expiryTimeInSeconds = 3600;
 
     const sessionData = extraData ? extraData : {};
     sessionData[SessionKey.Id] = cookie.sessionId;
@@ -22,7 +22,6 @@ export function createSessionData(cookieSecret: string, extraData?: any): any {
         [SignInInfoKeys.SignedIn]: 0
     };
     sessionData[SessionKey.Expires] = Date.now() + expiryTimeInSeconds * 1000;
-
     return sessionData;
 }
 
