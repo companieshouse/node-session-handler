@@ -57,7 +57,7 @@ function sessionRequestHandler(config: CookieConfig, sessionStore: SessionStore)
             }
 
         } else {
-            loggerInstance().infoRequest(request, `Session cookie ${sessionCookie} not found in request ${request.url}`);
+            loggerInstance().infoRequest(request, `Session cookie not found in request ${request.url}`);
             delete request.session;
         }
 
