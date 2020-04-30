@@ -42,7 +42,7 @@ describe("Session Middleware", () => {
     });
 
     describe("when cookie is not present", () => {
-        const request = { cookies: {} } as express.Request;
+        const request = { url: "/test-url", cookies: {} } as express.Request;
 
         it("should not try to load a session and set session object to Nothing", async () => {
             const sessionStore = Substitute.for<SessionStore>();
@@ -56,7 +56,9 @@ describe("Session Middleware", () => {
 
     describe("when cookie is present", () => {
         const session: Session = createSession(config.cookieSecret);
-        const request = { cookies: { [config.cookieName]: "" + session.get(SessionKey.Id) + session.get(SessionKey.ClientSig) } } as express.Request;
+        const request = {
+            url: "/test-url", cookies: { [config.cookieName]: "" + session.get(SessionKey.Id) + session.get(SessionKey.ClientSig) }
+        } as express.Request;
         const cookieArg = () => {
             return Arg.is(_ => _.value === "" + session.get(SessionKey.Id) + session.get(SessionKey.ClientSig));
         };
