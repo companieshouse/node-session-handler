@@ -48,9 +48,9 @@ function sessionRequestHandler(config: CookieConfig, sessionStore: SessionStore)
 
                 try {
                     const cookie = Cookie.createFrom(sessionCookie);
-                    sessionStore.delete(cookie);
+                    await sessionStore.delete(cookie);
                 } catch (err) {
-                    loggerInstance().error(err);
+                    loggerInstance().error(`Session deletion failed for cookie ${sessionCookie} due to error: ${err}`);
                 }
 
             }
