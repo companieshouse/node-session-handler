@@ -35,7 +35,7 @@ function sessionRequestHandler(config: CookieConfig, sessionStore: SessionStore)
                 try {
                     await sessionStore.delete(cookie);
                 } catch (sessionDeletionError) {
-                    loggerInstance().error(sessionDeletionError);
+                    loggerInstance().error(`Session deletion failed for cookie ${sessionCookie} due to error: ${sessionDeletionError}`);
                 }
             }
 

@@ -1,4 +1,5 @@
 import { Arg, Substitute, SubstituteOf } from "@fluffy-spoon/substitute";
+import * as assert from "assert";
 import { expect } from "chai";
 import { Request, Response } from "express";
 import { NextFunction } from "express";
@@ -80,7 +81,7 @@ describe("Session Middleware", () => {
 
         it("should delete session and delete session object from the request if session load fails", async () => {
             const sessionStore = Substitute.for<SessionStore>();
-            sessionStore.load(cookieArg()).returns(Promise.reject(""));
+            sessionStore.load(cookieArg()).returns(Promise.reject("Unexpected error in session loading"));
             sessionStore.delete(cookieArg()).returns(Promise.resolve());
 
             const response: SubstituteOf<Response> = Substitute.for<Response>();
@@ -88,6 +89,19 @@ describe("Session Middleware", () => {
 
             expect(request.session).to.eq(undefined);
             sessionStore.received().delete(cookieArg() as any);
+        });
+
+        it("should silently ignore error that happened when session was being deleted after session load failed", async () => {
+            const sessionStore = Substitute.for<SessionStore>();
+            sessionStore.load(cookieArg()).returns(Promise.reject("Unexpected error in session loading"));
+            sessionStore.delete(cookieArg()).returns(Promise.reject("Unexpected error in session deletion"));
+
+            const response: SubstituteOf<Response> = Substitute.for<Response>();
+            try {
+                await SessionMiddleware(config, sessionStore)(request, response, nextFunction);
+            } catch (e) {
+                assert.fail("Test should not have thrown error")
+            }
         });
     });
 });
