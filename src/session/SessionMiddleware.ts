@@ -6,6 +6,7 @@ import { loggerInstance } from "../Logger";
 import { Cookie, validateCookieSignature } from "./model/Cookie";
 import { Session } from "./model/Session";
 import { SessionStore } from "./store/SessionStore";
+import crypto from "crypto"
 
 export function SessionMiddleware(config: CookieConfig, sessionStore: SessionStore): RequestHandler {
     if (!config.cookieName) {
@@ -46,17 +47,20 @@ function sessionRequestHandler(config: CookieConfig, sessionStore: SessionStore)
 
     return async (request: Request, response: Response, next: NextFunction): Promise<any> => {
         const sessionCookie: string = request.cookies[config.cookieName];
+        let originalSessionHash: string;
 
         onHeaders(response, () => {
             if (request.session) {
-                response.cookie(config.cookieName, sessionCookie, {
-                    domain: config.cookieDomain,
-                    path: "/",
-                    httpOnly: true,
-                    secure: config.cookieSecureFlag || true,
-                    maxAge: (config.cookieTimeToLiveInSeconds || 3600) * 1000,
-                    encode: String
-                })
+                if (hash(request.session) !== originalSessionHash) {
+                    response.cookie(config.cookieName, sessionCookie, {
+                        domain: config.cookieDomain,
+                        path: "/",
+                        httpOnly: true,
+                        secure: config.cookieSecureFlag || true,
+                        maxAge: (config.cookieTimeToLiveInSeconds || 3600) * 1000,
+                        encode: String
+                    })
+                }
             } else {
                 if (sessionCookie) {
                     response.clearCookie(config.cookieName);
@@ -64,14 +68,38 @@ function sessionRequestHandler(config: CookieConfig, sessionStore: SessionStore)
             }
         });
 
+        type MethodSignature = { (cb?: () => void): void; (chunk: any, cb?: () => void): void; (chunk: any, encoding: string, cb?: () => void): void }
+        response.end = new Proxy(response.end, {
+            async apply (target: MethodSignature, thisArg: any, argArray?: any): Promise<any> {
+                if (request.session != null && hash(request.session) !== originalSessionHash) {
+                    try {
+                        await sessionStore.store(Cookie.createFrom(sessionCookie), request.session.data)
+                    } catch (err) {
+                        loggerInstance().error(err.message)
+                    }
+                }
+                return target.apply(thisArg, argArray)
+            }
+        })
+
         if (sessionCookie) {
             loggerInstance().infoRequest(request, `Session cookie ${sessionCookie} found in request: ${request.url}`);
             request.session = await loadSession(sessionCookie);
+            if (request.session != null) {
+                originalSessionHash = hash(request.session)
+            }
         } else {
             loggerInstance().infoRequest(request, `Session cookie not found in request ${request.url}`);
             delete request.session;
         }
 
-        return next();
+        next();
     };
+}
+
+function hash(session: Session): string {
+    return crypto
+        .createHash("sha1")
+        .update(JSON.stringify(session.data), "utf8")
+        .digest("hex")
 }
