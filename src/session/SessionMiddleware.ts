@@ -8,9 +8,15 @@ import { Session } from "./model/Session";
 import { SessionStore } from "./store/SessionStore";
 import crypto from "crypto"
 
+const DEFAULT_COOKIE_SECURE_FLAG = true;
+const DEFAULT_COOKIE_TIME_TO_LIVE_IN_SECONDS = 3600;
+
 export function SessionMiddleware(config: CookieConfig, sessionStore: SessionStore): RequestHandler {
     if (!config.cookieName) {
         throw Error("Cookie name must be defined");
+    }
+    if (!config.cookieDomain) {
+        throw Error("Cookie domain must be defined");
     }
     if (!config.cookieSecret || config.cookieSecret.length < 24) {
         throw Error("Cookie secret must be at least 24 chars long");
@@ -18,9 +24,6 @@ export function SessionMiddleware(config: CookieConfig, sessionStore: SessionSto
 
     return expressAsyncHandler(sessionRequestHandler(config, sessionStore));
 }
-
-const DEFAULT_COOKIE_SECURE_FLAG = true;
-const DEFAULT_COOKIE_TIME_TO_LIVE_IN_SECONDS = 3600;
 
 const sessionRequestHandler = (config: CookieConfig, sessionStore: SessionStore): RequestHandler => {
     async function loadSession (sessionCookie: string): Promise<Session | undefined> {

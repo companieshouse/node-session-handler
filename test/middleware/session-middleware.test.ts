@@ -36,6 +36,13 @@ describe("Session middleware", () => {
             });
         });
 
+        it("should fail when cookie domain is missing", () => {
+            [undefined, null, ""].forEach(cookieDomain => {
+                expect(() => SessionMiddleware({ ...config, cookieDomain }, undefined))
+                    .to.throw("Cookie domain must be defined")
+            });
+        });
+
         it("should fail when cookie secret is missing or too short", () => {
             [undefined, null, "", "12345678901234567890123"].forEach(cookieSecret => {
                 expect(() => SessionMiddleware({ ...config, cookieSecret }, undefined))
