@@ -57,7 +57,8 @@ Session middleware provides convenient integration point for express.js applicat
 1. read cookie value from request HTTP headers
 2. verify cookie signature if cookie is present
 3. load session from store using verified cookie if present
-4. stores verified session in request scope
+4. sets verified session in request scope
+5. stores session in store on request end if session data changed  
 
 Express.js applications wishing to introduce session handling should register middleware in the following way:
 
