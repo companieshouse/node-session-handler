@@ -19,7 +19,10 @@ export function SessionMiddleware(config: CookieConfig, sessionStore: SessionSto
     return expressAsyncHandler(sessionRequestHandler(config, sessionStore));
 }
 
-function sessionRequestHandler(config: CookieConfig, sessionStore: SessionStore): RequestHandler {
+const DEFAULT_COOKIE_SECURE_FLAG = true;
+const DEFAULT_COOKIE_TIME_TO_LIVE_IN_SECONDS = 3600;
+
+const sessionRequestHandler = (config: CookieConfig, sessionStore: SessionStore): RequestHandler => {
     async function loadSession (sessionCookie: string): Promise<Session | undefined> {
         let cookie: Cookie;
         try {
@@ -56,8 +59,8 @@ function sessionRequestHandler(config: CookieConfig, sessionStore: SessionStore)
                         domain: config.cookieDomain,
                         path: "/",
                         httpOnly: true,
-                        secure: config.cookieSecureFlag || true,
-                        maxAge: (config.cookieTimeToLiveInSeconds || 3600) * 1000,
+                        secure: config.cookieSecureFlag || DEFAULT_COOKIE_SECURE_FLAG,
+                        maxAge: (config.cookieTimeToLiveInSeconds || DEFAULT_COOKIE_TIME_TO_LIVE_IN_SECONDS) * 1000,
                         encode: String
                     })
                 }
@@ -73,7 +76,8 @@ function sessionRequestHandler(config: CookieConfig, sessionStore: SessionStore)
             async apply (target: MethodSignature, thisArg: any, argsArg?: any): Promise<any> {
                 if (request.session != null && hash(request.session) !== originalSessionHash) {
                     try {
-                        await sessionStore.store(Cookie.createFrom(sessionCookie), request.session.data)
+                        await sessionStore.store(Cookie.createFrom(sessionCookie), request.session.data,
+                            config.cookieTimeToLiveInSeconds || DEFAULT_COOKIE_TIME_TO_LIVE_IN_SECONDS)
                     } catch (err) {
                         loggerInstance().error(err.message)
                     }
@@ -97,7 +101,7 @@ function sessionRequestHandler(config: CookieConfig, sessionStore: SessionStore)
     };
 }
 
-function hash(session: Session): string {
+const hash = (session: Session): string => {
     return crypto
         .createHash("sha1")
         .update(JSON.stringify(session.data), "utf8")

@@ -23,7 +23,8 @@ declare global {
 const config: CookieConfig = {
     cookieName: "__SID",
     cookieDomain: "localhost",
-    cookieSecret: generateRandomBytesBase64(16)
+    cookieSecret: generateRandomBytesBase64(16),
+    cookieTimeToLiveInSeconds: 360
 };
 
 const createApp = (sessionStore: SessionStore): express.Application => {
@@ -104,13 +105,13 @@ describe("Session middleware - integration with express.js", () => {
                 .set("Cookie", [`${config.cookieName}=${cookie.value}`])
                 .expect(response => {
                     expect(response.get("Set-Cookie")[0]).to.be.satisfy((value: string) => {
-                        return value.startsWith(`__SID=${cookie.value}; Max-Age=3600; Domain=localhost; Path=/; Expires=`)
+                        return value.startsWith(`__SID=${cookie.value}; Max-Age=${config.cookieTimeToLiveInSeconds}; Domain=localhost; Path=/; Expires=`)
                             && value.endsWith("; HttpOnly; Secure")
                     })
                     expect(response.text).to.be.equal("OK")
                 })
 
-            sessionStore.received().store(cookie, {...sessionData, extra_data: { application: { mutated: true } }})
+            sessionStore.received().store(cookie, {...sessionData, extra_data: { application: { mutated: true } }}, config.cookieTimeToLiveInSeconds)
         })
 
         it("should render page when session persistence failed", async () => {
