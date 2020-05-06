@@ -19,7 +19,7 @@ declare global {
     }
 }
 
-describe("Session Middleware", () => {
+describe("Session middleware", () => {
     const config: CookieConfig = {
         cookieName: "__SID",
         cookieDomain: "localhost",

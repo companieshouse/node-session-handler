@@ -70,7 +70,7 @@ function sessionRequestHandler(config: CookieConfig, sessionStore: SessionStore)
 
         type MethodSignature = { (cb?: () => void): void; (chunk: any, cb?: () => void): void; (chunk: any, encoding: string, cb?: () => void): void }
         response.end = new Proxy(response.end, {
-            async apply (target: MethodSignature, thisArg: any, argArray?: any): Promise<any> {
+            async apply (target: MethodSignature, thisArg: any, argsArg?: any): Promise<any> {
                 if (request.session != null && hash(request.session) !== originalSessionHash) {
                     try {
                         await sessionStore.store(Cookie.createFrom(sessionCookie), request.session.data)
@@ -78,7 +78,7 @@ function sessionRequestHandler(config: CookieConfig, sessionStore: SessionStore)
                         loggerInstance().error(err.message)
                     }
                 }
-                return target.apply(thisArg, argArray)
+                return target.apply(thisArg, argsArg)
             }
         })
 

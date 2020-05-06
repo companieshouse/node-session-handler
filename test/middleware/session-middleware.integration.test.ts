@@ -3,14 +3,14 @@ import { expect } from "chai";
 import cookieParser from "cookie-parser"
 import express, { NextFunction, Request, Response } from "express";
 import request from "supertest"
-import { CookieConfig } from "../../src/config/CookieConfig";
 
 import { Cookie } from "../../src/session/model/Cookie";
+import { CookieConfig } from "../../src/config/CookieConfig";
 import { Session } from "../../src/session/model/Session";
 import { SessionMiddleware } from "../../src/session/SessionMiddleware";
 import { SessionStore } from "../../src/session/store/SessionStore";
-import { generateRandomBytesBase64 } from "../../src/utils/CookieUtils";
 import { createSessionData } from "../utils/SessionGenerator";
+import { generateRandomBytesBase64 } from "../../src/utils/CookieUtils";
 
 declare global {
     namespace Express {
@@ -43,7 +43,7 @@ const createApp = (sessionStore: SessionStore): express.Application => {
     return app
 }
 
-describe("Session middleware", () => {
+describe("Session middleware - integration with express.js", () => {
     describe("when cookie is not present", () => {
         it("should render page but not persist session nor set session cookie in response", async () => {
             const sessionStore = Substitute.for<SessionStore>();
