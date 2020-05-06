@@ -1,4 +1,4 @@
 import { RequestHandler } from "express";
-import { SessionStore } from "./store/SessionStore";
 import { CookieConfig } from "../config/CookieConfig";
+import { SessionStore } from "./store/SessionStore";
 export declare function SessionMiddleware(config: CookieConfig, sessionStore: SessionStore): RequestHandler;
