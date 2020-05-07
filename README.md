@@ -27,7 +27,7 @@ Note: Cookie parsing must happen before request is passed to session middleware.
 Since build artifacts are stored in the repository (no NPM registry in used just yet) to bring this module as dependency please add the following fragment to `package.json`: 
 
 ```$json
-"ch-node-session-handler": "git+ssh://git@github.com/companieshouse/node-session-handler.git#2.1.1"
+"ch-node-session-handler": "git+ssh://git@github.com/companieshouse/node-session-handler.git#3.0.0"
 ```
 
 ### Session
@@ -57,14 +57,21 @@ Session middleware provides convenient integration point for express.js applicat
 1. read cookie value from request HTTP headers
 2. verify cookie signature if cookie is present
 3. load session from store using verified cookie if present
-4. stores verified session in request scope
+4. sets verified session in request scope
+5. stores session in store on request end if session data changed  
 
 Express.js applications wishing to introduce session handling should register middleware in the following way:
 
 ```$javascript
 
 const sessionStore = new SessionStore(new Redis(`redis://${process.env.CACHE_SERVER}`))
-const middleware = SessionMiddleware({ cookieName: '__SID', cookieSecret: process.env.COOKIE_SECRET }, sessionStore)
+const middleware = SessionMiddleware({
+    cookieName: process.env.COOKIE_NAME,
+    cookieDomain: process.env.COOKIE_DOMAIN,
+    cookieSecureFlag: process.env.COOKIE_SECURE_ONLY,
+    cookieTimeToLiveInSeconds: process.env.DEFAULT_SESSION_EXPIRATION,
+    cookieSecret: process.env.COOKIE_SECRET
+}, sessionStore)
 
 app.use(middleware)
 ```

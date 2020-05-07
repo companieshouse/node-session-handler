@@ -19,9 +19,10 @@ declare global {
     }
 }
 
-describe("Session Middleware", () => {
+describe("Session middleware", () => {
     const config: CookieConfig = {
         cookieName: "__SID",
+        cookieDomain: "localhost",
         cookieSecret: generateRandomBytesBase64(16),
     };
     const requestMetadata = { url: "/test-url", path: "/test-url", method: "GET" }
@@ -32,6 +33,13 @@ describe("Session Middleware", () => {
             [undefined, null, ""].forEach(cookieName => {
                 expect(() => SessionMiddleware({ ...config, cookieName }, undefined))
                     .to.throw("Cookie name must be defined")
+            });
+        });
+
+        it("should fail when cookie domain is missing", () => {
+            [undefined, null, ""].forEach(cookieDomain => {
+                expect(() => SessionMiddleware({ ...config, cookieDomain }, undefined))
+                    .to.throw("Cookie domain must be defined")
             });
         });
 
@@ -49,7 +57,7 @@ describe("Session Middleware", () => {
             cookies: {}
         } as Request;
 
-        it("should not try to load a session and set session object to Nothing", async () => {
+        it("should not try to load a session and delete session object from the request", async () => {
             const sessionStore = Substitute.for<SessionStore>();
 
             await SessionMiddleware(config, sessionStore)(request, Substitute.for<Response>(), nextFunction);
@@ -69,7 +77,7 @@ describe("Session Middleware", () => {
             return Arg.is(_ => _.value === "" + session.get(SessionKey.Id) + session.get(SessionKey.ClientSig));
         };
 
-        it("should load a session and insert the session object in the request", async () => {
+        it("should load a session and insert session object in the request", async () => {
             const sessionStore = Substitute.for<SessionStore>();
             sessionStore.load(cookieArg()).returns(Promise.resolve(session.data));
 
@@ -78,7 +86,7 @@ describe("Session Middleware", () => {
             expect(request.session.data).to.be.deep.equal(session.data);
         });
 
-        it("should delete session alongside cookie and set the session object to undefined if session load fails", async () => {
+        it("should delete session and delete session object from the request if session load fails", async () => {
             const sessionStore = Substitute.for<SessionStore>();
             sessionStore.load(cookieArg()).returns(Promise.reject("Unexpected error in session loading"));
             sessionStore.delete(cookieArg()).returns(Promise.resolve());
@@ -88,7 +96,6 @@ describe("Session Middleware", () => {
 
             expect(request.session).to.eq(undefined);
             sessionStore.received().delete(cookieArg() as any);
-            response.received().clearCookie(config.cookieName);
         });
 
         it("should silently ignore error that happened when session was being deleted after session load failed", async () => {
