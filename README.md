@@ -50,8 +50,12 @@ import session from 'ch-node-session-handler';
 ```
 app.use((req, res, next) => {
   session.start(req, res)
-    .then(_ => { next(); })
-    .catch(err => { logger.error(err); next(); });
+    .then(_ => {
+       next();
+     }).catch(err => {
+       // handle error
+       next();
+     });
 }
 ```
 
