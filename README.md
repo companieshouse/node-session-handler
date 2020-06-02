@@ -1,4 +1,5 @@
 
+
 # node-session-handler
 
 Module provides a way of handling Companies House sessions for node apps.
@@ -14,6 +15,7 @@ import * as cookieParser from 'cookie-parser'
 ...
 app.use(cookieParser())
 ```
+
 ## Installation
 
 Add the following to `package.json`:
@@ -27,10 +29,10 @@ Add the following to `package.json`:
 ## Config
 
 - Ensure you have the config variable `SESSION_APP_KEY` set in your app config - it must contain the unique name of your app. This value must only contain letters, numbers and underscores, but must start with a letter. For example:
-```
-SESSION_APP_KEY=lfp_appeals_frontend
-```
-Please be sure that this value is unique enough so as not to overwrite another app's data in Redis
+	```
+	SESSION_APP_KEY=lfp_appeals_frontend
+	```
+	>Please be sure that this value is unique enough so as not to overwrite another app's data in Redis.
 
 - Also make sure that the value set in the global config parameter `CACHE_SERVER` is sufficient for your needs. You might want to overwrite in your app config to use a self-configured host.
 
