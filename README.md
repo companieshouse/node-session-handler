@@ -73,7 +73,7 @@ The `res.locals.session` object is in the format below:
 To reiterate, all data written by your app to the session will be stored in the `appData` stanza of the session object. So, assuming you  had an object:
 
 ```
-myAppSessionData = {some_key: "some_value"}`
+const myAppSessionData = {some_key: "some_value"}
 ```
 
 To write the above data to session, we'd do the following:
