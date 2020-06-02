@@ -1,12 +1,7 @@
+
 # node-session-handler
 
-Module provides a way of handling Companies House sessions.
-
-Module offers the following artifacts:
-
-- `Session` that reflects structure of the session including elements of Single Sign-On 
-- `SessionStore` that is responsible for reading and writing session data from / to database taking care of data encoding / decoding
-- `SessionMiddleware` that provides easy to use express.js middleware reading session based on the request cookie 
+Module provides a way of handling Companies House sessions for node apps.
 
 ## Prerequisite
 
@@ -19,77 +14,97 @@ import * as cookieParser from 'cookie-parser'
 ...
 app.use(cookieParser())
 ```
+## Installation
 
-Note: Cookie parsing must happen before request is passed to session middleware. 
-
-## How to use it
-
-Since build artifacts are stored in the repository (no NPM registry in used just yet) to bring this module as dependency please add the following fragment to `package.json`: 
+Add the following to `package.json`:
 
 ```$json
-"ch-node-session-handler": "git+ssh://git@github.com/companieshouse/node-session-handler.git#3.0.0"
+"ch-node-session-handler": "git+ssh://git@github.com/companieshouse/node-session-handler.git#4.0.0"
 ```
 
-### Session
+..and run `npm install`
 
-The session class is a wrapper around the raw session `data: ISession` (as retrieved from accounts after signing in). 
+## Config
 
-To keep the `ISession` type consistent, we added an extra field called `extra_data` (`SessionKey.ExtraData`) to store any data that apps might need in the session making session itself extensible.
+- Ensure you have the config variable `SESSION_APP_KEY` set in your app config - it must contain the unique name of your app. This value must only contain letters, numbers and underscores, but must start with a letter. For example:
+```
+SESSION_APP_KEY=lfp_appeals_frontend
+```
+- Also make sure that the value set in the global config parameter `CACHE_SERVER` is sufficient for your needs. You might want to overwrite in your app config to use a self-configured host.
 
-The class provides these methods:
+## Usage
 
-- `get<T = ISessionValue>(key: SessionKey): T | undefined` - allows retrieving session data for keys defined in the `SessionKey` enum that represents all possible types than can be retrieved from the session
-- `getExtraData<T>(key: string): T | undefined` - allows retrieving session data populated by the applications
-- `setExtraData<T>(key: string, val: T): void` - allows amending session data used by the applications by replacing existing value (if present)
-- `deleteExtraData(key: string): boolean` - deletes a key from the session data populated by an application (if exists)
-- `verify = (): void` - ensures that the session is valid i.e. contains the right fields, and it's not expired
+### Bootstrapping
 
-### SessionStore
-
-Session store offers a way to load `SessionStore.load`, store `SessionStore.store` and delete `SessionStore.delete` session from database without worrying about data encoding or decoding. 
-
-All above methods take instance of `Cookie` class which holds combination of session ID and signature. Use of that argument type helps to ensure that database operations are only performed for verified session identifiers.   
-
-### SessionMiddleware
-
-Session middleware provides convenient integration point for express.js applications. Middleware does:
-
-1. read cookie value from request HTTP headers
-2. verify cookie signature if cookie is present
-3. load session from store using verified cookie if present
-4. sets verified session in request scope
-5. stores session in store on request end if session data changed  
-
-Express.js applications wishing to introduce session handling should register middleware in the following way:
-
-```$javascript
-
-const sessionStore = new SessionStore(new Redis(`redis://${process.env.CACHE_SERVER}`))
-const middleware = SessionMiddleware({
-    cookieName: process.env.COOKIE_NAME,
-    cookieDomain: process.env.COOKIE_DOMAIN,
-    cookieSecureFlag: process.env.COOKIE_SECURE_ONLY,
-    cookieTimeToLiveInSeconds: process.env.DEFAULT_SESSION_EXPIRATION,
-    cookieSecret: process.env.COOKIE_SECRET
-}, sessionStore)
-
-app.use(middleware)
+In your express bootstrap file, usually `app.ts` or `server.ts` for most apps, add the following to your require section:
+```
+import session from 'ch-node-session-handler';
 ```
 
-Such application will then have access to session instance via `request.session` as long as `__SID` cookie is set to correct value.
+..and then:
 
-## Development
+```
+app.use((req, res, next) => {
+  session.start(req, res)
+    .then(_ => { next(); })
+    .catch(err => { logger.error(err); next(); });
+}
+```
 
-Module requires dependencies that can be installed via `npm install` command.
+The `session.start()` method is used to fire up the session for the current request/response cycle and will drop your currently available session data in `res.locals.session` which you can now access at any point in your code.
 
-### Linting and testing
+The `res.locals.session` object is in the format below:
 
-Code is linted using `ts-lint` which can be run via `npm run lint` command.
+```
+  {
+    accountData: { ... }, // contains read-only session data from accounts
+    appData: { ... }
+  }
+```
 
-Tests in turn can be run via `npm test` command.
+`accountData` contains read-only session data from accounts whereas `appData` will be used to hold session data for your app.
 
-### Compiling and packaging
+### Writing data to the session
+
+To reiterate, all data written by your app to the session will be stored in the `appData` stanza of the session object. So, assuming you  had an object:
+
+```
+myAppSessionData = {some_key: "some_value}`
+```
+
+To write the above data to session, we'd do the following:
+```
+session.write(res, myAppSessionData);
+```
+...where `res` is the response object.  The above data will now be available in `res.locals.session.appData`
+
+### Updating session data
+
+In order to update or add new data to the existing session session data , we would do the following:
+```
+let o = res.locals.session.appData;
+// manipulate the data here as you please, then:
+session.write(res, o);
+```
+
+### Reading session data
+
+Session data is read in directly by accessing `res.locals.session` due to the fact that this variable is populated during the session bootstrap, i.e. `session.start()`.
+
+The object returned will have to top-level keys: `appData` and `accountData`. By now, we all know what each of these represent.
+
+### Deleting session data
+
+To delete existing session session data , run  `session.delete(res);` All your app session data will be removed from`res.locals` and also deleted from the cache.
+
+## Linting and testing
+
+Run `npm test` for unit tests.
+
+Run `npm run lint` to lint.
+
+## Compiling and packaging
 
 At this point no NPM registry is in use and built packages are stored directly in the repository.
 
-For that reason every source code change should be compiled using `npm run build` command and build artifacts in `lib` directory should be committed alongside initial code change.  
+For that reason every source code change should be compiled using `npm run build`. The build artefacts in the `lib` directory should be committed alongside initial code change.  
