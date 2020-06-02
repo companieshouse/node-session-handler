@@ -30,6 +30,8 @@ Add the following to `package.json`:
 ```
 SESSION_APP_KEY=lfp_appeals_frontend
 ```
+Please be sure that this value is unique enough so as not to overwrite another app's data in Redis
+
 - Also make sure that the value set in the global config parameter `CACHE_SERVER` is sufficient for your needs. You might want to overwrite in your app config to use a self-configured host.
 
 ## Usage
@@ -69,12 +71,17 @@ The `res.locals.session` object is in the format below:
 To reiterate, all data written by your app to the session will be stored in the `appData` stanza of the session object. So, assuming you  had an object:
 
 ```
-myAppSessionData = {some_key: "some_value}`
+myAppSessionData = {some_key: "some_value"}`
 ```
 
 To write the above data to session, we'd do the following:
 ```
-session.write(res, myAppSessionData);
+session.write(res, myAppSessionData)
+  .then(
+    // proceed with program flow
+  ).catch(err => {
+    // handle error
+  });
 ```
 ...where `res` is the response object.  The above data will now be available in `res.locals.session.appData`
 
@@ -84,7 +91,12 @@ In order to update or add new data to the existing session session data , we wou
 ```
 let o = res.locals.session.appData;
 // manipulate the data here as you please, then:
-session.write(res, o);
+session.write(res, o)
+  .then(
+    // proceed with program flow
+  ).catch(err => {
+    // handle error
+  });
 ```
 
 ### Reading session data
@@ -95,7 +107,16 @@ The object returned will have to top-level keys: `appData` and `accountData`. By
 
 ### Deleting session data
 
-To delete existing session session data , run  `session.delete(res);` All your app session data will be removed from`res.locals` and also deleted from the cache.
+To delete existing session session data , run:
+  ```
+session.delete(res)
+    .then(
+      // proceed with program flow
+     ).catch(err => {
+      // handle error
+     });
+```
+  All your app session data will be removed from`res.locals` and also deleted from the cache.
 
 ## Linting and testing
 
