@@ -2,23 +2,28 @@
 
 # node-session-handler
 
-Module provides a way of handling Companies House sessions for node apps.
+The `node-session-handler` provides a means by which Companies House sessions are managed for node apps.
 
-## Prerequisite
+## Prerequisites
 
-Module requires `request.cookies` map to be populated with an object keyed by the cookie names. It can be achieved by use of [cookie-parser](https://www.npmjs.com/package/cookie-parser) module.
+It's required that you install the `cookie-parser` module in your app in order that the `Cookie` header is correctly parsed.  This will populate `req.cookies` with an object keyed by the cookie names.
 
-In short run `npm install cookie-parser` command to install dependency and add the following snipped to the application to apply cookie parsing middleware:
+```
+npm install cookie-parser
+```
+...and in your bootstrap file:
 
 ```$typescript
 import * as cookieParser from 'cookie-parser'
-...
+```
+Now, bind to your middleware:
+```
 app.use(cookieParser())
 ```
 
 ## Installation
 
-Add the following to `package.json`:
+To install the `node-session-handler`, add the following to `package.json`:
 
 ```$json
 "ch-node-session-handler": "git+ssh://git@github.com/companieshouse/node-session-handler.git#4.0.0"
@@ -34,13 +39,14 @@ Add the following to `package.json`:
 	```
 	>Please be sure that this value is unique enough so as not to overwrite another app's data in Redis.
 
-- Also make sure that the value set in the global config parameter `CACHE_SERVER` is sufficient for your needs. You might want to overwrite in your app config to use a self-configured host.
+- Also make sure that the value set in the global config parameter `CACHE_SERVER` is sufficient for your needs. You might want to overwrite it in your app config to use a self-configured Redis host. At any rate, ensure that this is the same host that accounts data is written to.
+- For your Vagrant set-up, the default Redis settings in `CACHE_SERVER`should suffice.
 
 ## Usage
 
 ### Bootstrapping
 
-In your express bootstrap file, usually `app.ts` or `server.ts` for most apps, add the following to your require section:
+In your Express bootstrap file (usually `app.ts` or `server.ts` for most apps), add the following to your require section:
 ```
 import session from 'ch-node-session-handler';
 ```
@@ -89,7 +95,9 @@ session.write(res, myAppSessionData)
     // handle error
   });
 ```
-...where `res` is the response object.  The above data will now be available in `res.locals.session.appData`
+...where `res` is the response object.
+
+The above app data will now be available in `res.locals.session.appData` whilst account data can be accessed from `res.locals.session.accountData`
 
 ### Updating session data
 
@@ -123,6 +131,10 @@ session.delete(res)
      });
 ```
   All your app session data will be removed from`res.locals` and also deleted from the cache.
+
+## Error handling
+
+In your local development environment, all errors will be logged to your console so please monitor it for any issues or to triage bugs.
 
 ## Linting and testing
 

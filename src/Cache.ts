@@ -1,13 +1,13 @@
 import Redis from "ioredis";
 import { loggerInstance } from "./Logger";
 
-const client = null;
-
 const Cache = {
+
+  client: null,
 
   _setClient: function (): void {
     try {
-      if (!this.clent || typeof this.client === 'undefined') {
+      if (!this.client || typeof this.client === 'undefined') {
         this.client = new Redis(`redis://${process.env.CACHE_SERVER}`);
       }
     } catch (err) {
