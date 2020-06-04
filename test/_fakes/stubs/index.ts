@@ -2,18 +2,20 @@ import * as fakeData from '../data';
 
 export const cookie = {
   getSessionId: function (request: object): any {
-      return fakeData.sessionId;
-    }
-  };
+    return fakeData.sessionId;
+  }
+};
 
 export const cache = {
-  _setClient: function (): void {},
+  _setClient: function (): void {
+    return;
+  },
   set: function (key: string, value: string, ttl: number): Promise<boolean> {
     return Promise.resolve(true);
   },
   get: function (key: string): Promise<any> {
     let r = '';
-    if(key !== fakeData.sessionId) {
+    if (key !== fakeData.sessionId) {
       r = JSON.stringify(fakeData.sessionData);
     } else {
       r = fakeData.cacheResultAccount;

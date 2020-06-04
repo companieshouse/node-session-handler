@@ -1,5 +1,6 @@
 
 
+
 # node-session-handler
 
 The `node-session-handler` provides a means by which Companies House sessions are managed for node apps.
@@ -144,9 +145,9 @@ For all forward environments, errors will be logged to the standard log files as
 
 ## Linting and testing
 
-Run `npm test` for unit tests.
+Run `npm test` for unit tests and `npm run test:coverage` to get a coverage report.
 
-Run `npm run lint` to lint.
+Run `npm run lint` to lint and `npm run lint:autofix` to automatically fix minor linting errors.
 
 ## Compiling and packaging
 
@@ -155,5 +156,5 @@ At this point no NPM registry is in use and built packages are stored directly i
 For that reason every source code change should be followed by a code compilation using `npm run build`. The built artefacts in the `lib` directory should be committed alongside your code changes.  
 
 ## To-do
- - [] Detach cache management from the session-handler into separate module
+ - [] Detach cache handling from this module into separate module
  - [] Bump up test coverage

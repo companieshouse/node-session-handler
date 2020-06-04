@@ -1,9 +1,6 @@
 import 'mocha';
-import { expect } from 'chai';
-import * as chai from 'chai';
-import * as sinon from 'sinon';
+import chai, { expect } from 'chai';
 chai.use(require('chai-as-promised'));
-chai.use(require('sinon-chai'));
 
 import * as cookie from '../src/Cookie';
 
@@ -34,7 +31,6 @@ describe('Session module', () => {
     expect(mock.response.locals).to.have.nested.property('session.appData');
     expect(mock.response.locals).to.have.nested.property('session.accountData');
     expect(mock.response.locals).to.have.nested.property('session.appData.some_key');
-    //expect(mock.response.locals).to.have.nested.property('session.accountData.expires');
   });
 
   it('should write data to the session', async () => {

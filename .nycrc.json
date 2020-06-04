@@ -1,7 +1,7 @@
 {
-    "reporter": [
-        "lcov",
-        "text-summary"
-    ],
-    "report-dir": "coverage-report"
+  "reporter": [
+    "lcov",
+    "text-summary"
+  ],
+  "report-dir": "coverage-report"
 }

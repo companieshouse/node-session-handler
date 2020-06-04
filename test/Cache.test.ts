@@ -13,7 +13,7 @@ describe('Cache module', () => {
   });
 
   it('should commit a value to cache', async () => {
-    let r = await cache.set('key', {some_key: "some_value"});
+    let r = await cache.set('key', { some_key: 'some_value' });
     expect(r).to.equal(true);
   });
 

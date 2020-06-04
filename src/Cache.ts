@@ -1,5 +1,5 @@
-import Redis from "ioredis";
-import { loggerInstance } from "./Logger";
+import Redis from 'ioredis';
+import { loggerInstance } from './Logger';
 
 const Cache: { [k: string]: any } = {
 
@@ -17,20 +17,20 @@ const Cache: { [k: string]: any } = {
 
   set: function (key: string, value: string, ttl: number): Promise<boolean> {
     this._setClient();
-    return new Promise ((resolve, reject) => {
-      this.client.set(key, value, "EX", ttl)
+    return new Promise((resolve, reject) => {
+      this.client.set(key, value, 'EX', ttl)
         .then(_ => {
           resolve(true);
         }).catch(err => {
           loggerInstance().error(err);
           reject(false);
         });
-      });
+    });
   },
 
   get: function (key: string): Promise<any> {
     this._setClient();
-    return new Promise ((resolve, reject) => {
+    return new Promise((resolve, reject) => {
       this.client.get(key)
         .then(result => {
           resolve(result);
@@ -38,12 +38,12 @@ const Cache: { [k: string]: any } = {
           loggerInstance().error(err);
           reject(false);
         });
-      });
+    });
   },
 
   delete: function (key: string): Promise<boolean> {
     this._setClient();
-    return new Promise ((resolve, reject) => {
+    return new Promise((resolve, reject) => {
       this.client.del(key)
         .then(_ => {
           resolve(true);
@@ -51,7 +51,7 @@ const Cache: { [k: string]: any } = {
           loggerInstance().error(err);
           reject(false);
         });
-      });
+    });
   }
 };
 

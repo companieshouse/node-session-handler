@@ -8,6 +8,6 @@ const Mock = {
   response: {
     locals: {}
   }
-}
+};
 
 export = Mock;

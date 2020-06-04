@@ -1,10 +1,10 @@
-import msgpack5 from "msgpack5";
-import * as cookie from "./Cookie";
-import * as cache from "./Cache";
-import { loggerInstance } from "./Logger";
+import msgpack5 from 'msgpack5';
+import * as cookie from './Cookie';
+import * as cache from './Cache';
+import { loggerInstance } from './Logger';
 
 const _appDataKey = process.env.SESSION_APP_KEY;
-const _defaultTtl = 60*60;
+const _defaultTtl = 60 * 60;
 
 const Session: { [k: string]: any } = {
 
@@ -137,7 +137,7 @@ const Session: { [k: string]: any } = {
    * @param data - user data from cache to be decoded
    * @return <Object>
    */
-  decodeAccountData: function(data) {
+  decodeAccountData: function (data) {
     try {
       const buffer = Buffer.from(data, 'base64');
       const decoded = msgpack5().decode(buffer);

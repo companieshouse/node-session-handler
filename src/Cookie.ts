@@ -1,5 +1,5 @@
-import * as crypto from "crypto";
-import { loggerInstance } from "./Logger";
+import * as crypto from 'crypto';
+import { loggerInstance } from './Logger';
 
 const _idOctets = (7 * 3);
 const _signatureStart = (_idOctets * 4) / 3;
@@ -13,10 +13,10 @@ const Cookie = {
     try {
       const adjustedId = this.extractSessionId(id);
       const value = crypto
-        .createHash("sha1")
+        .createHash('sha1')
         .update(adjustedId + secret)
-        .digest("base64");
-      return value.substr(0, value.indexOf("="));
+        .digest('base64');
+      return value.substr(0, value.indexOf('='));
     } catch (err) {
       loggerInstance().error(err);
     }
@@ -35,7 +35,7 @@ const Cookie = {
       const actualSignature = this.extractSignature(sessionCookie);
       const expectedSignature = this.generateSignature(sessionCookie, cookieSecret);
       if (actualSignature !== expectedSignature) {
-        return false
+        return false;
       } else {
         return true;
       }
@@ -46,11 +46,11 @@ const Cookie = {
 
   getSessionId: function (requestCookies: object): any {
     try {
-      if(typeof requestCookies[_cookieKey] === 'undefined') {
-        throw `Account session cookie '${_cookieKey}' missing in request`;
+      if (typeof requestCookies[_cookieKey] === 'undefined') {
+        throw new Error(`Account session cookie '${_cookieKey}' missing in request`);
       }
       if (!this.validateCookieSignature(requestCookies[_cookieKey], process.env.COOKIE_SECRET)) {
-        throw `Account session cookie not correctly signed`;
+        throw new Error(`Account session cookie not correctly signed`);
       }
       return requestCookies[_cookieKey].substring(0, _signatureStart);
     } catch (err) {

@@ -10,7 +10,8 @@
   ],
   "scripts": {
     "build": "tsc",
-    "lint": "tslint --project ./",
+    "lint": "tslint -p . -c tslint.json './src/**/*{.ts,.tsx}' './test/**/*{.ts,.tsx}'",
+    "lint:autofix": "tslint --fix -p . -c tslint.json 'src/**/*{.ts,.tsx}' 'test/**/*{.ts,.tsx}'",
     "test": "mocha test/**/*.test.ts",
     "test:coverage": "nyc npm test",
     "analyse-code": "sonar-scanner",
@@ -60,6 +61,7 @@
     "ts-node": "^8.9.1",
     "ts-sinon": "^1.2.0",
     "tslint": "^6.1.2",
+    "tslint-config-standard": "^9.0.0",
     "typescript": "^3.8.3"
   }
 }
