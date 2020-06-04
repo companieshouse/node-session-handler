@@ -26,7 +26,7 @@ app.use(cookieParser())
 To install the `node-session-handler`, add the following to `package.json`:
 
 ```$json
-"ch-node-session-handler": "git+ssh://git@github.com/companieshouse/node-session-handler.git#4.0.0"
+"ch-node-session-handler": "git://github.com/<user>/<project>.git#task\/proof-of-concept"
 ```
 
 ..and run `npm install`
@@ -40,7 +40,7 @@ To install the `node-session-handler`, add the following to `package.json`:
 	>Please be sure that this value is unique enough so as not to overwrite another app's data in Redis.
 
 - Also make sure that the value set in the global config parameter `CACHE_SERVER` is sufficient for your needs. You might want to overwrite it in your app config to use a self-configured Redis host. At any rate, ensure that this is the same host that accounts data is written to.
-- For your Vagrant set-up, the default Redis settings in `CACHE_SERVER`should suffice.
+- For a standard CH Vagrant install, the default Redis settings in `CACHE_SERVER`should suffice.
 
 ## Usage
 
@@ -65,7 +65,7 @@ app.use((req, res, next) => {
 }
 ```
 
-The `session.start()` method is used to fire up the session for the current request/response cycle and will drop your currently available session data in `res.locals.session` which you can now access at any point in your code.
+The `session.start()` method is used to fire up the session for the current request/response cycle and will fetch your currently available session data from Redis and add it to`res.locals.session` for fast and easy access for the current request/response cycle.
 
 The `res.locals.session` object is in the format below:
 
@@ -97,11 +97,13 @@ session.write(res, myAppSessionData)
 ```
 ...where `res` is the response object.
 
-The above app data will now be available in `res.locals.session.appData` whilst account data can be accessed from `res.locals.session.accountData`
+The above app data will now be immediately available in `res.locals.session.appData` whilst account data can be accessed from `res.locals.session.accountData`
+
+A copy of this new data is saved to Redis for subsequent requests.
 
 ### Updating session data
 
-In order to update or add new data to the existing session session data , we would do the following:
+In order to update or add new data to the existing app session data , we would do the following:
 ```
 let o = res.locals.session.appData;
 // manipulate the data here as you please, then:
@@ -115,9 +117,9 @@ session.write(res, o)
 
 ### Reading session data
 
-Session data is read in directly by accessing `res.locals.session` due to the fact that this variable is populated during the session bootstrap, i.e. `session.start()`.
+Session data is directly accessible via `res.locals.session` for the current request/response cycle -- having been populated during session bootstrap when `session.start()` was called.
 
-The object returned will have to top-level keys: `appData` and `accountData`. By now, we all know what each of these represent.
+The object returned will have two top-level keys: `appData` and `accountData`. By now, we all know what each of these represent.
 
 ### Deleting session data
 
@@ -130,11 +132,15 @@ session.delete(res)
       // handle error
      });
 ```
-  All your app session data will be removed from`res.locals` and also deleted from the cache.
+  All your app session data will be removed from `res.locals` and also deleted from the cache.
 
 ## Error handling
 
-In your local development environment, all errors will be logged to your console so please monitor it for any issues or to triage bugs.
+Care has been taken to ensure that errors in the `node-session-handler` are not terminal for your app but rather handled gracefully. Please let the module authors know of any terminal errors in your app arising from integration with this module for a timely fix.
+
+ In any case, if working locally, all session-handler errors will be logged to your console so please monitor it for any issues or to triage bugs.
+
+For all forward environments, errors will be logged to the standard log files as defined by the platform team.
 
 ## Linting and testing
 
@@ -147,3 +153,7 @@ Run `npm run lint` to lint.
 At this point no NPM registry is in use and built packages are stored directly in the repository.
 
 For that reason every source code change should be compiled using `npm run build`. The build artefacts in the `lib` directory should be committed alongside initial code change.  
+
+## To-do
+ - Detach cache management from the session-handler into separate module
+ - Bump up test coverage

@@ -3,6 +3,6 @@ declare const Cookie: {
     extractSignature: (sessionCookie: string) => string;
     extractSessionId: (sessionCookie: string) => string;
     validateCookieSignature: (sessionCookie: string, cookieSecret: string) => boolean;
-    getSessionId: (requestCookies: any) => any;
+    getSessionId: (requestCookies: object) => any;
 };
 export = Cookie;

@@ -6,7 +6,11 @@ import { loggerInstance } from "./Logger";
 const _appDataKey = process.env.SESSION_APP_KEY;
 const _defaultTtl = 60*60;
 
-const Session = {
+const Session: { [k: string]: any } = {
+
+  cookie: cookie,
+
+  cache: cache,
 
   /**
    * Set up default parameters
@@ -17,20 +21,20 @@ const Session = {
   _setUp: function (req): void {
     try {
       this.sessionData = { appData: null, accountData: null };
-      this.sessionId = cookie.getSessionId(req.cookies);
+      this.sessionId = this.cookie.getSessionId(req.cookies);
     } catch (err) {
       loggerInstance().error(err);
     }
   },
 
   /**
-   * Bootsrap a session
+   * Bootstrap a session
    *
    * @param req - the request object as supplied the the consumer
    * @param res - the response object as supplied the the consumer
    * @return <void>
    */
-  start: function (req, res): Promise<void> {
+  start: function (req, res): Promise<boolean> {
     this._setUp(req);
     return Promise.all(
       [
@@ -41,10 +45,10 @@ const Session = {
       this.sessionData.appData = JSON.parse(a);
       this.sessionData.accountData = b ? this.decodeAccountData(b) : b;
       res.locals.session = this.sessionData;
-      Promise.resolve(true);
+      return Promise.resolve(true);
     }).catch(err => {
       loggerInstance().error(err);
-      Promise.reject(false);
+      return Promise.reject(false);
     });
   },
 
@@ -57,7 +61,7 @@ const Session = {
   read: function (type): Promise<any> {
     return new Promise((resolve, reject) => {
       if (type === 'appData') {
-        cache.get(_appDataKey)
+        this.cache.get(_appDataKey)
           .then(r => {
             resolve(r);
           }).catch(err => {
@@ -65,7 +69,7 @@ const Session = {
             resolve(null);
           });
       } else if (type === 'accountData') {
-        cache.get(this.sessionId)
+        this.cache.get(this.sessionId)
           .then(r => {
             resolve(r);
           }).catch(err => {
@@ -91,7 +95,7 @@ const Session = {
         loggerInstance().error('Session was not properly started - missing appData field');
         reject(false);
       } else {
-        cache.set(_appDataKey, JSON.stringify(data), _defaultTtl)
+        this.cache.set(_appDataKey, JSON.stringify(data), _defaultTtl)
           .then(_ => {
             res.locals.session.appData = data;
             resolve(true);
@@ -116,7 +120,7 @@ const Session = {
         reject(false);
       } else {
         delete res.locals.session.appData;
-        cache.delete(_appDataKey)
+        this.cache.delete(_appDataKey)
           .then(_ => {
             resolve(true);
           }).catch(err => {
@@ -128,7 +132,7 @@ const Session = {
   },
 
   /**
-   * Decodes data saved against a user sessionId by the accounts team
+   * Decodes data saved against a user's sessionId by the accounts service
    *
    * @param data - user data from cache to be decoded
    * @return <Object>

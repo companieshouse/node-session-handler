@@ -44,7 +44,7 @@ const Cookie = {
     }
   },
 
-  getSessionId: function (requestCookies): any {
+  getSessionId: function (requestCookies: object): any {
     try {
       if(typeof requestCookies[_cookieKey] === 'undefined') {
         throw `Account session cookie '${_cookieKey}' missing in request`;

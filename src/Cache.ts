@@ -1,7 +1,7 @@
 import Redis from "ioredis";
 import { loggerInstance } from "./Logger";
 
-const Cache = {
+const Cache: { [k: string]: any } = {
 
   client: null,
 
@@ -28,7 +28,7 @@ const Cache = {
       });
   },
 
-  get: function (key: string): Promise<string> {
+  get: function (key: string): Promise<any> {
     this._setClient();
     return new Promise ((resolve, reject) => {
       this.client.get(key)
