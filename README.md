@@ -152,8 +152,8 @@ Run `npm run lint` to lint.
 
 At this point no NPM registry is in use and built packages are stored directly in the repository.
 
-For that reason every source code change should be compiled using `npm run build`. The build artefacts in the `lib` directory should be committed alongside initial code change.  
+For that reason every source code change should be followed by a code compilation using `npm run build`. The built artefacts in the `lib` directory should be committed alongside your code changes.  
 
 ## To-do
- - Detach cache management from the session-handler into separate module
- - Bump up test coverage
+ - [] Detach cache management from the session-handler into separate module
+ - [] Bump up test coverage
