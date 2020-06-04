@@ -58,7 +58,7 @@ const Session: { [k: string]: any } = {
    * @param type - the type of read to be performed
    * @return <Promise>
    */
-  read: function (type): Promise<any> {
+  read: function (type: string): Promise<any> {
     return new Promise((resolve, reject) => {
       if (type === 'appData') {
         this.cache.get(_appDataKey)
@@ -138,9 +138,8 @@ const Session: { [k: string]: any } = {
    * @return <Object>
    */
   decodeAccountData: function(data) {
-    const buffer = Buffer.from(data, 'base64');
-    let decoded;
     try {
+      const buffer = Buffer.from(data, 'base64');
       const decoded = msgpack5().decode(buffer);
       return typeof(decoded) === 'string' ? JSON.parse(decoded) : decoded;
     } catch (err) {

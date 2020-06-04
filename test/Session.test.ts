@@ -19,7 +19,7 @@ describe('Session module', () => {
     session.cookie = stub.cookie;
     expect(session._setUp(mock.request)).to.equal(undefined);
     expect(session).to.have.own.property('sessionData');
-    expect(session).to.have.own.property('sessionId').to.equal('abc123');
+    expect(session).to.have.own.property('sessionId').to.equal('QX3ns3vmXin3pzOwvMK4E+cgUj+8');
   });
 
   it('should start the session', async () => {

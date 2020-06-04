@@ -2,7 +2,7 @@ import * as fakeData from '../data';
 
 export const cookie = {
   getSessionId: function (request: object): any {
-      return 'abc123';
+      return fakeData.sessionId;
     }
   };
 
