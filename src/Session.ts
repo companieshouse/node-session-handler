@@ -119,7 +119,7 @@ const Session: { [k: string]: any } = {
         loggerInstance().error('Session was not properly started - missing appData field');
         reject(false);
       } else {
-        delete res.locals.session.appData;
+        res.locals.session.appData = null;
         this.cache.delete(_appDataKey)
           .then(_ => {
             resolve(true);
