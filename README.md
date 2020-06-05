@@ -84,7 +84,7 @@ The `res.locals.session` object is in the format below:
 To reiterate, all data written by your app to the session will be stored in the `appData` stanza of the session object. So, assuming you  had an object:
 
 ```
-const myAppSessionData = {some_key: "some_value"}
+const myAppSessionData = { some_key: "some_value" }
 ```
 
 To write the above data to session, we'd do the following:
@@ -133,7 +133,7 @@ session.delete(res)
       // handle error
      });
 ```
-  All your app session data will be removed from `res.locals` and also deleted from the cache.
+All your app session data will be removed from the Redis cache and `res.locals.session.appData` will be set to `null`. `res.locals.session.accountsData` will remain readable.
 
 ## Error handling
 
