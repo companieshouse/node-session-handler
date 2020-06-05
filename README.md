@@ -27,7 +27,7 @@ app.use(cookieParser())
 To install the `node-session-handler`, add the following to `package.json`:
 
 ```$json
-"ch-node-session-handler": "git+ssh://git@github.com/companieshouse/node-session-handler.git#task\/proof-of-concept"
+"ch-node-session-handler": "git+ssh://git@github.com/companieshouse/node-session-handler.git#task/proof-of-concept"
 ```
 
 ..and run `npm install`
