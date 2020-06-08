@@ -36,7 +36,7 @@ To install the `node-session-handler`, add the following to `package.json`:
 
 - Ensure you have the config variable `SESSION_APP_KEY` set in your app config - it must contain the unique name of your app. This value must only contain letters, numbers and underscores, but must start with a letter. For example:
 	```
-	SESSION_APP_KEY=lfp_appeals_frontend
+	export SESSION_APP_KEY=lfp_appeals_frontend
 	```
 	>Please be sure that this value is unique enough so as not to overwrite another app's data in Redis.
 
