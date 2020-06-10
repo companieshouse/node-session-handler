@@ -1,6 +1,6 @@
 {
   "name": "ch-node-session-handler",
-  "version": "3.0.0",
+  "version": "3.0.1",
   "description": "Node.js session handler for Companies House",
   "main": "./lib/index.js",
   "types": "./lib/index.d.ts",
@@ -28,7 +28,7 @@
   },
   "homepage": "https://github.com/companieshouse/node-session-handler#readme",
   "dependencies": {
-    "ch-logging": "git+ssh://git@github.com/companieshouse/ch-structured-logging-node.git#a3e0dcc57f91f63803e02ceef2cc5e4038de9a19",
+    "ch-logging": "git+ssh://git@github.com/companieshouse/ch-structured-logging-node.git#15a811238ceb58988ab755229a5c07b9500200f2",
     "crypto": "^1.0.1",
     "express-async-handler": "^1.1.4",
     "ioredis": "^4.16.3",
