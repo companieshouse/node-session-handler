@@ -31,7 +31,7 @@
     "ch-logging": "git+ssh://git@github.com/companieshouse/ch-structured-logging-node.git#15a811238ceb58988ab755229a5c07b9500200f2",
     "crypto": "^1.0.1",
     "express-async-handler": "^1.1.4",
-    "ioredis": "^4.16.3",
+    "ioredis": "^4.17.3",
     "msgpack5": "^4.2.1",
     "on-headers": "^1.0.2"
   },
