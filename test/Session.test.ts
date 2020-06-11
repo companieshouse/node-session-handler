@@ -2,8 +2,6 @@ import 'mocha';
 import chai, { expect } from 'chai';
 chai.use(require('chai-as-promised'));
 
-import * as cookie from '../src/Cookie';
-
 import * as fakeData from './_fakes/data';
 import * as mock from './_fakes/mocks';
 import * as stub from './_fakes/stubs';
@@ -11,13 +9,6 @@ import * as stub from './_fakes/stubs';
 import * as session from '../src/Session';
 
 describe('Session module', () => {
-
-  it('should initialise the default members of the session object', () => {
-    session.cookie = stub.cookie;
-    expect(session._setUp(mock.request)).to.equal(undefined);
-    expect(session).to.have.own.property('sessionData');
-    expect(session).to.have.own.property('sessionId').to.equal('QX3ns3vmXin3pzOwvMK4E+cgUj+8');
-  });
 
   it('should start the session', async () => {
     session.cookie = stub.cookie;
@@ -43,8 +34,18 @@ describe('Session module', () => {
     expect(r).to.equal(true);
   });
 
+  it('should retrieve the sessionId', async () => {
+    let r = await session.getId(mock.response);
+    expect(r).to.equal('Jaw2Kigqi7zgGhVjle9OjPZzX0wI');
+  });
+
+  it('should confirm user is not logged in', async () => {
+    let r = await session.isLoggedIn(mock.response);
+    expect(r).to.equal(false);
+  });
+
   it('should decode account data from cache', () => {
-    let r = session.decodeAccountData(fakeData.cacheResultAccount);
+    let r = session._decodeAccountData(fakeData.cacheResultAccount);
     expect(r).to.have.own.property('.client.signature');
     expect(r).to.have.own.property('.id');
     expect(r).to.have.own.property('.oauth2_nonce');

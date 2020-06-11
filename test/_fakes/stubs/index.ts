@@ -6,9 +6,22 @@ export const cookie = {
   }
 };
 
+export const redisClient = {
+  set: function (key: string, value: string, ttl: number): Promise<boolean> {
+    return Promise.resolve(true);
+  },
+  get: function (key: string): Promise<any> {
+    return Promise.resolve(fakeData.sessionDataString);
+  },
+  del: function (key: string): Promise<boolean> {
+    return Promise.resolve(true);
+  }
+};
+
+
 export const cache = {
-  _setClient: function (): void {
-    return;
+  _getClient: function () {
+    return redisClient;
   },
   set: function (key: string, value: string, ttl: number): Promise<boolean> {
     return Promise.resolve(true);
@@ -23,18 +36,6 @@ export const cache = {
     return Promise.resolve(r);
   },
   delete: function (key: string): Promise<boolean> {
-    return Promise.resolve(true);
-  }
-};
-
-export const redisClient = {
-  set: function (key: string, value: string, ttl: number): Promise<boolean> {
-    return Promise.resolve(true);
-  },
-  get: function (key: string): Promise<any> {
-    return Promise.resolve(fakeData.sessionDataString);
-  },
-  del: function (key: string): Promise<boolean> {
     return Promise.resolve(true);
   }
 };

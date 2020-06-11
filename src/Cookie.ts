@@ -48,11 +48,11 @@ const Cookie = {
     try {
       if (typeof requestCookies[_cookieKey] === 'undefined') {
         throw new Error(`Account session cookie '${_cookieKey}' missing in request`);
-      }
-      if (!this.validateCookieSignature(requestCookies[_cookieKey], process.env.COOKIE_SECRET)) {
+      } else if (!this.validateCookieSignature(requestCookies[_cookieKey], process.env.COOKIE_SECRET)) {
         throw new Error(`Account session cookie not correctly signed`);
+      } else {
+        return requestCookies[_cookieKey].substring(0, _signatureStart);
       }
-      return requestCookies[_cookieKey].substring(0, _signatureStart);
     } catch (err) {
       loggerInstance().error(err);
       return false;

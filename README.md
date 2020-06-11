@@ -1,6 +1,8 @@
 
 
 
+
+
 # node-session-handler
 
 The `node-session-handler` provides a means by which Companies House sessions are managed for node apps.
@@ -38,21 +40,19 @@ To install the `node-session-handler`, add the following to `package.json`:
 	```
 	export SESSION_APP_KEY=lfp_appeals_frontend
 	```
-	>Please be sure that this value is unique enough so as not to overwrite another app's data in Redis.
-
 - Also make sure that the value set in the global config parameter `CACHE_SERVER` is sufficient for your needs. You might want to overwrite it in your app config to use a self-configured Redis host. At any rate, ensure that this is the same host that accounts data is written to.
 - For a standard CH Vagrant install, the default Redis settings in `CACHE_SERVER`should suffice.
 
 ## Usage
 
-### Bootstrapping
+### 1. Bootstrapping
 
 In your Express bootstrap file (usually `app.ts` or `server.ts` for most apps), add the following to your require section:
 ```
 import session from 'ch-node-session-handler';
 ```
 
-..and then:
+...and then:
 
 ```
 app.use((req, res, next) => {
@@ -66,20 +66,29 @@ app.use((req, res, next) => {
 }
 ```
 
-The `session.start()` method is used to fire up the session for the current request/response cycle and will fetch your currently available session data from Redis and add it to`res.locals.session` for fast and easy access for the current request/response cycle.
+The `session.start()` method is used to fire up the session for the current request/response cycle and will fetch a user's session data from Redis and add it to`res.locals.session` to be  used in the current request/response cycle.
 
 The `res.locals.session` object is in the format below:
 
 ```
   {
     accountData: { ... }, // contains read-only session data from accounts
-    appData: { ... }
+    appData: { ... },
+    id: <value>
   }
 ```
 
-`accountData` contains read-only session data from accounts whereas `appData` will be used to hold session data for your app.
+- `accountData` contains read-only session data from accounts
+-  `appData` will be used to hold session data for your app
+- `id` contains the session id as decoded from the `__SID` cookie.
 
-### Writing data to the session
+**_Please note:_** All data keys in `res.locals.session`will be set to `null` if the `__SID` cookie is missing from the request or is invalid, *i.e.* not created by the accounts service.
+
+### 2. Checking if a user is logged in
+
+To check if a user is logged in,  call `session.isLoggedIn(res)`  where `res` is the response object. This method parses the accountData in`res.locals.session` and returns a boolean.
+
+### 3. Writing data to the session
 
 To reiterate, all data written by your app to the session will be stored in the `appData` stanza of the session object. So, assuming you  had an object:
 
@@ -102,7 +111,7 @@ The above app data will now be immediately available in `res.locals.session.appD
 
 A copy of this new data is saved to Redis for subsequent requests.
 
-### Updating session data
+### 4. Updating session data
 
 In order to update or add new data to the existing app session data , we would do the following:
 ```
@@ -116,13 +125,13 @@ session.write(res, o)
   });
 ```
 
-### Reading session data
+### 5. Reading session data
 
 Session data is directly accessible via `res.locals.session` for the current request/response cycle -- having been populated during session bootstrap when `session.start()` was called.
 
 The object returned will have two top-level keys: `appData` and `accountData`. By now, we all know what each of these represent.
 
-### Deleting session data
+### 6. Deleting session data
 
 To delete existing session session data , run:
   ```
@@ -133,7 +142,7 @@ session.delete(res)
       // handle error
      });
 ```
-All your app session data will be removed from the Redis cache and `res.locals.session.appData` will be set to `null`. `res.locals.session.accountsData` will remain readable.
+All your app session data will be removed from the Redis cache and `res.locals.session.appData` will be set to `null`.
 
 ## Error handling
 
@@ -147,7 +156,7 @@ For all forward environments, errors will be logged to the standard log files as
 
 Run `npm test` for unit tests and `npm run test:coverage` to get a coverage report.
 
-Run `npm run lint` to lint and `npm run lint:autofix` to automatically fix minor linting errors.
+Run `npm run lint` to lint and `npm run lint:fix` to automatically fix minor linting errors.
 
 ## Compiling and packaging
 

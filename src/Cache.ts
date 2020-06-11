@@ -1,55 +1,48 @@
 import Redis from 'ioredis';
 import { loggerInstance } from './Logger';
 
+const redisClient = () => {
+  if (typeof process.env.CACHE_SERVER !== 'undefined') {
+    return new Redis(`redis://${process.env.CACHE_SERVER}`);
+  }
+};
+
 const Cache: { [k: string]: any } = {
 
-  client: null,
-
-  _setClient: function (): void {
-    try {
-      if (!this.client || typeof this.client === 'undefined') {
-        this.client = new Redis(`redis://${process.env.CACHE_SERVER}`);
-      }
-    } catch (err) {
-      loggerInstance().error(err);
-    }
-  },
+  client: redisClient(),
 
   set: function (key: string, value: string, ttl: number): Promise<boolean> {
-    this._setClient();
     return new Promise((resolve, reject) => {
       this.client.set(key, value, 'EX', ttl)
         .then(_ => {
           resolve(true);
         }).catch(err => {
           loggerInstance().error(err);
-          reject(false);
+          reject(err);
         });
     });
   },
 
   get: function (key: string): Promise<any> {
-    this._setClient();
     return new Promise((resolve, reject) => {
       this.client.get(key)
         .then(result => {
           resolve(result);
         }).catch(err => {
           loggerInstance().error(err);
-          reject(false);
+          reject(err);
         });
     });
   },
 
   delete: function (key: string): Promise<boolean> {
-    this._setClient();
     return new Promise((resolve, reject) => {
       this.client.del(key)
         .then(_ => {
           resolve(true);
         }).catch(err => {
           loggerInstance().error(err);
-          reject(false);
+          reject(err);
         });
     });
   }

@@ -2,6 +2,7 @@ import msgpack5 from 'msgpack5';
 import * as cookie from './Cookie';
 import * as cache from './Cache';
 import { loggerInstance } from './Logger';
+import SessionError from './SessionError';
 
 const _appDataKey = process.env.SESSION_APP_KEY;
 const _defaultTtl = 60 * 60;
@@ -13,21 +14,6 @@ const Session: { [k: string]: any } = {
   cache: cache,
 
   /**
-   * Set up default parameters
-   *
-   * @param req - the request object as supplied the the consumer
-   * @return <void>
-   */
-  _setUp: function (req): void {
-    try {
-      this.sessionData = { appData: null, accountData: null };
-      this.sessionId = this.cookie.getSessionId(req.cookies);
-    } catch (err) {
-      loggerInstance().error(err);
-    }
-  },
-
-  /**
    * Bootstrap a session
    *
    * @param req - the request object as supplied the the consumer
@@ -35,33 +21,49 @@ const Session: { [k: string]: any } = {
    * @return <void>
    */
   start: function (req, res): Promise<boolean> {
-    this._setUp(req);
-    return Promise.all(
-      [
-        this.read('appData'),
-        this.read('accountData')
-      ]
-    ).then(([a, b]) => {
-      this.sessionData.appData = JSON.parse(a);
-      this.sessionData.accountData = b ? this.decodeAccountData(b) : b;
-      res.locals.session = this.sessionData;
-      return Promise.resolve(true);
-    }).catch(err => {
+    let signature = { appData: null, accountData: null, id: null };
+    try {
+      const sessionId = this.cookie.getSessionId(req.cookies);
+      if (!sessionId) {
+        throw new SessionError('Invalid session Id');
+      } else {
+        return Promise.all(
+          [
+            this.read(sessionId, 'appData'),
+            this.read(sessionId, 'accountData')
+          ]
+        ).then(([a, b]) => {
+          const acc = b ? this._decodeAccountData(b) : b;
+          const o = {
+            appData: JSON.parse(a),
+            accountData: acc,
+            id: acc['.id']
+          };
+          res.locals.session = o;
+          return Promise.resolve(true);
+        }).catch(err => {
+          loggerInstance().error(err);
+          res.locals.session = signature;
+          return Promise.reject(new SessionError(err.message));
+        });
+      }
+    } catch (err) {
       loggerInstance().error(err);
-      return Promise.reject(false);
-    });
+      res.locals.session = signature;
+      return Promise.reject(new SessionError(err.message));
+    }
   },
 
   /**
-   * Read data from session
+   * Read data from session cache
    *
    * @param type - the type of read to be performed
    * @return <Promise>
    */
-  read: function (type: string): Promise<any> {
+  read: function (sessionId: string, type: string): Promise<any> {
     return new Promise((resolve, reject) => {
       if (type === 'appData') {
-        this.cache.get(_appDataKey)
+        this.cache.get(`${_appDataKey}.${sessionId}`)
           .then(r => {
             resolve(r);
           }).catch(err => {
@@ -69,7 +71,7 @@ const Session: { [k: string]: any } = {
             resolve(null);
           });
       } else if (type === 'accountData') {
-        this.cache.get(this.sessionId)
+        this.cache.get(sessionId)
           .then(r => {
             resolve(r);
           }).catch(err => {
@@ -77,7 +79,7 @@ const Session: { [k: string]: any } = {
             resolve(null);
           });
       } else {
-        reject('Invalid type option');
+        reject(new SessionError('Invalid type option'));
       }
     });
   },
@@ -91,17 +93,17 @@ const Session: { [k: string]: any } = {
    */
   write: function (res, data): Promise<boolean> {
     return new Promise((resolve, reject) => {
-      if (typeof res.locals.session === 'undefined' || typeof res.locals.session.appData === 'undefined') {
-        loggerInstance().error('Session was not properly started - missing appData field');
-        reject(false);
+      const sessionId = this.getId(res);
+      if (!sessionId) {
+        reject(new SessionError('Session Id does not exist'));
       } else {
-        this.cache.set(_appDataKey, JSON.stringify(data), _defaultTtl)
+        this.cache.set(`${_appDataKey}.${sessionId}`, JSON.stringify(data), _defaultTtl)
           .then(_ => {
             res.locals.session.appData = data;
             resolve(true);
           }).catch(err => {
             loggerInstance().error(err);
-            reject(false);
+            reject(new SessionError(err.message));
           });
       }
     });
@@ -115,20 +117,56 @@ const Session: { [k: string]: any } = {
    */
   delete: function (res): Promise<boolean> {
     return new Promise((resolve, reject) => {
-      if (typeof res.locals.session === 'undefined' || typeof res.locals.session.appData === 'undefined') {
-        loggerInstance().error('Session was not properly started - missing appData field');
-        reject(false);
+      const sessionId = this.getId(res);
+      if (!sessionId) {
+        reject(new SessionError('Session Id does not exist'));
       } else {
-        res.locals.session.appData = null;
-        this.cache.delete(_appDataKey)
+        this.cache.delete(`${_appDataKey}.${sessionId}`)
           .then(_ => {
+            res.locals.session.appData = null;
             resolve(true);
           }).catch(err => {
             loggerInstance().error(err);
-            reject(false);
+            reject(new SessionError(err.message));
           });
       }
     });
+  },
+
+  /**
+   * Retrieve an Id from the accountData object from the response object
+   *
+   * @param res - the response object
+   * @return <void>
+   */
+  getId: function (res): any {
+    try {
+      if (!res.locals.session.accountData) {
+        throw new SessionError('Account data is null -- posiibly missing or unrecognised __SID');
+      } else {
+        return res.locals.session.accountData['.id'];
+      }
+    } catch (err) {
+      return false;
+    }
+  },
+
+  /**
+   * Determine if a user is logged in or not
+   *
+   * @param res - the response object
+   * @return <void>
+   */
+  isLoggedIn: function (res): boolean {
+    try {
+      let r = false;
+      if (res.locals.session.accountData.signin_info.signed_in === 1) {
+        r = true;
+      }
+      return r;
+    } catch (err) {
+      return false;
+    }
   },
 
   /**
@@ -137,13 +175,14 @@ const Session: { [k: string]: any } = {
    * @param data - user data from cache to be decoded
    * @return <Object>
    */
-  decodeAccountData: function (data) {
+  _decodeAccountData: function (data) {
     try {
       const buffer = Buffer.from(data, 'base64');
       const decoded = msgpack5().decode(buffer);
       return typeof(decoded) === 'string' ? JSON.parse(decoded) : decoded;
     } catch (err) {
       loggerInstance().error(err);
+      return null;
     }
   }
 };

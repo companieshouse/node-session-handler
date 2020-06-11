@@ -11,7 +11,7 @@
   "scripts": {
     "build": "tsc",
     "lint": "tslint -p . -c tslint.json './src/**/*{.ts,.tsx}' './test/**/*{.ts,.tsx}'",
-    "lint:autofix": "tslint --fix -p . -c tslint.json 'src/**/*{.ts,.tsx}' 'test/**/*{.ts,.tsx}'",
+    "lint:fix": "tslint --fix -p . -c tslint.json 'src/**/*{.ts,.tsx}' 'test/**/*{.ts,.tsx}'",
     "test": "mocha test/**/*.test.ts",
     "test:coverage": "nyc npm test",
     "analyse-code": "sonar-scanner",
