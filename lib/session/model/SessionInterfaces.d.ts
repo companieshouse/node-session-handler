@@ -18,6 +18,7 @@ export declare type ISession = {
 export declare type ISignInInfo = {
     [SignInInfoKeys.AccessToken]?: IAccessToken;
     [SignInInfoKeys.AdminPermissions]?: string;
+    [SignInInfoKeys.CompanyNumber]?: string;
     [SignInInfoKeys.SignedIn]?: number;
     [SignInInfoKeys.UserProfile]?: IUserProfile;
 };
