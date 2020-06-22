@@ -21,6 +21,7 @@ export type ISession = {
 export type ISignInInfo = {
     [SignInInfoKeys.AccessToken]?: IAccessToken,
     [SignInInfoKeys.AdminPermissions]?: string,
+    [SignInInfoKeys.CompanyNumber]?: string,
     [SignInInfoKeys.SignedIn]?: number,
     [SignInInfoKeys.UserProfile]?: IUserProfile,
 };
