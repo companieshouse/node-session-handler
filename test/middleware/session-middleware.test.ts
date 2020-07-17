@@ -10,6 +10,7 @@ import { SessionMiddleware } from "../../src/session/SessionMiddleware";
 import { SessionStore } from "../../src/session/store/SessionStore";
 import { generateRandomBytesBase64 } from "../../src/utils/CookieUtils";
 import { createSession } from "../utils/SessionGenerator";
+import { Cookie } from "../../src/session/model/Cookie";
 
 declare global {
     namespace Express {
@@ -74,7 +75,7 @@ describe("Session middleware", () => {
             cookies: { [config.cookieName]: "" + session.get(SessionKey.Id) + session.get(SessionKey.ClientSig) }
         } as Request;
         const cookieArg = () => {
-            return Arg.is(_ => _.value === "" + session.get(SessionKey.Id) + session.get(SessionKey.ClientSig));
+            return Arg.is((_: Cookie) => _.value === "" + session.get(SessionKey.Id) + session.get(SessionKey.ClientSig));
         };
 
         it("should load a session and insert session object in the request", async () => {
