@@ -51,7 +51,7 @@
     "express": "^4.17.1",
     "mocha": "^7.1.2",
     "nyc": "^15.0.1",
-    "sonarqube-scanner": "^2.6.0",
+    "sonarqube-scanner": "^2.7.0",
     "supertest": "^4.0.2",
     "ts-node": "^8.10.2",
     "tslint": "^6.1.2",
