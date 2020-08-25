@@ -102,16 +102,16 @@ const sessionRequestHandler = (config: CookieConfig, sessionStore: SessionStore)
             loggerInstance().infoRequest(request, `Session cookie not found in request ${request.url}, creating new session`);
 
             const session = new Session();
-            const cookie: Cookie = Cookie.createNew(config.cookieSecret);
-            session.data = { [SessionKey.Id]: cookie.value };
+            // const cookie: Cookie = Cookie.createNew(config.cookieSecret);
+            session.data = { [SessionKey.Id]: Cookie.createNew(config.cookieSecret).value };
 
             // store cookie session in Redis
-            await sessionStore.store(cookie, session.data, 3600);
+            // await sessionStore.store(cookie, session.data, 3600);
 
             // set the cookie for future requests
             request.session = session;
-            response.cookie(config.cookieName, session.data[SessionKey.Id]);
-            delete request.session;
+            // response.cookie(config.cookieName, session.data[SessionKey.Id]);
+            // delete request.session;
         }
 
         next();
