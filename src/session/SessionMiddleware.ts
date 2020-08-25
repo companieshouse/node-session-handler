@@ -111,7 +111,7 @@ const sessionRequestHandler = (config: CookieConfig, sessionStore: SessionStore)
             // set the cookie for future requests
             request.session = session;
             // response.cookie(config.cookieName, session.data[SessionKey.Id]);
-            // delete request.session;
+            delete request.session;
         }
 
         next();
