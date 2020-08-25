@@ -7,6 +7,7 @@ import { Cookie, validateCookieSignature } from "./model/Cookie";
 import { Session } from "./model/Session";
 import { SessionStore } from "./store/SessionStore";
 import crypto from "crypto"
+import { SessionKey } from "./keys/SessionKey";
 
 const DEFAULT_COOKIE_SECURE_FLAG = true;
 const DEFAULT_COOKIE_TIME_TO_LIVE_IN_SECONDS = 3600;
@@ -33,7 +34,8 @@ const sessionRequestHandler = (config: CookieConfig, sessionStore: SessionStore)
             cookie = Cookie.createFrom(sessionCookie);
             const sessionData = await sessionStore.load(cookie);
             const session = new Session(sessionData);
-            session.verify();
+
+            // session.verify();
 
             loggerInstance().debug(`Session successfully loaded from cookie ${sessionCookie}`);
             return session;
@@ -96,7 +98,19 @@ const sessionRequestHandler = (config: CookieConfig, sessionStore: SessionStore)
                 originalSessionHash = hash(request.session)
             }
         } else {
-            loggerInstance().infoRequest(request, `Session cookie not found in request ${request.url}`);
+            // if there is no cookie, we need to create a new session
+            loggerInstance().infoRequest(request, `Session cookie not found in request ${request.url}, creating new session`);
+
+            const session = new Session();
+            const cookie: Cookie = Cookie.createNew(config.cookieSecret);
+            session.data = { [SessionKey.Id]: cookie.value };
+
+            // store cookie session in Redis
+            await sessionStore.store(cookie, session.data, 3600);
+
+            // set the cookie for future requests
+            request.session = session;
+            response.cookie(config.cookieName, session.data[SessionKey.Id]);
             delete request.session;
         }
 

@@ -63,8 +63,7 @@ describe("Session middleware", () => {
 
             await SessionMiddleware(config, sessionStore)(request, Substitute.for<Response>(), nextFunction);
 
-            expect(request.session).to.eq(undefined);
-            sessionStore.didNotReceive().load(Arg.any());
+            sessionStore.received(1).store(Arg.all());
         });
     });
 
