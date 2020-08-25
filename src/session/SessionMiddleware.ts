@@ -8,6 +8,7 @@ import { Session } from "./model/Session";
 import { SessionStore } from "./store/SessionStore";
 import crypto from "crypto"
 import { SessionKey } from "./keys/SessionKey";
+import { generateSessionId, generateSignature } from '../utils/CookieUtils';
 
 const DEFAULT_COOKIE_SECURE_FLAG = true;
 const DEFAULT_COOKIE_TIME_TO_LIVE_IN_SECONDS = 3600;
@@ -103,7 +104,9 @@ const sessionRequestHandler = (config: CookieConfig, sessionStore: SessionStore)
 
             const session = new Session();
             // const cookie: Cookie = Cookie.createNew(config.cookieSecret);
-            session.data = { [SessionKey.Id]: Cookie.createNew(config.cookieSecret).value };
+            const sessionId = generateSessionId();
+            const signature = generateSignature(sessionId, config.cookieSecret);
+            session.data = { [SessionKey.Id]: sessionId + signature };
 
             // store cookie session in Redis
             // await sessionStore.store(cookie, session.data, 3600);
@@ -111,7 +114,6 @@ const sessionRequestHandler = (config: CookieConfig, sessionStore: SessionStore)
             // set the cookie for future requests
             request.session = session;
             // response.cookie(config.cookieName, session.data[SessionKey.Id]);
-            delete request.session;
         }
 
         next();
