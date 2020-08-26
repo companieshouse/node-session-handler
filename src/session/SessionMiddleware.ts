@@ -103,7 +103,14 @@ const sessionRequestHandler = (config: CookieConfig, sessionStore: SessionStore)
                     loggerInstance().info(`session is not null, but hashes are not equal... attempting to store a new cookie`);
 
                     try {
-                        await sessionStore.store(Cookie.createFrom(sessionCookie), request.session.data,
+                        let cookie;
+                        if(sessionCookie) {
+                            cookie = Cookie.createFrom(sessionCookie);
+                        } else {
+                            loggerInstance().info(`creating new session cookie`);
+                            cookie = Cookie.createNew(config.cookieSecret);
+                        }
+                        await sessionStore.store(cookie, request.session.data,
                             config.cookieTimeToLiveInSeconds || DEFAULT_COOKIE_TIME_TO_LIVE_IN_SECONDS)
                     } catch (err) {
                         loggerInstance().error(err.message)
