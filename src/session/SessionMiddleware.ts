@@ -117,7 +117,7 @@ const sessionRequestHandler = (config: CookieConfig, sessionStore: SessionStore)
         loggerInstance().info(`now, do we have a sessionCookie? ${sessionCookie}`);
 
         if (!sessionCookie) {
-            createSessionCookie(request, config, response, sessionStore);
+            await createSessionCookie(request, config, response, sessionStore);
         }
         loggerInstance().infoRequest(request, `Session cookie ${sessionCookie} found in request: ${request.url}`);
         request.session = await loadSessionBySessionCookie(sessionCookie);
@@ -148,9 +148,13 @@ const createSessionCookie = async (request: Request, config: CookieConfig, respo
     // loggerInstance().info(`generated signature: ${signature}`);
     // session.data = {[SessionKey.Id]: sessionId + signature};
 
-    // store cookie session in Redis
-    await sessionStore.store(cookie, session.data, 3600);
-    loggerInstance().info(`cookie stored in session store`);
+    try {
+        // store cookie session in Redis
+        await sessionStore.store(cookie, session.data, 3600);
+        loggerInstance().info(`cookie stored in session store`);
+    } catch (err) {
+        loggerInstance().error(err.message)
+    }
 
     // set the cookie for future requests
     request.session = session;
