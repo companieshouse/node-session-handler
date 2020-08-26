@@ -117,8 +117,8 @@ const sessionRequestHandler = (config: CookieConfig, sessionStore: SessionStore)
         loggerInstance().info(`now, do we have a sessionCookie? ${sessionCookie}`);
 
         if (!sessionCookie) {
-            await createSessionCookie(request, config, response, sessionStore);
-            sessionCookie = request.cookies[config.cookieName];
+            const cookie: Cookie = await createSessionCookie(request, config, response, sessionStore);
+            sessionCookie = cookie.value;
             return next();
         }
         loggerInstance().infoRequest(request, `Session cookie ${sessionCookie} found in request: ${request.url}`);
@@ -132,7 +132,7 @@ const sessionRequestHandler = (config: CookieConfig, sessionStore: SessionStore)
     };
 }
 
-const createSessionCookie = async (request: Request, config: CookieConfig, response: Response, sessionStore: SessionStore): Promise<void> => {
+const createSessionCookie = async (request: Request, config: CookieConfig, response: Response, sessionStore: SessionStore): Promise<Cookie> => {
     // if there is no cookie, we need to create a new session
     loggerInstance().infoRequest(request, `Session cookie not found in request ${request.url}, creating new session`);
 
@@ -164,10 +164,12 @@ const createSessionCookie = async (request: Request, config: CookieConfig, respo
 
     response.cookie(config.cookieName, session.data[SessionKey.Id]);
     loggerInstance().info(`do we have a cookie in request after response.cookie is run? ${JSON.stringify(request.cookies)}`);
-    request.cookies = [cookie];
-    loggerInstance().info(`do we have a cookie in request after we hard code it in? ${JSON.stringify(request.cookies)}`);
+    // request.cookies = [cookie];
+    // loggerInstance().info(`do we have a cookie in request after we hard code it in? ${JSON.stringify(request.cookies)}`);
 
     loggerInstance().info(`do we now have a cookie after attempting to create one? ${request.cookies[config.cookieName]}`);
+
+    return cookie
 }
 
 const hash = (session: Session): string => {
