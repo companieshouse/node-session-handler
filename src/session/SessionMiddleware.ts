@@ -66,7 +66,7 @@ const sessionRequestHandler = (config: CookieConfig, sessionStore: SessionStore)
     }
 
     return async (request: Request, response: Response, next: NextFunction): Promise<any> => {
-        const sessionCookie: string = request.cookies[config.cookieName];
+        let sessionCookie: string = request.cookies[config.cookieName];
 
         loggerInstance().info(`session cookie is ${sessionCookie}`);
 
@@ -118,6 +118,7 @@ const sessionRequestHandler = (config: CookieConfig, sessionStore: SessionStore)
 
         if (!sessionCookie) {
             await createSessionCookie(request, config, response, sessionStore);
+            sessionCookie = request.cookies[config.cookieName];
             return next();
         }
         loggerInstance().infoRequest(request, `Session cookie ${sessionCookie} found in request: ${request.url}`);
@@ -161,8 +162,8 @@ const createSessionCookie = async (request: Request, config: CookieConfig, respo
     request.session = session;
     loggerInstance().info(`applying to session: ${JSON.stringify(request.session)}`);
 
-    response.cookie(config.cookieName, session.data[SessionKey.Id]);
-
+    // response.cookie(config.cookieName, session.data[SessionKey.Id]);
+    request.cookies = [cookie];
     loggerInstance().info(`do we now have a cookie after attempting to create one? ${request.cookies[config.cookieName]}`);
 }
 
