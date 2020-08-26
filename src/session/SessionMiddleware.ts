@@ -140,7 +140,7 @@ const sessionRequestHandler = (config: CookieConfig, sessionStore: SessionStore)
             // set the cookie for future requests
             request.session = session;
             loggerInstance().info(`applying to session: ${JSON.stringify(request.session)}`);
-            // response.cookie(config.cookieName, session.data[SessionKey.Id]);
+            response.cookie(config.cookieName, session.data[SessionKey.Id]);
         }
             loggerInstance().infoRequest(request, `Session cookie ${sessionCookie} found in request: ${request.url}`);
             request.session = await loadSession(sessionCookie);
