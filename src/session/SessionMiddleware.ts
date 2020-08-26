@@ -150,6 +150,8 @@ const createSessionCookie = (request: Request, config: CookieConfig, response: R
     request.session = session;
     loggerInstance().info(`applying to session: ${JSON.stringify(request.session)}`);
     response.cookie(config.cookieName, session.data[SessionKey.Id]);
+
+    loggerInstance().info(`do we now have a cookie after attempting to create one? ${request.cookies[config.cookieName]}`);
 }
 
 const hash = (session: Session): string => {
