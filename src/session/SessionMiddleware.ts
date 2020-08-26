@@ -162,8 +162,11 @@ const createSessionCookie = async (request: Request, config: CookieConfig, respo
     request.session = session;
     loggerInstance().info(`applying to session: ${JSON.stringify(request.session)}`);
 
-    // response.cookie(config.cookieName, session.data[SessionKey.Id]);
+    response.cookie(config.cookieName, session.data[SessionKey.Id]);
+    loggerInstance().info(`do we have a cookie in request after response.cookie is run? ${JSON.stringify(request.cookies)}`);
     request.cookies = [cookie];
+    loggerInstance().info(`do we have a cookie in request after we hard code it in? ${JSON.stringify(request.cookies)}`);
+
     loggerInstance().info(`do we now have a cookie after attempting to create one? ${request.cookies[config.cookieName]}`);
 }
 
