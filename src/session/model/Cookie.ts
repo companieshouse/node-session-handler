@@ -6,6 +6,7 @@ import {
 } from "../../utils/CookieUtils";
 import { CookieSecretNotSetError, InvalidCookieLengthError, InvalidCookieSignatureError } from "./CookieErrors";
 import { CookieConstants } from "../../utils/CookieConstants";
+import {loggerInstance} from "../../Logger";
 
 const validateSessionCookieLength = (sessionCookie: string): void => {
     if (sessionCookie.length < CookieConstants._cookieValueLength) {
@@ -14,6 +15,9 @@ const validateSessionCookieLength = (sessionCookie: string): void => {
 };
 
 export const validateCookieSignature = (cookieString: string, cookieSecret: string): void => {
+
+    loggerInstance().infoRequest(`validating cookie signature: ${sessionCookie}`);
+
     if (!cookieSecret) {
         throw new CookieSecretNotSetError();
     }
@@ -48,6 +52,9 @@ export class Cookie {
     }
 
     public static createFrom(cookieString: string): Cookie {
+
+        loggerInstance().infoRequest(`creating cookie from cookieString: ${cookieString}`);
+
         validateSessionCookieLength(cookieString);
         return new Cookie(extractSessionId(cookieString), extractSignature(cookieString))
     }

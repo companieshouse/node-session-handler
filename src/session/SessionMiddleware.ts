@@ -29,11 +29,18 @@ export function SessionMiddleware(config: CookieConfig, sessionStore: SessionSto
 
 const sessionRequestHandler = (config: CookieConfig, sessionStore: SessionStore): RequestHandler => {
     async function loadSession (sessionCookie: string): Promise<Session | undefined> {
+
+        loggerInstance().infoRequest(`loading session for session cookie: ${sessionCookie}`);
+
         let cookie: Cookie;
         try {
             validateCookieSignature(sessionCookie, config.cookieSecret);
             cookie = Cookie.createFrom(sessionCookie);
+
+            loggerInstance().infoRequest(`created new cookie ${JSON.stringify(cookie)} from sessionCookie`);
             const sessionData = await sessionStore.load(cookie);
+
+            loggerInstance().infoRequest(`session data ${JSON.stringify(sessionData)}`);
             const session = new Session(sessionData);
 
             // session.verify();
@@ -41,7 +48,10 @@ const sessionRequestHandler = (config: CookieConfig, sessionStore: SessionStore)
             loggerInstance().debug(`Session successfully loaded from cookie ${sessionCookie}`);
             return session;
         } catch (sessionLoadingError) {
+            loggerInstance().infoRequest(`unable to load session`);
             if (cookie) {
+
+                loggerInstance().infoRequest(`however we do have a cookie: ${JSON.stringify(cookie)}`);
                 try {
                     await sessionStore.delete(cookie);
                 } catch (sessionDeletionError) {
@@ -56,11 +66,18 @@ const sessionRequestHandler = (config: CookieConfig, sessionStore: SessionStore)
 
     return async (request: Request, response: Response, next: NextFunction): Promise<any> => {
         const sessionCookie: string = request.cookies[config.cookieName];
+
+        loggerInstance().infoRequest(`session cookie is ${sessionCookie}`);
+
         let originalSessionHash: string;
 
         onHeaders(response, () => {
+
+            loggerInstance().infoRequest(`request.session is ${JSON.stringify(request.session)}`);
             if (request.session) {
+                loggerInstance().infoRequest(`we have a session, checking hash against original session hash`);
                 if (hash(request.session) !== originalSessionHash) {
+                    loggerInstance().infoRequest(`hash does not match, setting response`);
                     response.cookie(config.cookieName, sessionCookie, {
                         domain: config.cookieDomain,
                         path: "/",
@@ -71,6 +88,7 @@ const sessionRequestHandler = (config: CookieConfig, sessionStore: SessionStore)
                     })
                 }
             } else {
+                loggerInstance().infoRequest(`no session found, session cookie is: ${sessionCookie}`);
                 if (sessionCookie) {
                     response.clearCookie(config.cookieName);
                 }
@@ -81,6 +99,9 @@ const sessionRequestHandler = (config: CookieConfig, sessionStore: SessionStore)
         response.end = new Proxy(response.end, {
             async apply (target: MethodSignature, thisArg: any, argsArg?: any): Promise<any> {
                 if (request.session != null && hash(request.session) !== originalSessionHash) {
+
+                    loggerInstance().infoRequest(`session is not null, but hashes are not equal... attempting to store a new cookie`);
+
                     try {
                         await sessionStore.store(Cookie.createFrom(sessionCookie), request.session.data,
                             config.cookieTimeToLiveInSeconds || DEFAULT_COOKIE_TIME_TO_LIVE_IN_SECONDS)
@@ -92,10 +113,13 @@ const sessionRequestHandler = (config: CookieConfig, sessionStore: SessionStore)
             }
         })
 
+        loggerInstance().infoRequest(`now, do we have a sessionCookie? ${sessionCookie}`);
+
         if (sessionCookie) {
             loggerInstance().infoRequest(request, `Session cookie ${sessionCookie} found in request: ${request.url}`);
             request.session = await loadSession(sessionCookie);
             if (request.session != null) {
+                loggerInstance().infoRequest(`session is not null, setting original hash`);
                 originalSessionHash = hash(request.session)
             }
         } else {
@@ -105,7 +129,9 @@ const sessionRequestHandler = (config: CookieConfig, sessionStore: SessionStore)
             const session = new Session();
             // const cookie: Cookie = Cookie.createNew(config.cookieSecret);
             const sessionId = generateSessionId();
+            loggerInstance().infoRequest(`generated sessionId: ${sessionId}`);
             const signature = generateSignature(sessionId, config.cookieSecret);
+            loggerInstance().infoRequest(`generated signature: ${signature}`);
             session.data = { [SessionKey.Id]: sessionId + signature };
 
             // store cookie session in Redis
@@ -113,9 +139,11 @@ const sessionRequestHandler = (config: CookieConfig, sessionStore: SessionStore)
 
             // set the cookie for future requests
             request.session = session;
+            loggerInstance().infoRequest(`applying to session: ${JSON.stringify(request.session)}`);
             // response.cookie(config.cookieName, session.data[SessionKey.Id]);
         }
 
+        loggerInstance().infoRequest(`next...`);
         next();
     };
 }
