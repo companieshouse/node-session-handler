@@ -66,7 +66,7 @@ const sessionRequestHandler = (config: CookieConfig, sessionStore: SessionStore)
     }
 
     return async (request: Request, response: Response, next: NextFunction): Promise<any> => {
-        const sessionCookie: string = request.cookies[config.cookieName];
+        let sessionCookie: string = request.cookies[config.cookieName];
 
         loggerInstance().info(`session cookie is ${sessionCookie}`);
 
@@ -118,6 +118,7 @@ const sessionRequestHandler = (config: CookieConfig, sessionStore: SessionStore)
 
         if (!sessionCookie) {
             createSessionCookie(request, config, response);
+            sessionCookie = request.cookies[config.cookieName];
         }
         loggerInstance().infoRequest(request, `Session cookie ${sessionCookie} found in request: ${request.url}`);
         request.session = await loadSessionBySessionCookie(sessionCookie);
