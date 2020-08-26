@@ -7,6 +7,8 @@ import { Cookie, validateCookieSignature } from "./model/Cookie";
 import { Session } from "./model/Session";
 import { SessionStore } from "./store/SessionStore";
 import crypto from "crypto"
+import { SessionKey } from "./keys/SessionKey";
+import { generateSessionId, generateSignature } from "../utils/CookieUtils";
 
 const DEFAULT_COOKIE_SECURE_FLAG = true;
 const DEFAULT_COOKIE_TIME_TO_LIVE_IN_SECONDS = 3600;
@@ -115,7 +117,8 @@ const sessionRequestHandler = (config: CookieConfig, sessionStore: SessionStore)
         loggerInstance().info(`now, do we have a sessionCookie? ${sessionCookie}`);
 
         if (!sessionCookie) {
-            sessionCookie = Cookie.createNew(config.cookieSecret).value;
+            const cookie: Cookie = await createSessionCookie(request, config, response, sessionStore);
+            sessionCookie = cookie.value;
             return next();
         }
         loggerInstance().infoRequest(request, `Session cookie ${sessionCookie} found in request: ${request.url}`);
@@ -127,6 +130,45 @@ const sessionRequestHandler = (config: CookieConfig, sessionStore: SessionStore)
         loggerInstance().info(`next...`);
         next();
     };
+}
+
+const createSessionCookie = async (request: Request, config: CookieConfig, response: Response, sessionStore: SessionStore): Promise<Cookie> => {
+    // if there is no cookie, we need to create a new session
+    loggerInstance().infoRequest(request, `Session cookie not found in request ${request.url}, creating new session`);
+
+    const cookie: Cookie = Cookie.createNew(config.cookieSecret);
+
+    const session = new Session();
+    session.data = {[SessionKey.Id]: cookie.value};
+    loggerInstance().info(`session data to be stored: ${session.data}`);
+
+    // // const cookie: Cookie = Cookie.createNew(config.cookieSecret);
+    // // const sessionId = generateSessionId();
+    // // loggerInstance().info(`generated sessionId: ${sessionId}`);
+    // // const signature = generateSignature(sessionId, config.cookieSecret);
+    // // loggerInstance().info(`generated signature: ${signature}`);
+    // // session.data = {[SessionKey.Id]: sessionId + signature};
+    //
+    // try {
+    //     // store cookie session in Redis
+    //     await sessionStore.store(cookie, session.data, 3600);
+    //     loggerInstance().info(`cookie stored in session store`);
+    // } catch (err) {
+    //     loggerInstance().error(err.message)
+    // }
+    //
+    // // set the cookie for future requests
+    request.session = session;
+    // loggerInstance().info(`applying to session: ${JSON.stringify(request.session)}`);
+    //
+    // response.cookie(config.cookieName, session.data[SessionKey.Id]);
+    // loggerInstance().info(`do we have a cookie in request after response.cookie is run? ${JSON.stringify(request.cookies)}`);
+    // // request.cookies = [cookie];
+    // // loggerInstance().info(`do we have a cookie in request after we hard code it in? ${JSON.stringify(request.cookies)}`);
+    //
+    // loggerInstance().info(`do we now have a cookie after attempting to create one? ${request.cookies[config.cookieName]}`);
+
+    return cookie
 }
 
 const hash = (session: Session): string => {
