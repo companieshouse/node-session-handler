@@ -118,6 +118,7 @@ const sessionRequestHandler = (config: CookieConfig, sessionStore: SessionStore)
 
         if (!sessionCookie) {
             await createSessionCookie(request, config, response, sessionStore);
+            return next();
         }
         loggerInstance().infoRequest(request, `Session cookie ${sessionCookie} found in request: ${request.url}`);
         request.session = await loadSessionBySessionCookie(sessionCookie);
