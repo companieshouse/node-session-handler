@@ -118,7 +118,7 @@ const sessionRequestHandler = (config: CookieConfig, sessionStore: SessionStore)
 
         if (!sessionCookie) {
             const cookie: Cookie = await createSessionCookie(request, config, response, sessionStore);
-            sessionCookie = cookie.value;
+            sessionCookie = cookie.sessionId;
             return next();
         }
         loggerInstance().infoRequest(request, `Session cookie ${sessionCookie} found in request: ${request.url}`);
@@ -142,13 +142,6 @@ const createSessionCookie = async (request: Request, config: CookieConfig, respo
     session.data = {[SessionKey.Id]: cookie.value};
     loggerInstance().info(`session data to be stored: ${session.data}`);
 
-    // // const cookie: Cookie = Cookie.createNew(config.cookieSecret);
-    // // const sessionId = generateSessionId();
-    // // loggerInstance().info(`generated sessionId: ${sessionId}`);
-    // // const signature = generateSignature(sessionId, config.cookieSecret);
-    // // loggerInstance().info(`generated signature: ${signature}`);
-    // // session.data = {[SessionKey.Id]: sessionId + signature};
-    //
     // try {
     //     // store cookie session in Redis
     //     await sessionStore.store(cookie, session.data, 3600);
@@ -160,13 +153,8 @@ const createSessionCookie = async (request: Request, config: CookieConfig, respo
     // // set the cookie for future requests
     request.session = session;
     // loggerInstance().info(`applying to session: ${JSON.stringify(request.session)}`);
-    //
-    // response.cookie(config.cookieName, session.data[SessionKey.Id]);
-    // loggerInstance().info(`do we have a cookie in request after response.cookie is run? ${JSON.stringify(request.cookies)}`);
-    // // request.cookies = [cookie];
-    // // loggerInstance().info(`do we have a cookie in request after we hard code it in? ${JSON.stringify(request.cookies)}`);
-    //
-    // loggerInstance().info(`do we now have a cookie after attempting to create one? ${request.cookies[config.cookieName]}`);
+
+    response.cookie(config.cookieName, session.data[SessionKey.Id]);
 
     return cookie
 }
