@@ -122,14 +122,7 @@ const sessionRequestHandler = (config: CookieConfig, sessionStore: SessionStore)
 
         loggerInstance().info(`now, do we have a sessionCookie? ${sessionCookie}`);
 
-        if (sessionCookie) {
-            loggerInstance().infoRequest(request, `Session cookie ${sessionCookie} found in request: ${request.url}`);
-            request.session = await loadSession(sessionCookie);
-            if (request.session != null) {
-                loggerInstance().info(`session is not null, setting original hash`);
-                originalSessionHash = hash(request.session)
-            }
-        } else {
+        if (!sessionCookie) {
             // if there is no cookie, we need to create a new session
             loggerInstance().infoRequest(request, `Session cookie not found in request ${request.url}, creating new session`);
 
@@ -149,7 +142,12 @@ const sessionRequestHandler = (config: CookieConfig, sessionStore: SessionStore)
             loggerInstance().info(`applying to session: ${JSON.stringify(request.session)}`);
             // response.cookie(config.cookieName, session.data[SessionKey.Id]);
         }
-
+            loggerInstance().infoRequest(request, `Session cookie ${sessionCookie} found in request: ${request.url}`);
+            request.session = await loadSession(sessionCookie);
+            if (request.session != null) {
+                loggerInstance().info(`session is not null, setting original hash`);
+                originalSessionHash = hash(request.session)
+            }
         loggerInstance().info(`next...`);
         next();
     };
