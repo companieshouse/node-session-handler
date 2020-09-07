@@ -62,8 +62,8 @@ const sessionRequestHandler = (config: CookieConfig, sessionStore: SessionStore)
                         domain: config.cookieDomain,
                         path: "/",
                         httpOnly: true,
-                        secure: config.cookieSecureFlag || DEFAULT_COOKIE_SECURE_FLAG,
-                        maxAge: (config.cookieTimeToLiveInSeconds || DEFAULT_COOKIE_TIME_TO_LIVE_IN_SECONDS) * 1000,
+                        secure: config.cookieSecureFlag != null ? config.cookieSecureFlag : DEFAULT_COOKIE_SECURE_FLAG,
+                        maxAge: (config.cookieTimeToLiveInSeconds != null ? config.cookieTimeToLiveInSeconds : DEFAULT_COOKIE_TIME_TO_LIVE_IN_SECONDS) * 1000,
                         encode: String
                     })
                 }
@@ -80,7 +80,7 @@ const sessionRequestHandler = (config: CookieConfig, sessionStore: SessionStore)
                 if (request.session != null && hash(request.session) !== originalSessionHash) {
                     try {
                         await sessionStore.store(Cookie.createFrom(sessionCookie), request.session.data,
-                            config.cookieTimeToLiveInSeconds || DEFAULT_COOKIE_TIME_TO_LIVE_IN_SECONDS)
+                            config.cookieTimeToLiveInSeconds != null ? config.cookieTimeToLiveInSeconds : DEFAULT_COOKIE_TIME_TO_LIVE_IN_SECONDS)
                     } catch (err) {
                         loggerInstance().error(err.message)
                     }
