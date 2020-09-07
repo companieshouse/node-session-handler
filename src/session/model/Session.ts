@@ -29,20 +29,22 @@ export class Session {
         return delete this.data[SessionKey.ExtraData][key];
     }
 
-    public verify = (): void => {
-
-        const signInInfo = this.data[SessionKey.SignInInfo];
-
-        if (!signInInfo) {
-            throw new IncompleteSessionDataError(SessionKey.SignInInfo);
+    public verify (): void {
+        if (this.data[SessionKey.SignInInfo]) {
+            this.verifySignInInfo(this.data[SessionKey.SignInInfo]);
         }
 
+        this.verifyExpiryTime(this.data[SessionKey.Expires]);
+    };
+
+    private verifySignInInfo(signInInfo: Record<string, any>): void {
         const accessToken = signInInfo[SignInInfoKeys.AccessToken];
         if (!accessToken || !accessToken[AccessTokenKeys.AccessToken]) {
             throw new IncompleteSessionDataError(SessionKey.SignInInfo, SignInInfoKeys.AccessToken);
         }
+    }
 
-        const expires = this.data[SessionKey.Expires];
+    private verifyExpiryTime(expires: number): void {
         if (!expires) {
             throw new IncompleteSessionDataError(SessionKey.Expires);
         }
@@ -52,5 +54,5 @@ export class Session {
         if (expires <= dateNowMilliseconds) {
             throw new SessionExpiredError(expires, dateNowMilliseconds);
         }
-    };
+    }
 }

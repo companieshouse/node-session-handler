@@ -44,13 +44,6 @@ describe("Session", () => {
             expect(() => createSession(cookieSecret).verify()).to.not.throw();
         });
 
-        it("should fail when sign in info is missing", () => {
-            const sessionData = createSessionData(cookieSecret);
-            delete sessionData[SessionKey.SignInInfo];
-
-            expect(() => new Session(sessionData).verify()).to.throw("Session data is incomplete - signin_info property is missing");
-        });
-
         it("should fail when access token is missing", () => {
             const sessionData = createSessionData(cookieSecret);
             delete sessionData[SessionKey.SignInInfo][SignInInfoKeys.AccessToken];
