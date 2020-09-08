@@ -12,7 +12,7 @@ import crypto from "crypto"
 const DEFAULT_COOKIE_SECURE_FLAG = true;
 const DEFAULT_COOKIE_TIME_TO_LIVE_IN_SECONDS = 3600;
 
-export function SessionMiddleware(config: CookieConfig, sessionStore: SessionStore, createSessionWhenCookieNotFound: boolean = false): RequestHandler {
+export function SessionMiddleware(config: CookieConfig, sessionStore: SessionStore, createSessionWhenNotFound: boolean = false): RequestHandler {
     if (!config.cookieName) {
         throw Error("Cookie name must be defined");
     }
@@ -23,10 +23,10 @@ export function SessionMiddleware(config: CookieConfig, sessionStore: SessionSto
         throw Error("Cookie secret must be at least 24 chars long");
     }
 
-    return expressAsyncHandler(sessionRequestHandler(config, sessionStore, createSessionWhenCookieNotFound));
+    return expressAsyncHandler(sessionRequestHandler(config, sessionStore, createSessionWhenNotFound));
 }
 
-const sessionRequestHandler = (config: CookieConfig, sessionStore: SessionStore, createSessionWhenCookieNotFound: boolean = false): RequestHandler => {
+const sessionRequestHandler = (config: CookieConfig, sessionStore: SessionStore, createSessionWhenNotFound: boolean = false): RequestHandler => {
     async function loadSession (sessionCookie: string): Promise<Session | undefined> {
         let cookie: Cookie;
         try {
@@ -97,16 +97,17 @@ const sessionRequestHandler = (config: CookieConfig, sessionStore: SessionStore,
             if (request.session != null) {
                 originalSessionHash = hash(request.session)
             }
-        } else if (createSessionWhenCookieNotFound) {
-            loggerInstance().debugRequest(request, `Session cookie not found in request ${request.url} so empty session will get created`);
-            const cookie = Cookie.createNew(config.cookieSecret)
-            sessionCookie = cookie.value
-            request.session = new Session({
-                [SessionKey.Id]: cookie.sessionId
-            });
         } else {
             loggerInstance().infoRequest(request, `Session cookie not found in request ${request.url}`);
             delete request.session;
+        }
+
+        if (request.session == null && createSessionWhenNotFound) {
+            const cookie = Cookie.createNew(config.cookieSecret)
+            request.session = new Session({
+                [SessionKey.Id]: cookie.sessionId
+            });
+            loggerInstance().debugRequest(request, `Session cookie ${(sessionCookie = cookie.value)} has been created for request: ${request.url}`);
         }
 
         next();

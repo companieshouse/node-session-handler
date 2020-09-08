@@ -11,6 +11,8 @@ import { SessionMiddleware } from "../../src/session/SessionMiddleware";
 import { SessionStore } from "../../src/session/store/SessionStore";
 import { generateRandomBytesBase64 } from "../../src/utils/CookieUtils";
 import { createSessionData } from "../utils/SessionGenerator";
+import { ISession } from "../../src";
+import { SessionKey } from "../../src/session/keys/SessionKey";
 
 declare global {
     namespace Express {
@@ -27,10 +29,10 @@ const config: CookieConfig = {
     cookieTimeToLiveInSeconds: 360
 };
 
-const createApp = (sessionStore: SessionStore): express.Application => {
+const createApp = (sessionStore: SessionStore, createSessionWhenNotFound: boolean): express.Application => {
     const app = express()
     app.use(cookieParser())
-    app.use(SessionMiddleware(config, sessionStore))
+    app.use(SessionMiddleware(config, sessionStore, createSessionWhenNotFound))
     app.get("/render", (req: Request, res: Response, next: NextFunction) => {
         if (req.query.mutate) {
             req.session.setExtraData("application", { mutated: true })
@@ -64,91 +66,140 @@ describe("Session middleware - integration with express.js", () => {
     }].forEach(({ scenario, uri , validateResponse}) => {
         describe(`on ${scenario}`, () => {
             describe("when cookie is not present", () => {
-                it("should respond but not persist session nor set session cookie in response", async () => {
-                    const sessionStore = Substitute.for<SessionStore>();
+                describe('when session creation feature is enabled', () => {
+                    it("should respond and persist session and set session cookie in response", async () => {
+                        const sessionStore = Substitute.for<SessionStore>();
 
-                    await request(createApp(sessionStore))
-                        .get(uri)
-                        .expect(response => {
-                            expect(response.get("Set-Cookie")).to.be.equal(undefined)
-                            validateResponse(response)
-                        })
+                        await request(createApp(sessionStore, true))
+                            .get(uri)
+                            .expect(response => {
+                                expect(response.get("Set-Cookie")).to.be.not.equal(undefined)
+                                validateResponse(response)
+                            })
 
-                    sessionStore.didNotReceive().store(Arg.any(), Arg.any())
+                        sessionStore.received().store(Arg.any(), Arg.is((session:  ISession) => {
+                            return Object.keys(session).length === 2
+                                && session[SessionKey.Id] != null
+                                && session[SessionKey.ExtraData] != null;
+                        }), config.cookieTimeToLiveInSeconds)
+                    })
+                })
+
+                describe('when session creation feature is disabled', () => {
+                    it("should respond but not persist session nor set session cookie in response", async () => {
+                        const sessionStore = Substitute.for<SessionStore>();
+
+                        await request(createApp(sessionStore, false))
+                            .get(uri)
+                            .expect(response => {
+                                expect(response.get("Set-Cookie")).to.be.equal(undefined)
+                                validateResponse(response)
+                            })
+
+                        sessionStore.didNotReceive().store(Arg.any(), Arg.any(), Arg.any())
+                    })
                 })
             })
 
             describe("when cookie is present", () => {
                 const cookie: Cookie = Cookie.createNew(config.cookieSecret);
 
-                it("should respond but not persist session and delete session cookie if session load failed", async () => {
-                    const sessionStore: SubstituteOf<SessionStore> = Substitute.for<SessionStore>();
-                    sessionStore.load(cookie).rejects("Unexpected error in session loading");
+                describe('when session creation feature is enabled', () => {
+                    it("should respond and persist session and create session cookie if session load failed", async () => {
+                        const sessionStore: SubstituteOf<SessionStore> = Substitute.for<SessionStore>();
+                        sessionStore.load(cookie).rejects("Unexpected error in session loading");
 
-                    await request(createApp(sessionStore))
-                        .get(uri)
-                        .set("Cookie", [`${config.cookieName}=${cookie.value}`])
-                        .expect(response => {
-                            expect(response.get("Set-Cookie")[0]).to.be.equal("__SID=; Path=/; Expires=Thu, 01 Jan 1970 00:00:00 GMT")
-                            validateResponse(response)
-                        })
+                        await request(createApp(sessionStore, true))
+                            .get(uri)
+                            .set("Cookie", [`${config.cookieName}=${cookie.value}`])
+                            .expect(response => {
+                                expect(response.get("Set-Cookie")[0]).to.be.satisfy((value: string) => {
+                                    return value.includes(`Max-Age=${config.cookieTimeToLiveInSeconds}; Domain=localhost; Path=/; Expires=`)
+                                        && value.endsWith("; HttpOnly; Secure")
+                                })
+                                validateResponse(response)
+                            })
 
-                    sessionStore.didNotReceive().store(Arg.any(), Arg.any())
+                        sessionStore.received().store(Arg.any(), Arg.any(), Arg.any())
+                    })
+                })
+
+                describe('when session creation feature is disabled', () => {
+                    it("should respond but not persist session and delete session cookie if session load failed", async () => {
+                        const sessionStore: SubstituteOf<SessionStore> = Substitute.for<SessionStore>();
+                        sessionStore.load(cookie).rejects("Unexpected error in session loading");
+
+                        await request(createApp(sessionStore, false))
+                            .get(uri)
+                            .set("Cookie", [`${config.cookieName}=${cookie.value}`])
+                            .expect(response => {
+                                expect(response.get("Set-Cookie")[0]).to.be.equal("__SID=; Path=/; Expires=Thu, 01 Jan 1970 00:00:00 GMT")
+                                validateResponse(response)
+                            })
+
+                        sessionStore.didNotReceive().store(Arg.any(), Arg.any(), Arg.any())
+                    })
                 })
 
                 // tslint:disable-next-line:max-line-length
                 it("should respond but not persist session nor reset session cookie if session load succeeded but session didn't change", async () => {
-                    const sessionStore: SubstituteOf<SessionStore> = Substitute.for<SessionStore>();
-                    sessionStore.load(cookie).resolves(createSessionData(config.cookieSecret));
+                    for (let createSessionWhenNotFound of [false, true]) {
+                        const sessionStore: SubstituteOf<SessionStore> = Substitute.for<SessionStore>();
+                        sessionStore.load(cookie).resolves(createSessionData(config.cookieSecret));
 
-                    await request(createApp(sessionStore))
-                        .get(uri)
-                        .set("Cookie", [`${config.cookieName}=${cookie.value}`])
-                        .expect(response => {
-                            expect(response.get("Set-Cookie")).to.be.equal(undefined)
-                            validateResponse(response)
-                        })
+                        await request(createApp(sessionStore, false))
+                            .get(uri)
+                            .set("Cookie", [`${config.cookieName}=${cookie.value}`])
+                            .expect(response => {
+                                expect(response.get("Set-Cookie")).to.be.equal(undefined)
+                                validateResponse(response)
+                            })
 
-                    sessionStore.didNotReceive().store(Arg.any(), Arg.any())
+                        sessionStore.didNotReceive().store(Arg.any(), Arg.any(), Arg.any())
+                    }
                 })
 
                 it("should respond and persist session and reset cookie if session load succeeded and session did change", async () => {
-                    const sessionData: Record<string, any> = createSessionData(config.cookieSecret);
+                    for (let createSessionWhenNotFound of [false, true]) {
+                        const sessionData: Record<string, any> = createSessionData(config.cookieSecret);
 
-                    const sessionStore: SubstituteOf<SessionStore> = Substitute.for<SessionStore>();
-                    sessionStore.load(cookie).resolves({ ...sessionData, extra_data: {} });
-                    sessionStore.store(cookie, Arg.any()).resolves();
+                        const sessionStore: SubstituteOf<SessionStore> = Substitute.for<SessionStore>();
+                        sessionStore.load(cookie).resolves({ ...sessionData, extra_data: {} });
+                        sessionStore.store(cookie, Arg.any(), Arg.any()).resolves();
 
-                    await request(createApp(sessionStore))
-                        .get(uri + "?mutate=true")
-                        .set("Cookie", [`${config.cookieName}=${cookie.value}`])
-                        .expect(response => {
-                            expect(response.get("Set-Cookie")[0]).to.be.satisfy((value: string) => {
-                                return value.startsWith(`__SID=${cookie.value}; Max-Age=${config.cookieTimeToLiveInSeconds}; Domain=localhost; Path=/; Expires=`)
-                                    && value.endsWith("; HttpOnly; Secure")
+                        await request(createApp(sessionStore, createSessionWhenNotFound))
+                            .get(uri + "?mutate=true")
+                            .set("Cookie", [`${config.cookieName}=${cookie.value}`])
+                            .expect(response => {
+                                expect(response.get("Set-Cookie")[0]).to.be.satisfy((value: string) => {
+                                    return value.startsWith(`__SID=${cookie.value}; Max-Age=${config.cookieTimeToLiveInSeconds}; Domain=localhost; Path=/; Expires=`)
+                                        && value.endsWith("; HttpOnly; Secure")
+                                })
+                                validateResponse(response)
                             })
-                            validateResponse(response)
-                        })
 
-                    sessionStore.received().store(cookie, {
-                        ...sessionData,
-                        extra_data: { application: { mutated: true } }
-                    }, config.cookieTimeToLiveInSeconds)
+                        sessionStore.received().store(cookie, {
+                            ...sessionData,
+                            extra_data: { application: { mutated: true } }
+                        }, config.cookieTimeToLiveInSeconds)
+                    }
                 })
 
                 it("should respond when session persistence failed", async () => {
-                    const sessionData: Record<string, any> = createSessionData(config.cookieSecret);
+                    for (let createSessionWhenNotFound of [false, true]) {
+                        const sessionData: Record<string, any> = createSessionData(config.cookieSecret);
 
-                    const sessionStore: SubstituteOf<SessionStore> = Substitute.for<SessionStore>();
-                    sessionStore.load(cookie).resolves({ ...sessionData, extra_data: {} });
-                    sessionStore.store(cookie, Arg.any()).rejects("Unexpected error");
+                        const sessionStore: SubstituteOf<SessionStore> = Substitute.for<SessionStore>();
+                        sessionStore.load(cookie).resolves({ ...sessionData, extra_data: {} });
+                        sessionStore.store(cookie, Arg.any(), Arg.any()).rejects("Unexpected error");
 
-                    await request(createApp(sessionStore))
-                        .get(uri + "?mutate=true")
-                        .set("Cookie", [`${config.cookieName}=${cookie.value}`])
-                        .expect(response => {
-                            validateResponse(response)
-                        })
+                        await request(createApp(sessionStore, createSessionWhenNotFound))
+                            .get(uri + "?mutate=true")
+                            .set("Cookie", [`${config.cookieName}=${cookie.value}`])
+                            .expect(response => {
+                                validateResponse(response)
+                            })
+                    }
                 })
             })
         })
