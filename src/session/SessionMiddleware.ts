@@ -63,7 +63,8 @@ const sessionRequestHandler = (config: CookieConfig, sessionStore: SessionStore)
                         path: "/",
                         httpOnly: true,
                         secure: config.cookieSecureFlag != null ? config.cookieSecureFlag : DEFAULT_COOKIE_SECURE_FLAG,
-                        maxAge: (config.cookieTimeToLiveInSeconds != null ? config.cookieTimeToLiveInSeconds : DEFAULT_COOKIE_TIME_TO_LIVE_IN_SECONDS) * 1000,
+                        maxAge: (config.cookieTimeToLiveInSeconds != null ? config.cookieTimeToLiveInSeconds
+                            : DEFAULT_COOKIE_TIME_TO_LIVE_IN_SECONDS) * 1000,
                         encode: String
                     })
                 }
