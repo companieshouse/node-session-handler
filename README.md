@@ -78,6 +78,10 @@ app.use(middleware)
 
 Such application will then have access to session instance via `request.session` as long as `__SID` cookie is set to correct value.
 
+There is also an option to have not authenticated sessions without sign-in info. In such cases middleware creates empty session as long as no valid session was found in the request.
+
+To enable support for non authenticated sessions pass `true` as a last argument to the middleware factory function e.g. `SessionMiddleware(config, sessionStore, true)`.
+
 ## Development
 
 Module requires dependencies that can be installed via `npm install` command.
