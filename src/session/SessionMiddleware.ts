@@ -5,13 +5,14 @@ import { CookieConfig } from "../config/CookieConfig";
 import { loggerInstance } from "../Logger";
 import { Cookie, validateCookieSignature } from "./model/Cookie";
 import { Session } from "./model/Session";
+import { SessionKey } from "./keys/SessionKey";
 import { SessionStore } from "./store/SessionStore";
 import crypto from "crypto"
 
 const DEFAULT_COOKIE_SECURE_FLAG = true;
 const DEFAULT_COOKIE_TIME_TO_LIVE_IN_SECONDS = 3600;
 
-export function SessionMiddleware(config: CookieConfig, sessionStore: SessionStore): RequestHandler {
+export function SessionMiddleware(config: CookieConfig, sessionStore: SessionStore, createSessionWhenNotFound: boolean = false): RequestHandler {
     if (!config.cookieName) {
         throw Error("Cookie name must be defined");
     }
@@ -22,10 +23,10 @@ export function SessionMiddleware(config: CookieConfig, sessionStore: SessionSto
         throw Error("Cookie secret must be at least 24 chars long");
     }
 
-    return expressAsyncHandler(sessionRequestHandler(config, sessionStore));
+    return expressAsyncHandler(sessionRequestHandler(config, sessionStore, createSessionWhenNotFound));
 }
 
-const sessionRequestHandler = (config: CookieConfig, sessionStore: SessionStore): RequestHandler => {
+const sessionRequestHandler = (config: CookieConfig, sessionStore: SessionStore, createSessionWhenNotFound: boolean = false): RequestHandler => {
     async function loadSession (sessionCookie: string): Promise<Session | undefined> {
         let cookie: Cookie;
         try {
@@ -52,7 +53,7 @@ const sessionRequestHandler = (config: CookieConfig, sessionStore: SessionStore)
     }
 
     return async (request: Request, response: Response, next: NextFunction): Promise<any> => {
-        const sessionCookie: string = request.cookies[config.cookieName];
+        let sessionCookie: string = request.cookies[config.cookieName];
         let originalSessionHash: string;
 
         onHeaders(response, () => {
@@ -91,7 +92,7 @@ const sessionRequestHandler = (config: CookieConfig, sessionStore: SessionStore)
         })
 
         if (sessionCookie) {
-            loggerInstance().infoRequest(request, `Session cookie ${sessionCookie} found in request: ${request.url}`);
+            loggerInstance().debugRequest(request, `Session cookie ${sessionCookie} found in request: ${request.url}`);
             request.session = await loadSession(sessionCookie);
             if (request.session != null) {
                 originalSessionHash = hash(request.session)
@@ -99,6 +100,14 @@ const sessionRequestHandler = (config: CookieConfig, sessionStore: SessionStore)
         } else {
             loggerInstance().infoRequest(request, `Session cookie not found in request ${request.url}`);
             delete request.session;
+        }
+
+        if (request.session == null && createSessionWhenNotFound) {
+            const cookie = Cookie.createNew(config.cookieSecret)
+            request.session = new Session({
+                [SessionKey.Id]: cookie.sessionId
+            });
+            loggerInstance().debugRequest(request, `Session cookie ${(sessionCookie = cookie.value)} has been created for request: ${request.url}`);
         }
 
         next();

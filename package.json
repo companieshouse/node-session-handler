@@ -1,6 +1,6 @@
 {
   "name": "ch-node-session-handler",
-  "version": "3.0.5",
+  "version": "4.0.0",
   "description": "Node.js session handler for Companies House",
   "main": "./lib/index.js",
   "types": "./lib/index.d.ts",

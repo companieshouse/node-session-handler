@@ -7,5 +7,7 @@ export declare class Session {
     getExtraData<T>(key: string): T | undefined;
     setExtraData<T>(key: string, value: T): void;
     deleteExtraData(key: string): boolean;
-    verify: () => void;
+    verify(): void;
+    private verifySignInInfo;
+    private verifyExpiryTime;
 }

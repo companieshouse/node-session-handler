@@ -27,7 +27,7 @@ Note: Cookie parsing must happen before request is passed to session middleware.
 Since build artifacts are stored in the repository (no NPM registry in used just yet) to bring this module as dependency please add the following fragment to `package.json`: 
 
 ```$json
-"ch-node-session-handler": "git+ssh://git@github.com/companieshouse/node-session-handler.git#3.0.5"
+"ch-node-session-handler": "git+ssh://git@github.com/companieshouse/node-session-handler.git#4.0.0"
 ```
 
 ### Session
@@ -77,6 +77,10 @@ app.use(middleware)
 ```
 
 Such application will then have access to session instance via `request.session` as long as `__SID` cookie is set to correct value.
+
+There is also an option to have not authenticated sessions without sign-in info. In such cases middleware creates empty session as long as no valid session was found in the request.
+
+To enable support for non authenticated sessions pass `true` as a last argument to the middleware factory function e.g. `SessionMiddleware(config, sessionStore, true)`.
 
 ## Development
 
