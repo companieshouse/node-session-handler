@@ -14,9 +14,8 @@
     "test": "mocha test/**/*.test.ts",
     "test:coverage": "nyc npm test",
     "analyse-code": "sonar-scanner",
-    "preversion": "npm run lint && npm run test",
-    "version": "rm -rf lib && npm run build && git add -A lib",
-    "postversion": "git push && git push --tags"
+    "prepublishOnly": "tsc",
+    "postpublish": "rm -rf lib"
   },
   "repository": {
     "type": "git",
