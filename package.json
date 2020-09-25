@@ -28,7 +28,7 @@
   },
   "homepage": "https://github.com/companieshouse/node-session-handler#readme",
   "dependencies": {
-    "ch-logging": "git+ssh://git@github.com/companieshouse/ch-structured-logging-node.git#15a811238ceb58988ab755229a5c07b9500200f2",
+    "@companieshouse/structured-logging-node": "~1.0.0",
     "crypto": "^1.0.1",
     "express-async-handler": "^1.1.4",
     "ioredis": "^4.17.3",
