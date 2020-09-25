@@ -1,5 +1,5 @@
 {
-  "name": "@comanieshouse/node-session-handler",
+  "name": "@companieshouse/node-session-handler",
   "version": "4.1.0",
   "description": "Node.js session handler for Companies House",
   "main": "./lib/index.js",
