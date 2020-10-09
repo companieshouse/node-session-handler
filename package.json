@@ -13,7 +13,7 @@
     "test": "mocha test/**/*.test.ts",
     "test:coverage": "nyc npm test",
     "analyse-code": "sonar-scanner",
-    "prepublishOnly": "tsc",
+    "prepublishOnly": "[ ! -d node_modules ] && npm install; tsc",
     "postpublish": "rm -rf lib"
   },
   "repository": {
