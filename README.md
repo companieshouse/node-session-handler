@@ -24,10 +24,10 @@ Note: Cookie parsing must happen before request is passed to session middleware.
 
 ## How to use it
 
-Since build artifacts are stored in the repository (no NPM registry in used just yet) to bring this module as dependency please add the following fragment to `package.json`: 
+To bring this module as dependency please add the following fragment to `package.json`: 
 
 ```$json
-"ch-node-session-handler": "git+ssh://git@github.com/companieshouse/node-session-handler.git#4.0.0"
+"@companieshouse/node-session-handler": "~4.1.0"
 ```
 
 ### Session
@@ -91,9 +91,3 @@ Module requires dependencies that can be installed via `npm install` command.
 Code is linted using `ts-lint` which can be run via `npm run lint` command.
 
 Tests in turn can be run via `npm test` command.
-
-### Compiling and packaging
-
-At this point no NPM registry is in use and built packages are stored directly in the repository.
-
-For that reason every source code change should be compiled using `npm run build` command and build artifacts in `lib` directory should be committed alongside initial code change.  

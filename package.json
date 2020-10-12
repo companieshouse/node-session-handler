@@ -1,12 +1,11 @@
 {
-  "name": "ch-node-session-handler",
-  "version": "4.0.0",
+  "name": "@companieshouse/node-session-handler",
+  "version": "4.1.0",
   "description": "Node.js session handler for Companies House",
   "main": "./lib/index.js",
   "types": "./lib/index.d.ts",
   "files": [
-    "lib",
-    "src"
+    "lib"
   ],
   "scripts": {
     "build": "tsc",
@@ -14,9 +13,8 @@
     "test": "mocha test/**/*.test.ts",
     "test:coverage": "nyc npm test",
     "analyse-code": "sonar-scanner",
-    "preversion": "npm run lint && npm run test",
-    "version": "rm -rf lib && npm run build && git add -A lib",
-    "postversion": "git push && git push --tags"
+    "prepublishOnly": "[ ! -d node_modules ] && npm install; tsc",
+    "postpublish": "rm -rf lib"
   },
   "repository": {
     "type": "git",
@@ -28,7 +26,7 @@
   },
   "homepage": "https://github.com/companieshouse/node-session-handler#readme",
   "dependencies": {
-    "ch-logging": "git+ssh://git@github.com/companieshouse/ch-structured-logging-node.git#15a811238ceb58988ab755229a5c07b9500200f2",
+    "@companieshouse/structured-logging-node": "~1.0.0",
     "crypto": "^1.0.1",
     "express-async-handler": "^1.1.4",
     "ioredis": "^4.17.3",
