@@ -47,7 +47,7 @@ const sessionRequestHandler = (config: CookieConfig, sessionStore: SessionStore,
                 }
             }
 
-            loggerInstance().error(`Session loading failed from cookie ${sessionCookie} due to error: ${sessionLoadingError}`);
+            loggerInstance().info(`Session loading failed from cookie ${sessionCookie} due to error: ${sessionLoadingError}`);
             return undefined;
         }
     }
