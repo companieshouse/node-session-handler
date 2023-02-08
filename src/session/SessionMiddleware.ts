@@ -67,6 +67,7 @@ const sessionRequestHandler = (config: CookieConfig, sessionStore: SessionStore,
                         : DEFAULT_COOKIE_TIME_TO_LIVE_IN_SECONDS) * 1000,
                     encode: String
                 })
+                loggerInstance().debug(`Refreshed session cookie ${sessionCookie}`);
             } else {
                 if (sessionCookie) {
                     response.clearCookie(config.cookieName);
