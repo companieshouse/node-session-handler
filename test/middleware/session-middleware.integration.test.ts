@@ -142,7 +142,7 @@ describe("Session middleware - integration with express.js", () => {
                 })
 
                 // tslint:disable-next-line:max-line-length
-                it("should respond but not persist session nor reset session cookie if session load succeeded but session didn't change", async () => {
+                it("should respond but not persist session but reset session cookie if session load succeeded and session didn't change", async () => {
                     for (let createSessionWhenNotFound of [false, true]) {
                         const sessionStore: SubstituteOf<SessionStore> = Substitute.for<SessionStore>();
                         sessionStore.load(cookie).resolves(createSessionData(config.cookieSecret));
@@ -151,7 +151,10 @@ describe("Session middleware - integration with express.js", () => {
                             .get(uri)
                             .set("Cookie", [`${config.cookieName}=${cookie.value}`])
                             .expect(response => {
-                                expect(response.get("Set-Cookie")).to.be.equal(undefined)
+                                expect(response.get("Set-Cookie")[0]).to.be.satisfy((value: string) => {
+                                    return value.startsWith(`__SID=${cookie.value}; Max-Age=${config.cookieTimeToLiveInSeconds}; Domain=localhost; Path=/; Expires=`)
+                                        && value.endsWith("; HttpOnly; Secure")
+                                })
                                 validateResponse(response)
                             })
 

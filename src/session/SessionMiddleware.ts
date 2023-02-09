@@ -58,17 +58,16 @@ const sessionRequestHandler = (config: CookieConfig, sessionStore: SessionStore,
 
         onHeaders(response, () => {
             if (request.session) {
-                if (hash(request.session) !== originalSessionHash) {
-                    response.cookie(config.cookieName, sessionCookie, {
-                        domain: config.cookieDomain,
-                        path: "/",
-                        httpOnly: true,
-                        secure: config.cookieSecureFlag != null ? config.cookieSecureFlag : DEFAULT_COOKIE_SECURE_FLAG,
-                        maxAge: (config.cookieTimeToLiveInSeconds != null ? config.cookieTimeToLiveInSeconds
-                            : DEFAULT_COOKIE_TIME_TO_LIVE_IN_SECONDS) * 1000,
-                        encode: String
-                    })
-                }
+                response.cookie(config.cookieName, sessionCookie, {
+                    domain: config.cookieDomain,
+                    path: "/",
+                    httpOnly: true,
+                    secure: config.cookieSecureFlag != null ? config.cookieSecureFlag : DEFAULT_COOKIE_SECURE_FLAG,
+                    maxAge: (config.cookieTimeToLiveInSeconds != null ? config.cookieTimeToLiveInSeconds
+                        : DEFAULT_COOKIE_TIME_TO_LIVE_IN_SECONDS) * 1000,
+                    encode: String
+                })
+                loggerInstance().debug(`Refreshed session cookie ${sessionCookie}`);
             } else {
                 if (sessionCookie) {
                     response.clearCookie(config.cookieName);
