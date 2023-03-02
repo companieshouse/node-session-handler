@@ -17,6 +17,10 @@ test: test-unit
 test-unit:
 	npm run test:coverage
 
+.PHONY: security-check
+security-check:
+	npm audit
+
 .PHONY: sonar
 sonar:
 	npm run analyse-code
