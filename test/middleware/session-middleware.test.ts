@@ -63,7 +63,6 @@ describe("Session middleware", () => {
                 const sessionStore = Substitute.for<SessionStore>();
 
                 await SessionMiddleware(config, sessionStore, createSessionWhenNotFound)(request, Substitute.for<Response>(), nextFunction);
-                console.log(request);
                 sessionStore.didNotReceive().load(Arg.any());
             }
         });
@@ -73,7 +72,6 @@ describe("Session middleware", () => {
                 const sessionStore = Substitute.for<SessionStore>();
 
                 await SessionMiddleware(config, sessionStore, true)(request, Substitute.for<Response>(), nextFunction);
-                console.log(request);
                 expect(request.session).to.be.not.undefined
                 expect(request.session.get(SessionKey.Id)).to.be.not.empty
                 expect(request.session.get(SessionKey.ExtraData)).to.be.empty
