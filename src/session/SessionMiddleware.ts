@@ -82,7 +82,7 @@ const sessionRequestHandler = (config: CookieConfig, sessionStore: SessionStore,
                     try {
                         await sessionStore.store(Cookie.createFrom(sessionCookie), request.session.data,
                             config.cookieTimeToLiveInSeconds != null ? config.cookieTimeToLiveInSeconds : DEFAULT_COOKIE_TIME_TO_LIVE_IN_SECONDS)
-                    } catch (err) {
+                    } catch (err: any) {
                         loggerInstance().error(err.message)
                     }
                 }
