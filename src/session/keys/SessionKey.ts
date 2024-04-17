@@ -8,5 +8,6 @@ export enum SessionKey {
     Hijacked = ".hijacked",
     OAuth2Nonce = ".oauth2_nonce",
     ZXSKey = ".zxs_key",
-    Pst = "pst"
+    Pst = "pst",
+    CsrfToken = "csrf_token"
 }
