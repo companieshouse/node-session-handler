@@ -5,5 +5,6 @@ export enum UserProfileKeys {
     UserId = "id",
     Locale = "locale",
     Permissions = "permissions",
+    TokenPermissions = "token_permissions",
     Scope = "scope",
 }

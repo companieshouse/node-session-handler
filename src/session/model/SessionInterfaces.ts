@@ -36,6 +36,9 @@ export type IUserProfile = {
     [UserProfileKeys.Surname]?: string,
     [UserProfileKeys.Permissions]?: {
         [Key: string]: any;
+    },
+    [UserProfileKeys.TokenPermissions]?: {
+        [Key: string]: any;
     }
 };
 
