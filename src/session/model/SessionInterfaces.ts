@@ -38,7 +38,7 @@ export type IUserProfile = {
         [Key: string]: any;
     },
     [UserProfileKeys.TokenPermissions]?: {
-        [Key: string]: any;
+        [Key: string]: string;
     }
 };
 
