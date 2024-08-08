@@ -1,5 +1,6 @@
 export enum SignInInfoKeys {
     AccessToken = "access_token",
+    AdditionalScope = "additional_scope",
     AdminPermissions = "admin_permissions",
     CompanyNumber = "company_number",
     SignedIn = "signed_in",
