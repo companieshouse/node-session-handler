@@ -21,7 +21,7 @@ export type ISession = {
 
 export type ISignInInfo = {
     [SignInInfoKeys.AccessToken]?: IAccessToken,
-    [SignInInfoKeys.AdditionalScope]?: string;
+    [SignInInfoKeys.AdditionalScope]?: string,
     [SignInInfoKeys.AdminPermissions]?: string,
     [SignInInfoKeys.CompanyNumber]?: string,
     [SignInInfoKeys.SignedIn]?: number,
@@ -39,8 +39,8 @@ export type IUserProfile = {
         [Key: string]: any;
     },
     [UserProfileKeys.TokenPermissions]?: {
-        [Key: string]: string;
-    }
+        [Key: string]: string
+    } | null,
 };
 
 export type IAccessToken = {
