@@ -26,6 +26,8 @@ export type ISignInInfo = {
     [SignInInfoKeys.CompanyNumber]?: string,
     [SignInInfoKeys.SignedIn]?: number,
     [SignInInfoKeys.UserProfile]?: IUserProfile,
+    [SignInInfoKeys.AcspNumber]?: string,
+    [SignInInfoKeys.AcspRole]?: string,
 };
 
 export type IUserProfile = {

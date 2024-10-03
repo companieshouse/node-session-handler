@@ -5,4 +5,6 @@ export enum SignInInfoKeys {
     CompanyNumber = "company_number",
     SignedIn = "signed_in",
     UserProfile = "user_profile",
+    AcspNumber = "acsp_number",
+    AcspRole = "acsp_role",
 }
