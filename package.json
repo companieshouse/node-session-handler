@@ -1,6 +1,6 @@
 {
   "name": "@companieshouse/node-session-handler",
-  "version": "4.1.0",
+  "version": "5.2.0",
   "description": "Node.js session handler for Companies House",
   "main": "./lib/index.js",
   "types": "./lib/index.d.ts",
@@ -34,7 +34,7 @@
     "on-headers": "^1.0.2"
   },
   "devDependencies": {
-    "@fluffy-spoon/substitute": "^1.145.0",
+    "@fluffy-spoon/substitute": "^1.178.0",
     "@types/chai": "^4.2.13",
     "@types/cookie-parser": "^1.4.2",
     "@types/express": "^4.17.8",

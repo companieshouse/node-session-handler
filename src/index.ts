@@ -14,3 +14,5 @@ declare global {
 }
 
 export { Session, ISession, SessionStore, SessionMiddleware, CookieConfig };
+export { EnsureSessionCookiePresentMiddleware } from "./session/EnsureCookiePresentMiddleware"
+export { CookiePresenceConfig } from "./config/CookiePresenceConfig";
