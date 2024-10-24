@@ -51,6 +51,19 @@ describe("EnsureSessionCookiePresentMiddleware", () => {
 
         expect(() => ensureCookiePresentMiddleware(request, response, nextFunction)).to.throw("Session Cookie Not Set")
     })
+
+    it("handles extra query parameters when redirecting", () => {
+        request.cookies = {}
+        request.url = "http://localhost:8080/registered-email"
+        request.query = {
+            another: "abcdef"
+        }
+
+        ensureCookiePresentMiddleware(request, response, nextFunction)
+
+        response.received(1).redirect("http://localhost:8080/registered-email?another=abcdef&redirect=true")
+
+    })
 })
 
 describe("EnsureSessionCookiePresentMiddleware with custom redirection properties", () => {
