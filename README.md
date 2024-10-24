@@ -105,11 +105,11 @@ const ensureSessionCookiePresentMiddleware =
         // Ensure use the same cookie name as session, spreading cookie config
         // will accomplish this
         ...cookieConfig,
-        // Supply values for redirectQueryParameterName and redirectQueryParameterValue
-        // to customise the query parameter which is used to validate the redirected
-        // request. (Defaults to name: `redirect` value: `true`)
-        redirectQueryParameterName: "not-redirect",
-        redirectQueryParameterValue: "not-true",
+        // Supply values for redirectHeaderName and redirectHeaderValue
+        // to customise the header which is used to validate the redirected
+        // request. (Defaults to name: `x-redirection-count` value: `1`)
+        redirectHeaderName: "not-redirect",
+        redirectHeaderValue: "not-true",
     })
 
 app.use(sessionMiddleware)

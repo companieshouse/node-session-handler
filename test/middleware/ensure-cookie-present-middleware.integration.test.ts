@@ -40,17 +40,18 @@ describe("EnsureSessionCookiePresentMiddleware middleware - integration with exp
             cookies: {},
             validateResponse: (response: request.Response) => {
                 expect(response.status).equals(302)
-                expect(response.get("Location")).to.be.equal("/my-endpoint-to-test?redirect=true")
+                expect(response.get("Location")).to.be.equal("/my-endpoint-to-test")
+                expect(response.get("x-redirection-count")).to.be.equal("1")
             }
         }, {
             scenario: "responds with server error when session cookie unset and query parameter",
-            queryString: "redirect=true",
+            headers: {"x-redirection-count": "1"},
             cookies: {},
             validateResponse: (response: request.Response) => {
                 expect(response.status).equals(500)
             }
         }
-    ].forEach(({scenario, queryString, cookies, validateResponse}) => {
+    ].forEach(({scenario, headers, cookies, validateResponse}) => {
         it(scenario, async () => {
             let testRequest = request(createApp())
                 .get("/my-endpoint-to-test");
@@ -60,8 +61,10 @@ describe("EnsureSessionCookiePresentMiddleware middleware - integration with exp
                 testRequest = testRequest.set("Cookie", Object.entries(cookies).map(([key, value]) => `${key}=${value}`))
             }
 
-            if (queryString) {
-                testRequest = testRequest.query(queryString);
+            if (headers) {
+                for (const [headerName, headerValue] of Object.entries(headers)) {
+                    testRequest = testRequest.set(headerName, headerValue)
+                }
             }
 
             await testRequest
