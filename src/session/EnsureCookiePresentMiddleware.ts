@@ -24,9 +24,7 @@ export function EnsureSessionCookiePresentMiddleware(config: CookiePresenceConfi
         const previouslyRedirected = hasPreviouslyBeenRedirected(req);
 
         if (!Object.keys(req.cookies).includes(config.cookieName)) {
-            const previousRedirect = previouslyRedirected;
-
-            if (previousRedirect) {
+            if (previouslyRedirected) {
                 throw new Error("Session Cookie Not Set")
             }
 
