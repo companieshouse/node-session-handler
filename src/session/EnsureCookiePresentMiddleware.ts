@@ -21,15 +21,17 @@ export function EnsureSessionCookiePresentMiddleware(config: CookiePresenceConfi
         redirectHeaderValue);
 
     return (req: Request, res: Response, next: NextFunction) => {
+        const previouslyRedirected = hasPreviouslyBeenRedirected(req);
+
         if (!Object.keys(req.cookies).includes(config.cookieName)) {
-            const previousRedirect = hasPreviouslyBeenRedirected(req);
+            const previousRedirect = previouslyRedirected;
 
             if (previousRedirect) {
                 throw new Error("Session Cookie Not Set")
             }
 
             return res.header(redirectHeaderName, redirectHeaderValue).redirect(req.originalUrl)
-        } else {
+        } else if (previouslyRedirected) {
             res.removeHeader(redirectHeaderName)
         }
 

@@ -60,14 +60,28 @@ describe("EnsureSessionCookiePresentMiddleware", () => {
         expect(() => ensureCookiePresentMiddleware(request, response, nextFunction)).to.throw("Session Cookie Not Set")
     })
 
-    it("removes the header from request when present and there is a session cookie", () => {
+    it("removes the header from request when present and there is a session cookie and has header in request", () => {
         request.cookies.returns({
             "__SID": "12344567"
         })
 
+        request.get("x-redirection-count").returns("1")
+
         ensureCookiePresentMiddleware(request, response, nextFunction)
 
         response.received(1).removeHeader("x-redirection-count")
+    })
+
+    it("does not remove header from request when present and there is a session cookie and does not have header in request", () => {
+        request.cookies.returns({
+            "__SID": "12344567"
+        })
+
+        request.get("x-redirection-count").returns(undefined)
+
+        ensureCookiePresentMiddleware(request, response, nextFunction)
+
+        response.received(0).removeHeader(Arg.any())
     })
 })
 
