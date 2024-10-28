@@ -29,6 +29,8 @@ export function EnsureSessionCookiePresentMiddleware(config: CookiePresenceConfi
             }
 
             return res.header(redirectHeaderName, redirectHeaderValue).redirect(req.originalUrl)
+        } else {
+            res.removeHeader(redirectHeaderName)
         }
 
         next();

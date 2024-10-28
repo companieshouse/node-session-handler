@@ -59,6 +59,16 @@ describe("EnsureSessionCookiePresentMiddleware", () => {
 
         expect(() => ensureCookiePresentMiddleware(request, response, nextFunction)).to.throw("Session Cookie Not Set")
     })
+
+    it("removes the header from request when present and there is a session cookie", () => {
+        request.cookies.returns({
+            "__SID": "12344567"
+        })
+
+        ensureCookiePresentMiddleware(request, response, nextFunction)
+
+        response.received(1).removeHeader("x-redirection-count")
+    })
 })
 
 const modifyingDefaultsScenarios = [{
