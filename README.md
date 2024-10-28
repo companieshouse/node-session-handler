@@ -82,6 +82,40 @@ There is also an option to have not authenticated sessions without sign-in info.
 
 To enable support for non authenticated sessions pass `true` as a last argument to the middleware factory function e.g. `SessionMiddleware(config, sessionStore, true)`.
 
+### EnsureSessionCookiePresentMiddleware
+
+Convenient Express middleware function which ensures requests contain the
+Session ID Cookie and forces a redirect if not. This is necessary if subsequent
+middlewares require the Cookie to be present in the request.
+
+Should be used alongside the `SessionMiddleware` and be placed following it
+in the chain of middleware functions.
+
+Should be used in the following way:
+
+```javascript
+// Create CookieConfig as required
+const cookieConfig = { ... };
+
+// Create sessionMiddleware using same cookie config, refer to previous section
+// for explicit instructions
+const sessionMiddleware = ...;
+const ensureSessionCookiePresentMiddleware = 
+    EnsureSessionCookiePresentMiddleware({
+        // Ensure use the same cookie name as session, spreading cookie config
+        // will accomplish this
+        ...cookieConfig,
+        // Supply values for redirectHeaderName and redirectHeaderValue
+        // to customise the header which is used to validate the redirected
+        // request. (Defaults to name: `x-redirection-count` value: `1`)
+        redirectHeaderName: "not-redirect",
+        redirectHeaderValue: "not-true",
+    })
+
+app.use(sessionMiddleware)
+app.use(ensureSessionCookiePresentMiddleware)
+```
+
 ## Development
 
 Module requires dependencies that can be installed via `npm install` command.
