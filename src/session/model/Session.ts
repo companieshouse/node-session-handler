@@ -3,6 +3,7 @@ import { SessionKey } from "../keys/SessionKey";
 import { ISession, ISessionValue } from "./SessionInterfaces";
 import { SignInInfoKeys } from "../keys/SignInInfoKeys";
 import { AccessTokenKeys } from "../keys/AccessTokenKeys";
+import { loggerInstance } from "../../Logger";
 
 export class Session {
 
@@ -39,8 +40,7 @@ export class Session {
 
     private verifySignInInfo(signInInfo: Record<string, any>): void {
         const accessToken = signInInfo[SignInInfoKeys.AccessToken];
-        console.log(">>> SignInInfo dump");
-        console.log(signInInfo);
+        loggerInstance().info(`Signin Info: ${signInInfo}`);
         if (!accessToken || !accessToken[AccessTokenKeys.AccessToken]) {
             throw new IncompleteSessionDataError(SessionKey.SignInInfo, SignInInfoKeys.AccessToken);
         }
