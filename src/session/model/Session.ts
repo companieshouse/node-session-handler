@@ -39,6 +39,8 @@ export class Session {
 
     private verifySignInInfo(signInInfo: Record<string, any>): void {
         const accessToken = signInInfo[SignInInfoKeys.AccessToken];
+        console.log(">>> SignInInfo dump");
+        console.log(signInInfo);
         if (!accessToken || !accessToken[AccessTokenKeys.AccessToken]) {
             throw new IncompleteSessionDataError(SessionKey.SignInInfo, SignInInfoKeys.AccessToken);
         }
