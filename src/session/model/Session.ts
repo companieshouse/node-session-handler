@@ -4,6 +4,7 @@ import { ISession, ISessionValue } from "./SessionInterfaces";
 import { SignInInfoKeys } from "../keys/SignInInfoKeys";
 import { AccessTokenKeys } from "../keys/AccessTokenKeys";
 import { loggerInstance } from "../../Logger";
+import { UserProfileKeys } from "../keys/UserProfileKeys";
 
 export class Session {
 
@@ -59,15 +60,21 @@ export class Session {
     }
 
     private logSignInInfo(signInInfo: Record<string, any>): void {
-     for (const [key, value] of Object.entries(signInInfo)) {
-        if (key === SignInInfoKeys.AccessToken) {
-          loggerInstance().info(`SignInInfo Key: ${key}, Value: "present"`);
-        } else if (key === SignInInfoKeys.UserProfile) { 
-          for (const [uKey, uValue] of Object.entries(value)) {
-            loggerInstance().info(`UserProfile Key: ${uKey}, Value: ${JSON.stringify(uValue)}`);
+     for (const [key1, value1] of Object.entries(signInInfo)) {
+        if (key1 === SignInInfoKeys.AccessToken) {
+          loggerInstance().info(`SignInInfo Key: ${key1}, Value: <present>`);
+        } else if (key1 === SignInInfoKeys.UserProfile) { 
+          for (const [key2, value2] of Object.entries(value1)) {
+            if (key2 === UserProfileKeys.TokenPermissions) {
+              for (const [key3, value3] of Object.entries(value2)) {
+               loggerInstance().info(`TokenPermission Key: ${key3}, Value: ${value3}`);
+              }
+            } else {
+              loggerInstance().info(`UserProfile Key: ${key2}, Value: ${value2}`);
+            }
           }
         } else {
-          loggerInstance().info(`SignInInfo Key: ${key}, Value: ${JSON.stringify(value)}`);
+          loggerInstance().info(`SignInInfo Key: ${key1}, Value: ${value1}`);
         }
     }
    }
