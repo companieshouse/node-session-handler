@@ -40,7 +40,7 @@ export class Session {
 
     private verifySignInInfo(signInInfo: Record<string, any>): void {
         const accessToken = signInInfo[SignInInfoKeys.AccessToken];
-        loggerInstance().info(`Signin Info: ${signInInfo.toString()}`);
+        this.logSignInInfo(signInInfo);
         if (!accessToken || !accessToken[AccessTokenKeys.AccessToken]) {
             throw new IncompleteSessionDataError(SessionKey.SignInInfo, SignInInfoKeys.AccessToken);
         }
@@ -57,4 +57,15 @@ export class Session {
             throw new SessionExpiredError(expires, dateNowMilliseconds);
         }
     }
+
+    private logSignInInfo(signInInfo: Record<string, any>): void {
+     for (const [key, value] of Object.entries(signInInfo)) {
+        if (key === SignInInfoKeys.AccessToken) {
+          loggerInstance().info(`SignInInfo Key: ${key}, Value: "present"`);
+          
+            continue; // Skip logging access token
+        }
+        loggerInstance().info(`SignInInfo Key: ${key}, Value: ${JSON.stringify(value)}`);
+    }
+   }
 }

@@ -10,7 +10,7 @@
   "scripts": {
     "build": "rm -rf ./lib && tsc",
     "lint": "tslint --project ./",
-    "test": "mocha test/**/*.test.ts",
+    "test": "env LOG_LEVEL=trace mocha test/**/*.test.ts",
     "test:coverage": "nyc npm test",
     "analyse-code": "sonar-scanner",
     "prepublishOnly": "[ ! -d node_modules ] && npm install; tsc",
