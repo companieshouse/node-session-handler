@@ -62,10 +62,13 @@ export class Session {
      for (const [key, value] of Object.entries(signInInfo)) {
         if (key === SignInInfoKeys.AccessToken) {
           loggerInstance().info(`SignInInfo Key: ${key}, Value: "present"`);
-          
-            continue; // Skip logging access token
+        } else if (key === SignInInfoKeys.UserProfile) { 
+          for (const [uKey, uValue] of Object.entries(value)) {
+            loggerInstance().info(`UserProfile Key: ${uKey}, Value: ${JSON.stringify(uValue)}`);
+          }
+        } else {
+          loggerInstance().info(`SignInInfo Key: ${key}, Value: ${JSON.stringify(value)}`);
         }
-        loggerInstance().info(`SignInInfo Key: ${key}, Value: ${JSON.stringify(value)}`);
     }
    }
 }
