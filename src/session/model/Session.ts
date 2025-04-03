@@ -32,7 +32,7 @@ export class Session {
     }
 
     public verify (): void {
-        if (this.data[SessionKey.SignInInfo]) {
+        if (this.data[SessionKey.SignInInfo] && this.data[SessionKey.SignInInfo][SignInInfoKeys.SignedIn]==1) {
             this.verifySignInInfo(this.data[SessionKey.SignInInfo]);
         }
 
@@ -41,8 +41,8 @@ export class Session {
 
     private verifySignInInfo(signInInfo: Record<string, any>): void {
         const accessToken = signInInfo[SignInInfoKeys.AccessToken];
+        this.logRecordArray(signInInfo, "SignInInfo");
         if (!accessToken || !accessToken[AccessTokenKeys.AccessToken]) {
-          this.logSignInInfo(signInInfo);
           throw new IncompleteSessionDataError(SessionKey.SignInInfo, SignInInfoKeys.AccessToken);
         }
     }
@@ -76,6 +76,18 @@ export class Session {
         } else {
           loggerInstance().info(`SignInInfo Key: ${key1}, Value: ${value1}`);
         }
+      }
     }
-   }
+    
+    private logRecordArray(recordArray: Record<string, any>, arrayName: string = ''): void {
+        for (const [key, value] of Object.entries(recordArray)) {
+            if (value && typeof value === 'object' && value !== null && !Array.isArray(value)) {
+                // If the value is an object, recursively log its entries
+                this.logRecordArray(value, key);
+            } else {
+                // Log the key-value pair
+                loggerInstance().info(`${arrayName} Key: ${key}, Value: ${value}`);
+            }
+        }
+    }
 }
