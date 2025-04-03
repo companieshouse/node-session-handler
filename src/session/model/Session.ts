@@ -59,26 +59,6 @@ export class Session {
         }
     }
 
-    private logSignInInfo(signInInfo: Record<string, any>): void {
-     for (const [key1, value1] of Object.entries(signInInfo)) {
-        if (key1 === SignInInfoKeys.AccessToken) {
-          loggerInstance().info(`SignInInfo Key: ${key1}, Value: <present>`);
-        } else if (key1 === SignInInfoKeys.UserProfile) { 
-          for (const [key2, value2] of Object.entries(value1)) {
-            if (key2 === UserProfileKeys.TokenPermissions) {
-              for (const [key3, value3] of Object.entries(value2)) {
-               loggerInstance().info(`TokenPermission Key: ${key3}, Value: ${value3}`);
-              }
-            } else {
-              loggerInstance().info(`UserProfile Key: ${key2}, Value: ${value2}`);
-            }
-          }
-        } else {
-          loggerInstance().info(`SignInInfo Key: ${key1}, Value: ${value1}`);
-        }
-      }
-    }
-    
     private logRecordArray(recordArray: Record<string, any>, arrayName: string = ''): void {
         for (const [key, value] of Object.entries(recordArray)) {
             if (value && typeof value === 'object' && value !== null && !Array.isArray(value)) {
@@ -86,7 +66,11 @@ export class Session {
                 this.logRecordArray(value, key);
             } else {
                 // Log the key-value pair
-                loggerInstance().info(`${arrayName} Key: ${key}, Value: ${value}`);
+                if (typeof value === 'string' && value.endsWith('_token')) {
+                    loggerInstance().info(`${arrayName} Key: ${key}, Value: <present>`);
+                } else {
+                    loggerInstance().info(`${arrayName} Key: ${key}, Value: ${value}`);
+                }
             }
         }
     }
