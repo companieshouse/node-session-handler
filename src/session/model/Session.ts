@@ -32,8 +32,14 @@ export class Session {
     }
 
     public verify (): void {
-        if (this.data[SessionKey.SignInInfo] && this.data[SessionKey.SignInInfo][SignInInfoKeys.SignedIn]==1) {
-            this.verifySignInInfo(this.data[SessionKey.SignInInfo]);
+        const signInInfo = this.data[SessionKey.SignInInfo];
+        if (signInInfo) {
+            if (signInInfo[SignInInfoKeys.SignedIn]==1) {
+                this.verifySignInInfo(signInInfo);
+            } else {
+                // If the user is not signed in, it's not an error but log the signInInfo to see what's there
+                this.logRecordArray(signInInfo, "SignInInfo");
+            }
         }
 
         this.verifyExpiryTime(this.data[SessionKey.Expires]);
@@ -41,9 +47,9 @@ export class Session {
 
     private verifySignInInfo(signInInfo: Record<string, any>): void {
         const accessToken = signInInfo[SignInInfoKeys.AccessToken];
-        this.logRecordArray(signInInfo, "SignInInfo");
         if (!accessToken || !accessToken[AccessTokenKeys.AccessToken]) {
-          throw new IncompleteSessionDataError(SessionKey.SignInInfo, SignInInfoKeys.AccessToken);
+            this.logRecordArray(signInInfo, "SignInInfo");
+            throw new IncompleteSessionDataError(SessionKey.SignInInfo, SignInInfoKeys.AccessToken);
         }
     }
 
