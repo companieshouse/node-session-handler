@@ -37,7 +37,7 @@ export class Session {
             if (signInInfo[SignInInfoKeys.SignedIn]==1) {
                 this.verifySignInInfo(signInInfo);
             } else {
-                // If the user is not signed in, it's not an error but log the signInInfo to see what's there
+                // If the user is not signed in, it's not an error but log the signInInfo to see what is there
                 this.logRecordArray(signInInfo, "SignInInfo");
             }
         }
