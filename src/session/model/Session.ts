@@ -65,14 +65,14 @@ export class Session {
         }
     }
 
-    private logRecordArray(recordArray: Record<string, any>, arrayName: string = ''): void {
+    private logRecordArray(recordArray: Record<string, any>, arrayName: string = ""): void {
         for (const [key, value] of Object.entries(recordArray)) {
-            if (value && typeof value === 'object' && value !== null && !Array.isArray(value)) {
+            if (value && typeof value === "object" && value !== null && !Array.isArray(value)) {
                 // If the value is an object, recursively log its entries
                 this.logRecordArray(value, key);
             } else {
                 // Log the key-value pair
-                if (typeof key === 'string' && key.endsWith('_token')) {
+                if (typeof key === "string" && key.endsWith("_token")) {
                     loggerInstance().info(`${arrayName} Key: ${key}, Value: <present>`);
                 } else {
                     loggerInstance().info(`${arrayName} Key: ${key}, Value: ${value}`);
