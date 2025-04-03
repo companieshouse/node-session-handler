@@ -66,7 +66,7 @@ export class Session {
                 this.logRecordArray(value, key);
             } else {
                 // Log the key-value pair
-                if (typeof value === 'string' && value.endsWith('_token')) {
+                if (typeof key === 'string' && key.endsWith('_token')) {
                     loggerInstance().info(`${arrayName} Key: ${key}, Value: <present>`);
                 } else {
                     loggerInstance().info(`${arrayName} Key: ${key}, Value: ${value}`);
