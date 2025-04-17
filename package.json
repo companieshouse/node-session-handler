@@ -26,11 +26,11 @@
   },
   "homepage": "https://github.com/companieshouse/node-session-handler#readme",
   "dependencies": {
-    "@companieshouse/structured-logging-node": "^1.0.0",
+    "@companieshouse/structured-logging-node": "^2.0.1",
     "crypto": "^1.0.1",
     "express-async-handler": "^1.1.4",
-    "ioredis": "^4.17.3",
-    "msgpack5": "^4.5.1",
+    "ioredis": "^5.6.1",
+    "msgpack5": "^6.0.2",
     "on-headers": "^1.0.2"
   },
   "devDependencies": {
