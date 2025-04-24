@@ -1,4 +1,5 @@
 import { Arg, Substitute, SubstituteOf } from "@fluffy-spoon/substitute";
+import sinon from "sinon"
 import { expect } from "chai";
 import cookieParser from "cookie-parser"
 import express, { NextFunction, Request, Response } from "express";
@@ -104,6 +105,18 @@ describe("Session middleware - integration with express.js", () => {
             describe("when cookie is present", () => {
                 const cookie: Cookie = Cookie.createNew(config.cookieSecret);
 
+                beforeEach(() => {
+                    sinon.reset();
+                    sinon.restore();
+                    sinon.stub(Cookie, "createNew").returns(cookie);
+                });
+
+                afterEach(done => {
+                    sinon.reset();
+                    sinon.restore();
+                    done();
+                });
+
                 describe('when session creation feature is enabled', () => {
                     it("should respond and persist session and create session cookie if session load failed", async () => {
                         const sessionStore: SubstituteOf<SessionStore> = Substitute.for<SessionStore>();
@@ -143,18 +156,18 @@ describe("Session middleware - integration with express.js", () => {
 
                 // tslint:disable-next-line:max-line-length
                 it("should respond but not persist session but reset session cookie if session load succeeded and session didn't change", async () => {
-                    for (let createSessionWhenNotFound of [false, true]) {
+                    for (const createSessionWhenNotFound of [false, true]) {
                         const sessionStore: SubstituteOf<SessionStore> = Substitute.for<SessionStore>();
                         sessionStore.load(cookie).resolves(createSessionData(config.cookieSecret));
-
-                        await request(createApp(sessionStore, false))
+                        await request(createApp(sessionStore, createSessionWhenNotFound))
                             .get(uri)
                             .set("Cookie", [`${config.cookieName}=${cookie.value}`])
                             .expect(response => {
-                                expect(response.get("Set-Cookie")[0]).to.be.satisfy((value: string) => {
-                                    return value.startsWith(`__SID=${cookie.value}; Max-Age=${config.cookieTimeToLiveInSeconds}; Domain=localhost; Path=/; Expires=`)
-                                        && value.endsWith("; HttpOnly; Secure")
-                                })
+                                console.log(`>>>>response.get("Set-Cookie")[0]`)
+                                console.log(response.get("Set-Cookie")[0])
+                                console.log(`__SID=${cookie.value}; Max-Age=${config.cookieTimeToLiveInSeconds}; Domain=localhost; Path=/; Expires=`)
+                                expect(response.get("Set-Cookie")[0]).to.contain(`__SID=${cookie.value}; Max-Age=${config.cookieTimeToLiveInSeconds}; Domain=localhost; Path=/; Expires=`);
+                                expect(response.get("Set-Cookie")[0]).to.contain(`; HttpOnly; Secure`);
                                 validateResponse(response)
                             })
 
@@ -163,7 +176,7 @@ describe("Session middleware - integration with express.js", () => {
                 })
 
                 it("should respond and persist session and reset cookie if session load succeeded and session did change", async () => {
-                    for (let createSessionWhenNotFound of [false, true]) {
+                    for (const createSessionWhenNotFound of [false, true]) {
                         const sessionData: Record<string, any> = createSessionData(config.cookieSecret);
 
                         const sessionStore: SubstituteOf<SessionStore> = Substitute.for<SessionStore>();

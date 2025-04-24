@@ -35,7 +35,10 @@ const sessionRequestHandler = (config: CookieConfig, sessionStore: SessionStore,
             const sessionData = await sessionStore.load(cookie);
             const session = new Session(sessionData);
             session.verify();
-
+            console.log(">>>comparison")
+            console.log(session)
+            console.log(cookie)
+            compareSessionAndCookie(session, cookie);
             loggerInstance().debug(`Session successfully loaded from cookie ${sessionCookie}`);
             return session;
         } catch (sessionLoadingError) {
@@ -57,7 +60,10 @@ const sessionRequestHandler = (config: CookieConfig, sessionStore: SessionStore,
         let originalSessionHash: string;
 
         onHeaders(response, () => {
+            console.log(">>>req.session here")
+            console.log(request.session)
             if (request.session) {
+                console.log(">>>req.session set")
                 response.cookie(config.cookieName, sessionCookie, {
                     domain: config.cookieDomain,
                     path: "/",
@@ -69,9 +75,12 @@ const sessionRequestHandler = (config: CookieConfig, sessionStore: SessionStore,
                 })
                 loggerInstance().debug(`Refreshed session cookie ${sessionCookie}`);
             } else {
+                console.log(">>>req.session not-set")
                 if (sessionCookie) {
+                    console.log(">>>req.session not-set setttt")
                     response.clearCookie(config.cookieName);
                 }
+                console.log(response.get("Set-Cookie"))
             }
         });
 
@@ -91,17 +100,24 @@ const sessionRequestHandler = (config: CookieConfig, sessionStore: SessionStore,
         })
 
         if (sessionCookie) {
+            console.log(">>>something")
+            console.log(">>>something4")
             loggerInstance().debugRequest(request, `Session cookie ${sessionCookie} found in request: ${request.url}`);
             request.session = await loadSession(sessionCookie);
             if (request.session != null) {
                 originalSessionHash = hash(request.session)
             }
         } else {
+            console.log(">>>something")
+            console.log(">>>something2")
             loggerInstance().infoRequest(request, `Session cookie not found in request ${request.url}`);
             delete request.session;
         }
-
+        console.log(">>>something")
+        console.log(">>>something6")
         if (request.session == null && createSessionWhenNotFound) {
+            console.log(">>>something")
+            console.log(">>>something5")
             const cookie = Cookie.createNew(config.cookieSecret)
             request.session = new Session({
                 [SessionKey.Id]: cookie.sessionId
@@ -113,6 +129,14 @@ const sessionRequestHandler = (config: CookieConfig, sessionStore: SessionStore,
     };
 }
 
+const compareSessionAndCookie = (session: Session, cookie: Cookie): void => {
+    if (session.data) {
+        if (session.data[SessionKey.Id] !== cookie.sessionId) {
+            session.data = {};
+            throw Error (`Session Id does not match the session key in Cookie`);
+        }
+    }
+}
 const hash = (session: Session): string => {
     return crypto
         .createHash("sha1")

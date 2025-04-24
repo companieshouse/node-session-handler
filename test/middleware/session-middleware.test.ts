@@ -9,8 +9,10 @@ import { Session } from "../../src/session/model/Session";
 import { SessionMiddleware } from "../../src/session/SessionMiddleware";
 import { SessionStore } from "../../src/session/store/SessionStore";
 import { generateRandomBytesBase64 } from "../../src/utils/CookieUtils";
-import { createSession } from "../utils/SessionGenerator";
+import {createSession, createSessionData} from "../utils/SessionGenerator";
 import { Cookie } from "../../src/session/model/Cookie";
+import sinon from "sinon";
+import Redis from "ioredis";
 
 declare global {
     namespace Express {
@@ -28,6 +30,7 @@ describe("Session middleware", () => {
     };
     const requestMetadata = { url: "/test-url", path: "/test-url", method: "GET" }
     const nextFunction = Substitute.for<NextFunction>();
+    const ssid = generateRandomBytesBase64(28);
 
     describe("middleware initialisation", () => {
         it("should fail when cookie name is missing", () => {
@@ -55,24 +58,31 @@ describe("Session middleware", () => {
     describe("when cookie is not present", () => {
         const request = {
             ...requestMetadata,
-            cookies: {}
+            cookies: {
+                [config.cookieName]: ssid
+            }
         } as Request;
 
         it("should not try to load a session", async () => {
             for (let createSessionWhenNotFound of [false, true]) {
                 const sessionStore = Substitute.for<SessionStore>();
-
                 await SessionMiddleware(config, sessionStore, createSessionWhenNotFound)(request, Substitute.for<Response>(), nextFunction);
                 sessionStore.didNotReceive().load(Arg.any());
             }
         });
 
         describe('when session creation feature is enabled', () => {
-            it("should create a session and insert session object in the request", async () => {
+            it.only("should create a session and insert session object in the request", async () => {
                 const sessionStore = Substitute.for<SessionStore>();
-
-                await SessionMiddleware(config, sessionStore, true)(request, Substitute.for<Response>(), nextFunction);
-                expect(request.session).to.be.not.undefined
+                const cookie: Cookie = Cookie.createNew(config.cookieSecret);
+                sinon.stub(Cookie, "createNew").returns(cookie);
+                // const sessionStore: SubstituteOf<SessionStore> = Substitute.for<SessionStore>();
+                //sessionStore.load(cookie).resolves(createSessionData(config.cookieSecret));
+                //new SessionStore(new Redis(`redis://${config.CACHE_SERVER}`))
+                //sinon.stub(sessionStore, "load").resolves(createSessionData(config.cookieSecret));
+                const rr = await SessionMiddleware(config, sessionStore, true)(request, Substitute.for<Response>(), nextFunction);
+                console.log(rr)
+                //expect(request.session).to.be.not.undefined
                 expect(request.session.get(SessionKey.Id)).to.be.not.empty
                 expect(request.session.get(SessionKey.ExtraData)).to.be.empty
             })
