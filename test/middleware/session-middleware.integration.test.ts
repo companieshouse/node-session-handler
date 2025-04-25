@@ -163,9 +163,6 @@ describe("Session middleware - integration with express.js", () => {
                             .get(uri)
                             .set("Cookie", [`${config.cookieName}=${cookie.value}`])
                             .expect(response => {
-                                console.log(`>>>>response.get("Set-Cookie")[0]`)
-                                console.log(response.get("Set-Cookie")[0])
-                                console.log(`__SID=${cookie.value}; Max-Age=${config.cookieTimeToLiveInSeconds}; Domain=localhost; Path=/; Expires=`)
                                 expect(response.get("Set-Cookie")[0]).to.contain(`__SID=${cookie.value}; Max-Age=${config.cookieTimeToLiveInSeconds}; Domain=localhost; Path=/; Expires=`);
                                 expect(response.get("Set-Cookie")[0]).to.contain(`; HttpOnly; Secure`);
                                 validateResponse(response)
