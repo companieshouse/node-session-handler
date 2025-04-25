@@ -35,7 +35,7 @@ const sessionRequestHandler = (config: CookieConfig, sessionStore: SessionStore,
             const sessionData = await sessionStore.load(cookie);
             const session = new Session(sessionData);
             session.verify();
-
+            compareSessionAndCookie(session, cookie);
             loggerInstance().debug(`Session successfully loaded from cookie ${sessionCookie}`);
             return session;
         } catch (sessionLoadingError) {
@@ -53,6 +53,7 @@ const sessionRequestHandler = (config: CookieConfig, sessionStore: SessionStore,
     }
 
     return async (request: Request, response: Response, next: NextFunction): Promise<any> => {
+
         let sessionCookie: string = request.cookies[config.cookieName];
         let originalSessionHash: string;
 
@@ -72,6 +73,7 @@ const sessionRequestHandler = (config: CookieConfig, sessionStore: SessionStore,
                 if (sessionCookie) {
                     response.clearCookie(config.cookieName);
                 }
+                console.log(response.get("Set-Cookie"))
             }
         });
 
@@ -100,7 +102,6 @@ const sessionRequestHandler = (config: CookieConfig, sessionStore: SessionStore,
             loggerInstance().infoRequest(request, `Session cookie not found in request ${request.url}`);
             delete request.session;
         }
-
         if (request.session == null && createSessionWhenNotFound) {
             const cookie = Cookie.createNew(config.cookieSecret)
             request.session = new Session({
@@ -113,6 +114,14 @@ const sessionRequestHandler = (config: CookieConfig, sessionStore: SessionStore,
     };
 }
 
+const compareSessionAndCookie = (session: Session, cookie: Cookie): void => {
+    if (session.data) {
+        if (session.data[SessionKey.Id] !== cookie.sessionId) {
+            session.data = {};
+            throw Error (`Session Id does not match the session key in Cookie`);
+        }
+    }
+}
 const hash = (session: Session): string => {
     return crypto
         .createHash("sha1")

@@ -28,6 +28,7 @@ describe("Session middleware", () => {
     };
     const requestMetadata = { url: "/test-url", path: "/test-url", method: "GET" }
     const nextFunction = Substitute.for<NextFunction>();
+    const sessionStore = Substitute.for<SessionStore>();
 
     describe("middleware initialisation", () => {
         it("should fail when cookie name is missing", () => {
@@ -55,7 +56,8 @@ describe("Session middleware", () => {
     describe("when cookie is not present", () => {
         const request = {
             ...requestMetadata,
-            cookies: {}
+            cookies: {},
+            headers: {}
         } as Request;
 
         it("should not try to load a session", async () => {
@@ -93,6 +95,7 @@ describe("Session middleware", () => {
         const session: Session = createSession(config.cookieSecret);
         const request = {
             ...requestMetadata,
+            headers: {},
             cookies: { [config.cookieName]: "" + session.get(SessionKey.Id) + session.get(SessionKey.ClientSig) }
         } as Request;
         const cookieArg = () => {
