@@ -93,11 +93,15 @@ const sessionRequestHandler = (config: CookieConfig, sessionStore: SessionStore,
         })
 
         if (sessionCookie) {
-            loggerInstance().debugRequest(request, `Session cookie ${sessionCookie} found in request: ${request.url}`);
+            let logMessage: string = `Session cookie ${sessionCookie} found in request: ${request.url}`;
             request.session = await loadSession(sessionCookie);
             if (request.session != null) {
+                logMessage += `, with session id: ${request.session.data[SessionKey.Id]}`;
                 originalSessionHash = hash(request.session)
+            } else {
+                logMessage += `, with session id: undefined`;
             }
+            loggerInstance().debugRequest(request, logMessage);
         } else {
             loggerInstance().infoRequest(request, `Session cookie not found in request ${request.url}`);
             delete request.session;
@@ -107,7 +111,7 @@ const sessionRequestHandler = (config: CookieConfig, sessionStore: SessionStore,
             request.session = new Session({
                 [SessionKey.Id]: cookie.sessionId
             });
-            loggerInstance().debugRequest(request, `Session cookie ${(sessionCookie = cookie.value)} has been created for request: ${request.url}`);
+            loggerInstance().debugRequest(request, `Session cookie ${(sessionCookie = cookie.value)} has been created for request: ${request.url}, with session id as "${cookie.sessionId}"`);
         }
 
         next();
@@ -118,7 +122,7 @@ const compareSessionAndCookie = (session: Session, cookie: Cookie): void => {
     if (session.data) {
         if (session.data[SessionKey.Id] !== cookie.sessionId) {
             session.data = {};
-            throw Error (`Session Id does not match the session key in Cookie`);
+            throw Error (`Session Id does not match the session key in Cookie, with session id: ${session.data[SessionKey.Id]}`);
         }
     }
 }
