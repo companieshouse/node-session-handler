@@ -16,7 +16,8 @@ export type ISession = {
     [SessionKey.Pst]?: string,
     [SessionKey.SignInInfo]?: ISignInInfo,
     [SessionKey.ExtraData]?: any,
-    [SessionKey.CsrfToken]?: string
+    [SessionKey.CsrfToken]?: string,
+    [SessionKey.Lang]?: string
 };
 
 export type ISignInInfo = {
