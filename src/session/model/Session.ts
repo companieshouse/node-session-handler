@@ -31,6 +31,15 @@ export class Session {
         return delete this.data[SessionKey.ExtraData][key];
     }
 
+    public getLanguage(): string | undefined {
+        return this.data[SessionKey.Lang];
+    }
+
+    public setLanguage(language: string): void {
+        // @ts-ignore - ignores read only flag to set language
+        this.data[SessionKey.Lang] = language;
+    }
+
     public verify (): void {
         const signInInfo = this.data[SessionKey.SignInInfo];
         if (signInInfo) {

@@ -39,6 +39,24 @@ describe("Session", () => {
         })
     });
 
+    describe("Session language", () => {
+        it("should get language when it exists", () => {
+            const session = new Session({ ...createSessionData(cookieSecret), [SessionKey.Lang]: "en" });
+            expect(session.getLanguage()).to.equal("en");
+        });
+
+        it("should return undefined when language does not exist", () => {
+            const session = new Session(createSessionData(cookieSecret));
+            expect(session.getLanguage()).to.equal(undefined);
+        });
+
+        it("should set language", () => {
+            const session = new Session(createSessionData(cookieSecret));
+            session.setLanguage("cy");
+            expect(session.getLanguage()).to.equal("cy");
+        });
+    });
+
     describe("session verification", () => {
         it("should pass and create verified session", () => {
             expect(() => createSession(cookieSecret).verify()).to.not.throw();

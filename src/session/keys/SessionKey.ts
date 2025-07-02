@@ -9,5 +9,6 @@ export enum SessionKey {
     OAuth2Nonce = ".oauth2_nonce",
     ZXSKey = ".zxs_key",
     Pst = "pst",
-    CsrfToken = "csrf_token"
+    CsrfToken = "csrf_token",
+    Lang = "lang"
 }
