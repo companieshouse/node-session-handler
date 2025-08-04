@@ -103,7 +103,7 @@ const sessionRequestHandler = (config: CookieConfig, sessionStore: SessionStore,
             }
             loggerInstance().debugRequest(request, logMessage);
         } else {
-            loggerInstance().infoRequest(request, `Session cookie not found in request ${request.url}`);
+            loggerInstance().debugRequest(request, `Session cookie not found in request ${request.url}`);
             delete request.session;
         }
         if (request.session == null && createSessionWhenNotFound) {
