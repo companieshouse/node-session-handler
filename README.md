@@ -4,9 +4,13 @@ Module provides a way of handling Companies House sessions.
 
 Module offers the following artifacts:
 
-- `Session` that reflects structure of the session including elements of Single Sign-On 
+- `Session` that reflects structure of the session including elements of Single Sign-On
 - `SessionStore` that is responsible for reading and writing session data from / to database taking care of data encoding / decoding
-- `SessionMiddleware` that provides easy to use express.js middleware reading session based on the request cookie 
+- `SessionMiddleware` that provides easy to use express.js middleware reading session based on the request cookie
+
+## Compatible Node.js Versions
+
+This package has been upgraded to be compatible with Node v24. Presently, it's backward compatible with v20 and v18 but compatibility is primarily required for v24 as all CH Node services are in the process of being upgraded to v24.
 
 ## Prerequisite
 
@@ -20,11 +24,11 @@ import * as cookieParser from 'cookie-parser'
 app.use(cookieParser())
 ```
 
-Note: Cookie parsing must happen before request is passed to session middleware. 
+Note: Cookie parsing must happen before request is passed to session middleware.
 
 ## How to use it
 
-To bring this module as dependency please add the following fragment to `package.json`: 
+To bring this module as dependency please add the following fragment to `package.json`:
 
 ```$json
 "@companieshouse/node-session-handler": "~4.1.0"
@@ -32,7 +36,7 @@ To bring this module as dependency please add the following fragment to `package
 
 ### Session
 
-The session class is a wrapper around the raw session `data: ISession` (as retrieved from accounts after signing in). 
+The session class is a wrapper around the raw session `data: ISession` (as retrieved from accounts after signing in).
 
 To keep the `ISession` type consistent, we added an extra field called `extra_data` (`SessionKey.ExtraData`) to store any data that apps might need in the session making session itself extensible.
 
@@ -46,9 +50,9 @@ The class provides these methods:
 
 ### SessionStore
 
-Session store offers a way to load `SessionStore.load`, store `SessionStore.store` and delete `SessionStore.delete` session from database without worrying about data encoding or decoding. 
+Session store offers a way to load `SessionStore.load`, store `SessionStore.store` and delete `SessionStore.delete` session from database without worrying about data encoding or decoding.
 
-All above methods take instance of `Cookie` class which holds combination of session ID and signature. Use of that argument type helps to ensure that database operations are only performed for verified session identifiers.   
+All above methods take instance of `Cookie` class which holds combination of session ID and signature. Use of that argument type helps to ensure that database operations are only performed for verified session identifiers.
 
 ### SessionMiddleware
 
@@ -58,7 +62,7 @@ Session middleware provides convenient integration point for express.js applicat
 2. verify cookie signature if cookie is present
 3. load session from store using verified cookie if present
 4. sets verified session in request scope
-5. stores session in store on request end if session data changed  
+5. stores session in store on request end if session data changed
 
 Express.js applications wishing to introduce session handling should register middleware in the following way:
 
@@ -100,7 +104,7 @@ const cookieConfig = { ... };
 // Create sessionMiddleware using same cookie config, refer to previous section
 // for explicit instructions
 const sessionMiddleware = ...;
-const ensureSessionCookiePresentMiddleware = 
+const ensureSessionCookiePresentMiddleware =
     EnsureSessionCookiePresentMiddleware({
         // Ensure use the same cookie name as session, spreading cookie config
         // will accomplish this
