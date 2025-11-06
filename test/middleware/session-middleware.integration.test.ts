@@ -67,7 +67,7 @@ describe("Session middleware - integration with express.js", () => {
     }].forEach(({ scenario, uri , validateResponse}) => {
         describe(`on ${scenario}`, () => {
             describe("when cookie is not present", () => {
-                describe('when session creation feature is enabled', () => {
+                describe("when session creation feature is enabled", () => {
                     it("should respond and persist session and set session cookie in response", async () => {
                         const sessionStore = Substitute.for<SessionStore>();
 
@@ -86,7 +86,7 @@ describe("Session middleware - integration with express.js", () => {
                     })
                 })
 
-                describe('when session creation feature is disabled', () => {
+                describe("when session creation feature is disabled", () => {
                     it("should respond but not persist session nor set session cookie in response", async () => {
                         const sessionStore = Substitute.for<SessionStore>();
 
@@ -117,7 +117,7 @@ describe("Session middleware - integration with express.js", () => {
                     done();
                 });
 
-                describe('when session creation feature is enabled', () => {
+                describe("when session creation feature is enabled", () => {
                     it("should respond and persist session and create session cookie if session load failed", async () => {
                         const sessionStore: SubstituteOf<SessionStore> = Substitute.for<SessionStore>();
                         sessionStore.load(cookie).rejects("Unexpected error in session loading");
@@ -137,7 +137,7 @@ describe("Session middleware - integration with express.js", () => {
                     })
                 })
 
-                describe('when session creation feature is disabled', () => {
+                describe("when session creation feature is disabled", () => {
                     it("should respond but not persist session and delete session cookie if session load failed", async () => {
                         const sessionStore: SubstituteOf<SessionStore> = Substitute.for<SessionStore>();
                         sessionStore.load(cookie).rejects("Unexpected error in session loading");
@@ -164,7 +164,7 @@ describe("Session middleware - integration with express.js", () => {
                             .set("Cookie", [`${config.cookieName}=${cookie.value}`])
                             .expect(response => {
                                 expect(response.get("Set-Cookie")[0]).to.contain(`__SID=${cookie.value}; Max-Age=${config.cookieTimeToLiveInSeconds}; Domain=localhost; Path=/; Expires=`);
-                                expect(response.get("Set-Cookie")[0]).to.contain(`; HttpOnly; Secure`);
+                                expect(response.get("Set-Cookie")[0]).to.contain("; HttpOnly; Secure");
                                 validateResponse(response)
                             })
 

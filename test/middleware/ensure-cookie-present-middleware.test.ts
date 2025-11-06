@@ -115,7 +115,7 @@ modifyingDefaultsScenarios.forEach(({ header, headerValue }) => {
             ensureCookiePresentMiddleware = EnsureSessionCookiePresentMiddleware(config);
         })
 
-        it(`redirects with header`, () => {
+        it("redirects with header", () => {
             const expectedheader = header || "x-redirection-count";
             const expectedheaderValue = headerValue || "1";
             
@@ -129,10 +129,10 @@ modifyingDefaultsScenarios.forEach(({ header, headerValue }) => {
             ensureCookiePresentMiddleware(request, response, nextFunction)
 
             response.received(1).header(expectedheader, expectedheaderValue)
-            response.received(1).redirect(`http://localhost:8080/registered-email`)
+            response.received(1).redirect("http://localhost:8080/registered-email")
         })
 
-        it(`calls next when cookie present`, () => {
+        it("calls next when cookie present", () => {
             request.cookies.returns({
                 "__SID": "3485869"
             })
@@ -157,7 +157,7 @@ modifyingDefaultsScenarios.forEach(({ header, headerValue }) => {
             expect(nextCalls).to.be.length(1)
         })
 
-        it(`errors when no cookie and header in request`, () => {
+        it("errors when no cookie and header in request", () => {
             const actualheader = header || "x-redirection-count";
             const actualheaderValue = headerValue || "1";
 

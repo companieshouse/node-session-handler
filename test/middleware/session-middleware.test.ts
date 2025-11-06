@@ -69,7 +69,7 @@ describe("Session middleware", () => {
             }
         });
 
-        describe('when session creation feature is enabled', () => {
+        describe("when session creation feature is enabled", () => {
             it("should create a session and insert session object in the request", async () => {
                 const sessionStore = Substitute.for<SessionStore>();
 
@@ -80,7 +80,7 @@ describe("Session middleware", () => {
             })
         })
 
-        describe('when session creation feature is disabled', () => {
+        describe("when session creation feature is disabled", () => {
             it("should delete session object from the request", async () => {
                 const sessionStore = Substitute.for<SessionStore>();
 
@@ -113,7 +113,7 @@ describe("Session middleware", () => {
             }
         });
 
-        describe('when session creation feature is enabled', () => {
+        describe("when session creation feature is enabled", () => {
             it("should create session and insert session object in the request if session load fails", async () => {
                 const sessionStore = Substitute.for<SessionStore>();
                 sessionStore.load(cookieArg()).returns(Promise.reject("Unexpected error in session loading"));
@@ -126,7 +126,7 @@ describe("Session middleware", () => {
             })
         })
 
-        describe('when session creation feature is disabled', () => {
+        describe("when session creation feature is disabled", () => {
             it("should delete session and delete session object from the request if session load fails", async () => {
                 const sessionStore = Substitute.for<SessionStore>();
                 sessionStore.load(cookieArg()).returns(Promise.reject("Unexpected error in session loading"));
