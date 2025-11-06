@@ -10,16 +10,16 @@ lint:
 build:	package-install lint
 	npm run build
 
-.PHONY: security-check
-security-check:
-	npm audit
-
 .PHONY: test
 test: test-unit
 
 .PHONY: test-unit
 test-unit:
 	npm run test:coverage
+
+.PHONY: dependency-check
+dependency-check:
+	npm audit
 
 .PHONY: security-check
 security-check:

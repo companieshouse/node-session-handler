@@ -115,10 +115,10 @@ modifyingDefaultsScenarios.forEach(({ header, headerValue }) => {
             ensureCookiePresentMiddleware = EnsureSessionCookiePresentMiddleware(config);
         })
 
-        it(`redirects with header`, () => {
+        it("redirects with header", () => {
             const expectedheader = header || "x-redirection-count";
             const expectedheaderValue = headerValue || "1";
-            
+
             request.cookies.returns({})
             request.originalUrl.returns("http://localhost:8080/registered-email")
 
@@ -126,19 +126,20 @@ modifyingDefaultsScenarios.forEach(({ header, headerValue }) => {
             request.get("x-redirection-count").returns(undefined);
             response.header(Arg.any(), Arg.any()).returns(response);
 
-            ensureCookiePresentMiddleware(request, response, nextFunction)
+            const invoke = () => ensureCookiePresentMiddleware(request, response, nextFunction);
+            expect(invoke).to.not.throw();
 
             response.received(1).header(expectedheader, expectedheaderValue)
-            response.received(1).redirect(`http://localhost:8080/registered-email`)
+            response.received(1).redirect("http://localhost:8080/registered-email")
         })
 
-        it(`calls next when cookie present`, () => {
+        it("calls next when cookie present", () => {
             request.cookies.returns({
                 "__SID": "3485869"
             })
             const actualHeader = header || "x-redirection-count";
             const actualHeaderValue = headerValue || "1";
-            
+
             request.originalUrl.returns("http://localhost:8080/registered-email")
             request.headers = {
                 [actualHeader]: actualHeaderValue
@@ -157,7 +158,7 @@ modifyingDefaultsScenarios.forEach(({ header, headerValue }) => {
             expect(nextCalls).to.be.length(1)
         })
 
-        it(`errors when no cookie and header in request`, () => {
+        it("errors when no cookie and header in request", () => {
             const actualheader = header || "x-redirection-count";
             const actualheaderValue = headerValue || "1";
 
