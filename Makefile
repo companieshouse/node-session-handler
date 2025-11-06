@@ -17,6 +17,10 @@ test: test-unit
 test-unit:
 	npm run test:coverage
 
+.PHONY: dependency-check
+dependency-check:
+	npm audit
+
 .PHONY: security-check
 security-check:
 	npm audit
