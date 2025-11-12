@@ -73,7 +73,6 @@ const sessionRequestHandler = (config: CookieConfig, sessionStore: SessionStore,
                 if (sessionCookie) {
                     response.clearCookie(config.cookieName);
                 }
-                console.log(response.get("Set-Cookie"))
             }
         });
 
