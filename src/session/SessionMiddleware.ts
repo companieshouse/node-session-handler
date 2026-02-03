@@ -69,10 +69,9 @@ const sessionRequestHandler = (config: CookieConfig, sessionStore: SessionStore,
                     encode: String
                 })
                 loggerInstance().debug(`Refreshed session cookie ${sessionCookie}`);
-            } else {
-                if (sessionCookie) {
+            } else if (sessionCookie) {
                     response.clearCookie(config.cookieName);
-                }
+                    loggerInstance().debug(`Cleared session cookie ${sessionCookie}`);
             }
         });
 
