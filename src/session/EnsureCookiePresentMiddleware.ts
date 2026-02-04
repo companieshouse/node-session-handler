@@ -1,4 +1,4 @@
-import { NextFunction, Request, RequestHandler, Response } from "express"
+import { NextFunction, Request, RequestHandler, Response } from "express";
 import { CookiePresenceConfig } from "../config/CookiePresenceConfig";
 
 const DEFAULT_REDIRECT_HEADER_NAME = "x-redirection-count";
@@ -25,16 +25,16 @@ export function EnsureSessionCookiePresentMiddleware(config: CookiePresenceConfi
 
         if (!Object.keys(req.cookies).includes(config.cookieName)) {
             if (previouslyRedirected) {
-                throw new Error("Session Cookie Not Set")
+                throw new Error("Session Cookie Not Set");
             }
 
-            return res.header(redirectHeaderName, redirectHeaderValue).redirect(req.originalUrl)
+            return res.header(redirectHeaderName, redirectHeaderValue).redirect(req.originalUrl);
         } else if (previouslyRedirected) {
-            res.removeHeader(redirectHeaderName)
+            res.removeHeader(redirectHeaderName);
         }
 
         next();
-    }
+    };
 }
 
 /**
@@ -62,4 +62,4 @@ const redirectionParametersSupplier = (config: CookiePresenceConfig): {
 } => ({
     redirectHeaderName: config.redirectHeaderName || DEFAULT_REDIRECT_HEADER_NAME,
     redirectHeaderValue: config.redirectHeaderValue || DEFAULT_REDIRECT_HEADER_VALUE
-})
+});

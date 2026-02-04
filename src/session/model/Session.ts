@@ -11,7 +11,7 @@ export class Session {
     public constructor(public data: Readonly<ISession> = {}) {
         if (this.data[SessionKey.ExtraData] == null) {
             // @ts-ignore - ignores read only flag to initiate extra data
-            this.data[SessionKey.ExtraData] = {}
+            this.data[SessionKey.ExtraData] = {};
         }
     }
 

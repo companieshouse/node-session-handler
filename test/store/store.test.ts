@@ -37,7 +37,7 @@ describe("Store", () => {
                 await new SessionStore(redis).load(cookie);
                 assert.fail();
             } catch (err: any) {
-                expect(err).to.be.instanceOf(RetrievalError)
+                expect(err).to.be.instanceOf(RetrievalError);
                 expect(err.message).to.equal(`Data retrieval failed for key ${cookie.sessionId} due to error: Some error`);
             }
         });
@@ -49,7 +49,7 @@ describe("Store", () => {
             // @ts-ignore
             redis.set(cookie.sessionId, Arg.any(), "EX", 3600).returns(Promise.resolve("OK"));
 
-            await new SessionStore(redis).store(cookie, data)
+            await new SessionStore(redis).store(cookie, data);
 
             // @ts-ignore
             redis.received().set(cookie.sessionId, Arg.is<string>(encodedDataArg => {
@@ -69,7 +69,7 @@ describe("Store", () => {
                 await new SessionStore(redis).store(cookie, data);
                 assert.fail();
             } catch (err: any) {
-                expect(err).to.be.instanceOf(StoringError)
+                expect(err).to.be.instanceOf(StoringError);
                 expect(err.message).to.equal(`Data storing failed for key ${cookie.sessionId} and value ${Encoding.encode(data)} due to error: Some error`);
             }
         });
@@ -95,7 +95,7 @@ describe("Store", () => {
                 await new SessionStore(redis).delete(cookie);
                 assert.fail();
             } catch (err: any) {
-                expect(err).to.be.instanceOf(DeletionError)
+                expect(err).to.be.instanceOf(DeletionError);
                 expect(err.message).to.equal(`Data deletion failed for key ${cookie.sessionId} due to error: Some error`);
             }
         });

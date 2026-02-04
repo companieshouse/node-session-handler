@@ -35,8 +35,8 @@ describe("Session", () => {
             const session = new Session({ ...createSessionData(cookieSecret), [SessionKey.ExtraData]: { application: data } });
 
             expect(session.deleteExtraData("application")).to.equal(true);
-            expect(session.getExtraData("application")).to.be.equal(undefined)
-        })
+            expect(session.getExtraData("application")).to.be.equal(undefined);
+        });
     });
 
     describe("Session language", () => {

@@ -1,13 +1,13 @@
 import { NextFunction, Request, RequestHandler, Response } from "express";
 import expressAsyncHandler from "express-async-handler";
-import onHeaders from "on-headers"
+import onHeaders from "on-headers";
 import { CookieConfig } from "../config/CookieConfig";
 import { loggerInstance } from "../Logger";
 import { Cookie, validateCookieSignature } from "./model/Cookie";
 import { Session } from "./model/Session";
 import { SessionKey } from "./keys/SessionKey";
 import { SessionStore } from "./store/SessionStore";
-import crypto from "crypto"
+import crypto from "crypto";
 
 const DEFAULT_COOKIE_SECURE_FLAG = true;
 const DEFAULT_COOKIE_TIME_TO_LIVE_IN_SECONDS = 3600;
@@ -67,11 +67,11 @@ const sessionRequestHandler = (config: CookieConfig, sessionStore: SessionStore,
                     maxAge: (config.cookieTimeToLiveInSeconds != null ? config.cookieTimeToLiveInSeconds
                         : DEFAULT_COOKIE_TIME_TO_LIVE_IN_SECONDS) * 1000,
                     encode: String
-                })
+                });
                 loggerInstance().debug(`Refreshed session cookie ${sessionCookie}`);
             } else if (sessionCookie) {
-                    response.clearCookie(config.cookieName);
-                    loggerInstance().debug(`Cleared session cookie ${sessionCookie}`);
+                response.clearCookie(config.cookieName);
+                loggerInstance().debug(`Cleared session cookie ${sessionCookie}`);
             }
         });
 
@@ -81,21 +81,21 @@ const sessionRequestHandler = (config: CookieConfig, sessionStore: SessionStore,
                 if (request.session != null && hash(request.session) !== originalSessionHash) {
                     try {
                         await sessionStore.store(Cookie.createFrom(sessionCookie), request.session.data,
-                            config.cookieTimeToLiveInSeconds != null ? config.cookieTimeToLiveInSeconds : DEFAULT_COOKIE_TIME_TO_LIVE_IN_SECONDS)
+                            config.cookieTimeToLiveInSeconds != null ? config.cookieTimeToLiveInSeconds : DEFAULT_COOKIE_TIME_TO_LIVE_IN_SECONDS);
                     } catch (err: any) {
-                        loggerInstance().error(err.message)
+                        loggerInstance().error(err.message);
                     }
                 }
-                return target.apply(thisArg, argsArg)
+                return target.apply(thisArg, argsArg);
             }
-        })
+        });
 
         if (sessionCookie) {
             let logMessage: string = `Session cookie ${sessionCookie} found in request: ${request.url}`;
             request.session = await loadSession(sessionCookie);
             if (request.session != null) {
                 logMessage += `, with session id: ${request.session.data[SessionKey.Id]}`;
-                originalSessionHash = hash(request.session)
+                originalSessionHash = hash(request.session);
             } else {
                 logMessage += `, with session id: undefined`;
             }
@@ -105,7 +105,7 @@ const sessionRequestHandler = (config: CookieConfig, sessionStore: SessionStore,
             delete request.session;
         }
         if (request.session == null && createSessionWhenNotFound) {
-            const cookie = Cookie.createNew(config.cookieSecret)
+            const cookie = Cookie.createNew(config.cookieSecret);
             request.session = new Session({
                 [SessionKey.Id]: cookie.sessionId
             });
@@ -114,7 +114,7 @@ const sessionRequestHandler = (config: CookieConfig, sessionStore: SessionStore,
 
         next();
     };
-}
+};
 
 const compareSessionAndCookie = (session: Session, cookie: Cookie): void => {
     if (session.data) {
@@ -123,10 +123,10 @@ const compareSessionAndCookie = (session: Session, cookie: Cookie): void => {
             throw Error (`Session Id does not match the session key in Cookie, with session id: ${session.data[SessionKey.Id]}`);
         }
     }
-}
+};
 const hash = (session: Session): string => {
     return crypto
         .createHash("sha1")
         .update(JSON.stringify(session.data), "utf8")
-        .digest("hex")
-}
+        .digest("hex");
+};

@@ -26,7 +26,7 @@ describe("Session middleware", () => {
         cookieDomain: "localhost",
         cookieSecret: generateRandomBytesBase64(16),
     };
-    const requestMetadata = { url: "/test-url", path: "/test-url", method: "GET" }
+    const requestMetadata = { url: "/test-url", path: "/test-url", method: "GET" };
     const nextFunction = Substitute.for<NextFunction>();
     const sessionStore = Substitute.for<SessionStore>();
 
@@ -34,21 +34,21 @@ describe("Session middleware", () => {
         it("should fail when cookie name is missing", () => {
             [undefined, null, ""].forEach(cookieName => {
                 expect(() => SessionMiddleware({ ...config, cookieName }, undefined))
-                    .to.throw("Cookie name must be defined")
+                    .to.throw("Cookie name must be defined");
             });
         });
 
         it("should fail when cookie domain is missing", () => {
             [undefined, null, ""].forEach(cookieDomain => {
                 expect(() => SessionMiddleware({ ...config, cookieDomain }, undefined))
-                    .to.throw("Cookie domain must be defined")
+                    .to.throw("Cookie domain must be defined");
             });
         });
 
         it("should fail when cookie secret is missing or too short", () => {
             [undefined, null, "", "12345678901234567890123"].forEach(cookieSecret => {
                 expect(() => SessionMiddleware({ ...config, cookieSecret }, undefined))
-                    .to.throw("Cookie secret must be at least 24 chars long")
+                    .to.throw("Cookie secret must be at least 24 chars long");
             });
         });
     });
@@ -74,11 +74,11 @@ describe("Session middleware", () => {
                 const sessionStore = Substitute.for<SessionStore>();
 
                 await SessionMiddleware(config, sessionStore, true)(request, Substitute.for<Response>(), nextFunction);
-                expect(request.session).to.be.not.undefined
-                expect(request.session.get(SessionKey.Id)).to.be.not.empty
-                expect(request.session.get(SessionKey.ExtraData)).to.be.empty
-            })
-        })
+                expect(request.session).to.be.not.undefined;
+                expect(request.session.get(SessionKey.Id)).to.be.not.empty;
+                expect(request.session.get(SessionKey.ExtraData)).to.be.empty;
+            });
+        });
 
         describe("when session creation feature is disabled", () => {
             it("should delete session object from the request", async () => {
@@ -86,9 +86,9 @@ describe("Session middleware", () => {
 
                 await SessionMiddleware(config, sessionStore, false)(request, Substitute.for<Response>(), nextFunction);
 
-                expect(request.session).to.be.undefined
-            })
-        })
+                expect(request.session).to.be.undefined;
+            });
+        });
     });
 
     describe("when cookie is present", () => {
@@ -123,8 +123,8 @@ describe("Session middleware", () => {
                 expect(request.session).to.be.not.undefined;
                 expect(request.session.get(SessionKey.Id)).to.be.not.empty;
                 expect(request.session.get(SessionKey.ExtraData)).to.be.empty;
-            })
-        })
+            });
+        });
 
         describe("when session creation feature is disabled", () => {
             it("should delete session and delete session object from the request if session load fails", async () => {
@@ -148,9 +148,9 @@ describe("Session middleware", () => {
                 try {
                     await SessionMiddleware(config, sessionStore, false)(request, response, nextFunction);
                 } catch (e) {
-                    assert.fail("Test should not have thrown error")
+                    assert.fail("Test should not have thrown error");
                 }
             });
-        })
+        });
     });
 });

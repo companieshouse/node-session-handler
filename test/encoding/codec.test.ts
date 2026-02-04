@@ -32,20 +32,20 @@ describe("Coding and decoding", () => {
         const encoded = Encoding.encode(decodedData);
         const decoded = Encoding.decode(encoded);
 
-        expect(decoded).to.be.deep.equal(decodedData)
+        expect(decoded).to.be.deep.equal(decodedData);
     });
 
     it("should encode and decode data with nested objects", () => {
-        const sessionData = createSessionData(generateRandomBytesBase64(16))
+        const sessionData = createSessionData(generateRandomBytesBase64(16));
         sessionData[SessionKey.ExtraData] = {
             car: {
                 wheels: 4
             }
-        }
+        };
 
         const encoded = Encoding.encode(sessionData);
         const decoded = Encoding.decode(encoded);
 
         expect(decoded).to.be.deep.equal(sessionData);
-    })
+    });
 });

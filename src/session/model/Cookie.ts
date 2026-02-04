@@ -49,7 +49,7 @@ export class Cookie {
 
     public static createFrom(cookieString: string): Cookie {
         validateSessionCookieLength(cookieString);
-        return new Cookie(extractSessionId(cookieString), extractSignature(cookieString))
+        return new Cookie(extractSessionId(cookieString), extractSignature(cookieString));
     }
 
 }
