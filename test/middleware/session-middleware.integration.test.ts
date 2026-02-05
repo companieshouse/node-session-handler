@@ -128,7 +128,7 @@ describe("Session middleware - integration with express.js", () => {
                         "should respond and persist session and create session cookie if session load failed",
                         async () => {
                             const sessionStore: SubstituteOf<SessionStore> = Substitute.for<SessionStore>();
-                        sessionStore.load(cookie).rejects("Unexpected error in session loading");
+                            sessionStore.load(cookie).rejects("Unexpected error in session loading");
 
                             await request(createApp(sessionStore, true))
                                 .get(uri)
