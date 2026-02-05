@@ -71,7 +71,7 @@ describe("EnsureSessionCookiePresentMiddleware", () => {
 
             ensureCookiePresentMiddleware(request, response, nextFunction);
 
-            response.received(1).removeHeader("x-redirection-count");
+            expect(response.received(1).removeHeader("x-redirection-count"));
         }
     );
 
@@ -86,7 +86,7 @@ describe("EnsureSessionCookiePresentMiddleware", () => {
 
             ensureCookiePresentMiddleware(request, response, nextFunction);
 
-            response.received(0).removeHeader(Arg.any());
+            expect(response.received(0).removeHeader(Arg.any()));
         }
     );
 });

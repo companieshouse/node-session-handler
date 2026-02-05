@@ -57,12 +57,12 @@ describe("Store", () => {
                 await new SessionStore(redis).store(cookie, data);
 
                 // @ts-ignore
-                redis.received().set(cookie.sessionId, Arg.is<string>(encodedDataArg => {
+                expect(redis.received().set(cookie.sessionId, Arg.is<string>(encodedDataArg => {
                     const decodedSession: ISession = Encoding.decode(encodedDataArg);
                     return JSON.stringify(decodedSession[SessionKey.ExtraData]) === JSON.stringify(data[SessionKey.ExtraData])
                         && decodedSession[SessionKey.Expires] != null
                         && decodedSession[SessionKey.Expires] === getSecondsSinceEpoch() + 3600;
-                }), "EX", 3600);
+                }), "EX", 3600));
             }
         );
 

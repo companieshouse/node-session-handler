@@ -161,6 +161,10 @@ describe("Session middleware", () => {
                     const response: SubstituteOf<Response> = Substitute.for<Response>();
                     try {
                         await SessionMiddleware(config, sessionStore, false)(request, response, nextFunction);
+                       sessionStore.received(1).load(cookieArg()));
+                       sessionStore.didNotReceive().delete(cookieArg()));
+                       expect(request.session).to.be.undefined;
+
                     } catch (e) {
                         assert.fail("Test should not have thrown error");
                     }
