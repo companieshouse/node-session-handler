@@ -69,9 +69,10 @@ describe("EnsureSessionCookiePresentMiddleware", () => {
 
             request.get("x-redirection-count").returns("1");
 
-            ensureCookiePresentMiddleware(request, response, nextFunction);
+            const invoke = () => ensureCookiePresentMiddleware(request, response, nextFunction);
+            expect(invoke).to.not.throw();
 
-            expect(response.received(1).removeHeader("x-redirection-count"));
+            response.received(1).removeHeader("x-redirection-count");
         }
     );
 
@@ -83,10 +84,10 @@ describe("EnsureSessionCookiePresentMiddleware", () => {
             });
 
             request.get("x-redirection-count").returns(undefined);
+            const invoke = () => ensureCookiePresentMiddleware(request, response, nextFunction);
+            expect(invoke).to.not.throw();
 
-            ensureCookiePresentMiddleware(request, response, nextFunction);
-
-            expect(response.received(0).removeHeader(Arg.any()));
+            response.received(0).removeHeader(Arg.any());
         }
     );
 });
