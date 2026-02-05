@@ -159,15 +159,11 @@ describe("Session middleware", () => {
                     sessionStore.delete(cookieArg()).returns(Promise.reject("Unexpected error in session deletion"));
 
                     const response: SubstituteOf<Response> = Substitute.for<Response>();
-                    try {
-                        await SessionMiddleware(config, sessionStore, false)(request, response, nextFunction);
-                        sessionStore.received(1).load(cookieArg() as any);
-                        sessionStore.received(1).delete(cookieArg() as any);
-                        expect(request.session).to.eq(undefined);
 
-                    } catch (e) {
-                        assert.fail("Test should not have thrown error");
-                    }
+                    await SessionMiddleware(config, sessionStore, false)(request, response, nextFunction);
+                    sessionStore.received(1).load(cookieArg() as any);
+                    sessionStore.received(1).delete(cookieArg() as any);
+                    expect(request.session).to.eq(undefined);
                 }
             );
         });
