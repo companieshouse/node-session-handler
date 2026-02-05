@@ -160,7 +160,7 @@ describe("Session middleware", () => {
 
                     const response: SubstituteOf<Response> = Substitute.for<Response>();
 
-                    await SessionMiddleware(config, sessionStore, false)(request, response, nextFunction);
+                    await assert.doesNotReject(() => SessionMiddleware(config, sessionStore, false)(request, response, nextFunction));
                     sessionStore.received(1).load(cookieArg() as any);
                     sessionStore.received(1).delete(cookieArg() as any);
                     expect(request.session).to.eq(undefined);
