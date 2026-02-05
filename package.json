@@ -11,8 +11,8 @@
     "build": "rm -rf ./lib && tsc",
     "lint": "eslint 'src/*.ts' 'src/**/*.ts' 'test/**/*.test.ts'",
     "lint:fix": "eslint 'src/*.ts' 'src/**/*.ts' 'test/**/*.test.ts' --fix",
-    "test": "env LOG_LEVEL=trace mocha test/**/*.test.ts",
-    "test:coverage": "nyc npm test",
+    "test": "jest",
+    "test:coverage": "jest --coverage",
     "analyse-code": "sonar-scanner",
     "prepublishOnly": "[ ! -d node_modules ] && npm install; tsc",
     "postpublish": "rm -rf lib"
@@ -44,6 +44,8 @@
     "@types/on-headers": "^1.0.0",
     "@types/sinon": "^17.0.4",
     "@types/supertest": "^2.0.16",
+    "@types/jest": "^29.5.13",
+    "@types/jest-when": "^3.5.5",
     "@typescript-eslint/eslint-plugin": "^8.49.0",
     "@typescript-eslint/parser": "^8.49.0",
     "eslint": "^9.39.2",
@@ -57,12 +59,16 @@
     "sonarqube-scanner": "^3.5.0",
     "supertest": "^7.1.4",
     "ts-node": "10.9.2",
-    "typescript": "^5.9.3"
+    "typescript": "^5.9.3",
+    "jest": "^29.7.0",
+    "jest-when": "^3.6.0",
+    "ts-jest": "^29.1.1"
   },
   "overrides": {
     "diff": "^8.0.3",
     "glob": "^12.0.0",
     "js-yaml": "^4.1.1",
-    "qs": "^6.14.1"
+    "qs": "^6.14.1",
+    "test-exclude": "^7.0.1"
   }
 }
