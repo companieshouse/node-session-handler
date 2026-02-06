@@ -34,7 +34,7 @@ describe("Cookie", () => {
             const signature: string = generateSignature(sessionId, cookieSecret);
 
             expect(Cookie.createFrom(sessionId + signature).value).to.be.equal(sessionId + signature);
-        })
+        });
 
         it("should fail if cookie string is too short", () => {
             const validSessionId: string = generateSessionId();
@@ -47,5 +47,5 @@ describe("Cookie", () => {
                     .to.throw(`Cookie string is not long enough - it is ${cookie.length} characters long while it should have 55 characters`);
             });
         });
-    })
+    });
 });

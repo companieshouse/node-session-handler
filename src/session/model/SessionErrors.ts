@@ -1,6 +1,6 @@
 export class IncompleteSessionDataError extends Error {
     constructor (...pathSegments: string[]) {
-        super(`Session data is incomplete - ${pathSegments.join(".")} property is missing`)
+        super(`Session data is incomplete - ${pathSegments.join(".")} property is missing`);
     }
 }
 

@@ -39,9 +39,9 @@ class RedisWrapper {
     public set = async (key: string, value: string, timeToLiveInSeconds: number): Promise<void> => {
 
         return this.client.set(key, value, "EX", timeToLiveInSeconds)
-            .then(() => { return })
+            .then(() => { return; })
             .catch(err => {
-                throw new StoringError(key, value, err)
+                throw new StoringError(key, value, err);
             });
     };
 
@@ -57,16 +57,16 @@ class RedisWrapper {
         return this.client.get(key)
             .then(checkIfResultEmpty)
             .catch(err => {
-                throw new RetrievalError(key, err)
+                throw new RetrievalError(key, err);
             });
     };
 
     public del = async (key: string): Promise<void> => {
 
         return this.client.del(key)
-            .then(() => { return })
+            .then(() => { return; })
             .catch(err => {
-                throw new DeletionError(key, err)
+                throw new DeletionError(key, err);
             });
     };
 }

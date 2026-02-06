@@ -20,14 +20,17 @@ describe("Store", () => {
     };
 
     describe("data loading", () => {
-        it("should read from cache using session id and decode data after read", async () => {
-            const redis = Substitute.for<Redis>();
-            redis.get(cookie.sessionId).returns(Promise.resolve(Encoding.encode(data)));
+        it(
+            "should read from cache using session id and decode data after read",
+            async () => {
+                const redis = Substitute.for<Redis>();
+                redis.get(cookie.sessionId).returns(Promise.resolve(Encoding.encode(data)));
 
-            expect(await new SessionStore(redis).load(cookie)).to.be.deep.equal(data);
+                expect(await new SessionStore(redis).load(cookie)).to.be.deep.equal(data);
 
-            redis.received().get(cookie.sessionId);
-        });
+                redis.received().get(cookie.sessionId);
+            }
+        );
 
         it("should throw error when read failed", async () => {
             const redis = Substitute.for<Redis>();
@@ -37,28 +40,31 @@ describe("Store", () => {
                 await new SessionStore(redis).load(cookie);
                 assert.fail();
             } catch (err: any) {
-                expect(err).to.be.instanceOf(RetrievalError)
+                expect(err).to.be.instanceOf(RetrievalError);
                 expect(err.message).to.equal(`Data retrieval failed for key ${cookie.sessionId} due to error: Some error`);
             }
         });
     });
 
     describe("data storing", () => {
-        it("should reset session expiry time and write to cache using session id and encode data before write", async () => {
-            const redis = Substitute.for<Redis>();
-            // @ts-ignore
-            redis.set(cookie.sessionId, Arg.any(), "EX", 3600).returns(Promise.resolve("OK"));
+        it(
+            "should reset session expiry time and write to cache using session id and encode data before write",
+            async () => {
+                const redis = Substitute.for<Redis>();
+                // @ts-ignore
+                redis.set(cookie.sessionId, Arg.any(), "EX", 3600).returns(Promise.resolve("OK"));
 
-            await new SessionStore(redis).store(cookie, data)
+                await new SessionStore(redis).store(cookie, data);
 
-            // @ts-ignore
-            redis.received().set(cookie.sessionId, Arg.is<string>(encodedDataArg => {
-                const decodedSession: ISession = Encoding.decode(encodedDataArg);
-                return JSON.stringify(decodedSession[SessionKey.ExtraData]) === JSON.stringify(data[SessionKey.ExtraData])
-                    && decodedSession[SessionKey.Expires] != null
-                    && decodedSession[SessionKey.Expires] === getSecondsSinceEpoch() + 3600;
-            }), "EX", 3600);
-        });
+                // @ts-ignore
+                redis.received().set(cookie.sessionId, Arg.is<string>(encodedDataArg => {
+                    const decodedSession: ISession = Encoding.decode(encodedDataArg);
+                    return JSON.stringify(decodedSession[SessionKey.ExtraData]) === JSON.stringify(data[SessionKey.ExtraData])
+                        && decodedSession[SessionKey.Expires] != null
+                        && decodedSession[SessionKey.Expires] === getSecondsSinceEpoch() + 3600;
+                }), "EX", 3600);
+            }
+        );
 
         it("should throw error when write failed", async () => {
             const redis = Substitute.for<Redis>();
@@ -69,7 +75,7 @@ describe("Store", () => {
                 await new SessionStore(redis).store(cookie, data);
                 assert.fail();
             } catch (err: any) {
-                expect(err).to.be.instanceOf(StoringError)
+                expect(err).to.be.instanceOf(StoringError);
                 expect(err.message).to.equal(`Data storing failed for key ${cookie.sessionId} and value ${Encoding.encode(data)} due to error: Some error`);
             }
         });
@@ -95,7 +101,7 @@ describe("Store", () => {
                 await new SessionStore(redis).delete(cookie);
                 assert.fail();
             } catch (err: any) {
-                expect(err).to.be.instanceOf(DeletionError)
+                expect(err).to.be.instanceOf(DeletionError);
                 expect(err.message).to.equal(`Data deletion failed for key ${cookie.sessionId} due to error: Some error`);
             }
         });
