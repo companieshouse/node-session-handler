@@ -1,15 +1,14 @@
 import { Arg, Substitute, SubstituteOf } from "@fluffy-spoon/substitute";
-import sinon from "sinon";
 import { expect } from "chai";
 import cookieParser from "cookie-parser";
-import express, { NextFunction, Request, Response } from "express";
+import express, { Request, Response } from "express";
 import request from "supertest";
-import { CookieConfig } from "../../src/config/CookieConfig";
+import { CookieConfig } from "../../src";
 
 import { Cookie } from "../../src/session/model/Cookie";
-import { Session } from "../../src/session/model/Session";
-import { SessionMiddleware } from "../../src/session/SessionMiddleware";
-import { SessionStore } from "../../src/session/store/SessionStore";
+import { Session } from "../../src";
+import { SessionMiddleware } from "../../src";
+import { SessionStore } from "../../src";
 import { generateRandomBytesBase64 } from "../../src/utils/CookieUtils";
 import { createSessionData } from "../utils/SessionGenerator";
 import { ISession } from "../../src";
@@ -34,19 +33,19 @@ const createApp = (sessionStore: SessionStore, createSessionWhenNotFound: boolea
     const app = express();
     app.use(cookieParser());
     app.use(SessionMiddleware(config, sessionStore, createSessionWhenNotFound));
-    app.get("/render", (req: Request, res: Response, next: NextFunction) => {
+    app.get("/render", (req: Request, res: Response) => {
         if (req.query.mutate) {
             req.session.setExtraData("application", { mutated: true });
         }
         res.status(200).send("OK");
     });
-    app.get("/redirect", (req: Request, res: Response, next: NextFunction) => {
+    app.get("/redirect", (req: Request, res: Response) => {
         if (req.query.mutate) {
             req.session.setExtraData("application", { mutated: true });
         }
         res.redirect("http://localhost");
     });
-    app.use((err: Error, req: Request, res: Response, next: NextFunction): void => {
+    app.use((err: Error, req: Request, res: Response): void => {
         console.log(err);
         res.status(500).send("ERROR");
     });
@@ -112,14 +111,10 @@ describe("Session middleware - integration with express.js", () => {
                 const cookie: Cookie = Cookie.createNew(config.cookieSecret);
 
                 beforeEach(() => {
-                    sinon.reset();
-                    sinon.restore();
-                    sinon.stub(Cookie, "createNew").returns(cookie);
+                    Cookie.createNew = () => cookie;
                 });
 
                 afterEach(done => {
-                    sinon.reset();
-                    sinon.restore();
                     done();
                 });
 
