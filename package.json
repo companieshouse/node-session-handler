@@ -3,6 +3,10 @@
   "version": "5.2.0",
   "description": "Node.js session handler for Companies House",
   "main": "./lib/index.js",
+  "engines": {
+    "node": ">=24.0.0",
+    "npm": ">=11"
+  },
   "types": "./lib/index.d.ts",
   "files": [
     "lib"
