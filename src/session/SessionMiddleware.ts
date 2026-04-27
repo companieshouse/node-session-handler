@@ -52,7 +52,7 @@ const sessionRequestHandler = (config: CookieConfig, sessionStore: SessionStore,
         }
     }
 
-    return async (request: Request, response: Response, next: NextFunction) => {
+    return async (request: Request, response: Response, next: NextFunction): Promise<void> => {
 
         let sessionCookie: string = request.cookies[config.cookieName];
         let originalSessionHash: string;
