@@ -26,7 +26,7 @@ export function SessionMiddleware(config: CookieConfig, sessionStore: SessionSto
     return expressAsyncHandler(sessionRequestHandler(config, sessionStore, createSessionWhenNotFound));
 }
 
-const sessionRequestHandler = (config: CookieConfig, sessionStore: SessionStore, createSessionWhenNotFound: boolean = false): RequestHandler => {
+const sessionRequestHandler = (config: CookieConfig, sessionStore: SessionStore, createSessionWhenNotFound: boolean = false) => {
     async function loadSession (sessionCookie: string): Promise<Session | undefined> {
         let cookie: Cookie;
         try {
@@ -52,7 +52,7 @@ const sessionRequestHandler = (config: CookieConfig, sessionStore: SessionStore,
         }
     }
 
-    return async (request: Request, response: Response, next: NextFunction): Promise<void> => {
+        return async (request: Request, response: Response, next: NextFunction) => {
 
         let sessionCookie: string = request.cookies[config.cookieName];
         let originalSessionHash: string;
