@@ -31,7 +31,7 @@
   },
   "homepage": "https://github.com/companieshouse/node-session-handler#readme",
   "dependencies": {
-    "@companieshouse/structured-logging-node": "^2.0.4",
+    "@companieshouse/structured-logging-node": "^2.0.13",
     "express-async-handler": "^1.1.4",
     "ioredis": "^4.17.3",
     "msgpack5": "^6.0.2",
