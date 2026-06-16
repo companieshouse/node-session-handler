@@ -10,7 +10,6 @@
         "pretty": true,
         "emitDecoratorMetadata": true,
         "experimentalDecorators": true,
-        "skipLibCheck": true,
         "strictNullChecks": false,
         "sourceMap": true,
         "typeRoots": [
