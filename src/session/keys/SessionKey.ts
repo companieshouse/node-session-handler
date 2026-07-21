@@ -1,6 +1,7 @@
 export enum SessionKey {
     SignInInfo = "signin_info",
     ClientSig = ".client.signature",
+    ClientSigV2 = ".client.signatureV2",
     Expires = "expires",
     Id = ".id",
     LastAccess = "last_access",

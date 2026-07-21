@@ -8,6 +8,7 @@ export type ISessionValue = ISignInInfo | IUserProfile | IAccessToken | string |
 export type ISession = {
     [SessionKey.Id]?: string,
     [SessionKey.ClientSig]?: string,
+    [SessionKey.ClientSigV2]?: string,
     [SessionKey.Hijacked]?: string | null,
     [SessionKey.OAuth2Nonce]?: string,
     [SessionKey.ZXSKey]?: string,
