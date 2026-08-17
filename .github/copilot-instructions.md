@@ -1,0 +1,279 @@
+# node-session-handler
+
+Node.js/TypeScript library providing Companies House session handling: reading,
+verifying, and persisting sessions to Redis, plus Express middleware to wire it
+into an application. Published as `@companieshouse/node-session-handler`;
+consumers install it as a dependency (source in `src/`, compiled output in
+`lib/`, only `lib/` is published).
+
+**Type:** node-lib
+**Team:** Phoenix
+**Jira project:** SIV
+
+## Build, lint, test
+
+- Install: `npm install`
+- Build (compiles `src/` to `lib/` via tsc): `npm run build`
+- Lint: `npm run lint` / autofix: `npm run lint:fix`
+- Test all: `npm test` (Jest). Coverage: `npm run test:coverage`
+- Run a single test file: `npx jest test/store/store.test.ts`
+- Run a single test by name: `npx jest test/store/store.test.ts -t "should read from cache"`
+- Test files must match `**/test/**/*.test.[jt]s` (see `jest.config.ts`); they live under
+  `test/`, mirroring the `src/` structure, not alongside source files.
+- `test/setup.ts` is Jest's `globalSetup` — it sets required env vars (`COOKIE_DOMAIN`,
+  `COOKIE_NAME`, `COOKIE_SECRET`, etc.) that `SessionMiddleware`/`Cookie` config expects.
+  Tests relying on env-derived config depend on this running first.
+- `Makefile` wraps npm scripts for CI (`make build`, `make test`, `make sonar`, etc.) —
+  prefer it when mirroring pipeline behaviour.
+
+## Architecture
+
+Three main artifacts exported from `src/index.ts`, layered as:
+
+1. **`Cookie`** (`src/session/model/Cookie.ts`) — represents a session cookie value as
+   `sessionId + signature`. Created via `Cookie.createNew()` (new session) or
+   `Cookie.createFrom()` (parses an existing cookie string). Signature validation
+   (`validateCookieSignature`) is a separate exported function, not a method, so it can run
+   before a `Cookie` is constructed (used by the middleware before trusting a cookie).
+2. **`Session`** (`src/session/model/Session.ts`) — wraps raw `ISession` data (a
+   `Record<SessionKey, ISessionValue>`), including CH's Single Sign-On fields plus an
+   `extra_data` bucket (`SessionKey.ExtraData`) for consuming apps to store arbitrary data.
+   `session.verify()` checks structural validity/expiry and throws `SessionErrors` subclasses.
+3. **`SessionStore`** (`src/session/store/SessionStore.ts`) — load/store/delete a session in
+   Redis, keyed by `cookie.sessionId`. Values are (de)serialised via `Encoding`
+   (`src/encoding/Encoding.ts`, msgpack5-based) before hitting Redis. Internally wraps the
+   `ioredis` client in a private `RedisWrapper` that converts raw Redis errors into typed
+   errors from `SessionStoreErrors.ts` (`RetrievalError`, `StoringError`, `DeletionError`,
+   `NoDataRetrievedError`).
+4. **`SessionMiddleware`** (`src/session/SessionMiddleware.ts`) — the integration point,
+   composing the above: reads the cookie from `request.cookies[config.cookieName]`
+   (requires `cookie-parser` upstream), validates its signature, loads/verifies the
+   `Session` via `SessionStore`, and attaches it to `request.session`. On any failure it
+   discards the session store entry and treats the request as unauthenticated rather than
+   throwing. On response end (via a `Proxy` around `response.end`, plus `on-headers` for
+   setting the cookie), it re-hashes the session data (SHA1) and only calls
+   `sessionStore.store()` if the data actually changed — avoid breaking this dirty-check when
+   modifying the middleware. Supports an optional `createSessionWhenNotFound` mode that
+   creates an empty unauthenticated session instead of leaving `request.session` undefined.
+- **`EnsureSessionCookiePresentMiddleware`** (`src/session/EnsureCookiePresentMiddleware.ts`)
+  is a separate, composable Express middleware — not part of `SessionMiddleware` — meant to
+  run immediately after it in the chain, to force a redirect when no session cookie is
+  present.
+- Errors are modelled as typed classes per domain (`CookieErrors.ts`, `SessionErrors.ts`,
+  `SessionStoreErrors.ts`) rather than generic `Error`/string throws — follow this pattern
+  for new failure modes.
+- `SessionKey`/`SignInInfoKeys`/`UserProfileKeys`/`AccessTokenKeys` (`src/session/keys/`) are
+  enums defining the exact field names of session data; use these instead of raw string keys
+  when reading/writing `ISession`.
+
+## Conventions
+
+- 4-space indentation, double quotes, semicolons enforced by ESLint (`eslint.config.mjs`);
+  run `npm run lint:fix` before committing.
+- Tests use **Jest** as the runner but **Chai** (`expect`/`assert`) for assertions and
+  `@fluffy-spoon/substitute` (`Substitute.for<T>()`, `Arg`) for mocking interfaces like
+  `Redis` — not Jest's own `expect`/mocks. `sinon` and `jest-when` are also available.
+  Integration-style tests are suffixed `*.integration.test.ts`.
+- `strictNullChecks` is disabled in `tsconfig.json` even though `strict` is on — don't rely
+  on strict null checking when writing new source.
+- Compiled `lib/` output is committed to source in this checkout but is regenerated by
+  `npm run build` / `prepublishOnly`; don't hand-edit files under `lib/`.
+
+
+---
+
+<!-- CHS-STANDARDS: node-lib -->
+<!-- Generated by ch-ai-dev/bin/apply-standards — do not edit this section manually -->
+<!-- ch-ai-dev-commit: 6893eb24c -->
+
+# CHS Node.js Development Standards
+
+These standards apply to **all** Companies House Node.js services and libraries
+regardless of service type. Service-type-specific standards (`node-web.md`,
+`node-library.md`) supplement this file — read this first.
+
+**Authoritative style reference:** [`companieshouse/styleguides` — TypeScript](https://github.com/companieshouse/styleguides/blob/main/standards/typescript.md)
+(based on Google TypeScript Style Guide). Use `typescript-eslint` for linting enforcement.
+
+> **[CH Required]** TypeScript is the standard for all CHS Node.js services and libraries. JavaScript is deprecated. Source: [CH TypeScript styleguide](https://github.com/companieshouse/styleguides/blob/main/standards/typescript.md)
+
+---
+
+## 1. Code Style
+
+### TypeScript
+- Enable strict mode in `tsconfig.json` — no `any` types unless genuinely
+  unavoidable; document why if used
+- Prefer `interface` over `type` for object shapes
+- Use `const` by default; `let` only when reassignment is necessary; never `var`
+- Explicit return types on all exported functions and class methods
+- No unused variables or imports — treat them as errors
+
+### Naming
+- Files: `kebab-case.ts` matching the primary export
+- Classes and interfaces: `PascalCase`
+- Functions and variables: `camelCase`
+- Constants: `SCREAMING_SNAKE_CASE`
+- Nunjucks templates: `kebab-case.njk`
+
+### Comments
+- Comments only where the code genuinely needs clarification
+- JSDoc on exported functions that are not self-evident
+
+---
+
+## 2. Logging
+
+> **[CH Required]** Use `@companieshouse/structured-logging-node` throughout. Do not use `console.log` in production paths. Source: CH convention.
+>
+> **[CH Required]** PII must never appear in logs at any level. Log IDs (session IDs, userIds, company numbers), never values (names, emails, document details). Source: [Secure SDLC](https://companieshouse.atlassian.net/wiki/spaces/DEV/pages/973242435)
+
+| Level | When to use |
+|---|---|
+| `logger.debug()` | Detailed trace. Suppressed in production. |
+| `logger.info()` | Significant events: request received, decision made, redirect issued. |
+| `logger.warn()` | Recoverable issues: unexpected session state, retried calls. |
+| `logger.error()` | Exceptions. Always include the error object. |
+
+When rethrowing or wrapping a caught error, preserve the original cause using
+the ES2022 `cause` option — `throw new Error("message", { cause: err })` — never
+construct a new error from `err.message` alone. The original stack trace is
+otherwise silently discarded, making production diagnosis much harder.
+
+# CHS Node.js Library Standards
+
+These standards apply to Companies House Node.js libraries — packages published
+to npm or GitHub Packages for consumption by other CHS services. They supplement
+`core.md` and the common Node.js standards in `node.md` — read both of those first.
+
+Examples of CHS Node.js libraries: `api-sdk-node`, `private-api-sdk-node`,
+`node-session-handler`, `ch-node-utils`, `structured-logging-node`.
+
+---
+
+## 1. What belongs in a library
+
+Extract logic into a library only when two or more services need the same behaviour and it is stable enough to version independently. Do not extract speculatively — wait for an actual second consumer.
+
+---
+
+## 2. Build Setup
+
+- TypeScript throughout — no plain JavaScript source files
+- Compile to `dist/` — this is what consumers import: `dist/index.js` + `dist/index.d.ts`
+- `main` and `types` fields in `package.json` must point to `dist/`; `files` must include only `dist/`
+- `src/` is source; `dist/` is build output — never import from `dist/` internally
+
+---
+
+## 3. API Design
+
+### Public API surface
+- Export only what consumers genuinely need — keep the public surface minimal
+- Use an `index.ts` barrel file to define the public API explicitly
+- Mark internal modules clearly — use an `internal/` directory or omit from
+  the barrel export; do not rely on consumers knowing what is "internal"
+- Use `interface` over `type` for exported object shapes — easier for
+  consumers to extend
+
+### Backwards compatibility
+- Never make a breaking change without bumping the major version (semver)
+- Breaking changes include: removing an export, changing a function signature,
+  changing a class name, changing observable behaviour
+- Deprecate before removing — mark with `@deprecated` JSDoc for at least one
+  minor version before removal
+- When adding optional parameters, add them at the end with a default value
+
+### Documentation
+- JSDoc on all exported types and functions
+- Document: purpose, parameters, return value, thrown errors, side effects
+- Include a usage example in JSDoc for non-obvious APIs
+- Keep `README.md` current — it is the first thing a consumer reads
+
+---
+
+## 4. Versioning
+
+Follow [Semantic Versioning](https://semver.org/): `MAJOR.MINOR.PATCH`
+
+| Change type | Version bump |
+|---|---|
+| Backwards-incompatible change | MAJOR |
+| New functionality, backwards compatible | MINOR |
+| Bug fix, no API change | PATCH |
+
+> **[CH Note]** CH does not use `CHANGELOG.md` files. Version history is
+> tracked via git, and releases are created automatically by Concourse pipelines
+> using the version file in the repository root. Do not recommend or require a
+> `CHANGELOG.md` for CHS libraries.
+>
+> **[Best Practice]** A `CHANGELOG.md` or equivalent release notes (e.g. in the
+> GitHub release description) can be valuable for library consumers who need to
+> understand what changed between versions without reading git history. This is
+> under active discussion at CH but is not yet policy. If a project already
+> maintains one, keep it current; if not, consider using GitHub release notes
+> to document breaking changes and significant additions.
+
+- Never republish a release — publish a patch release instead
+- Deprecate before removing — mark with `@deprecated` JSDoc for at least one
+  minor version before removal
+
+---
+
+## 5. Testing
+
+Libraries must be more thoroughly tested than application code — bugs
+propagate to every consumer.
+
+- Jest for all tests
+- Test every exported function and class against its documented contract
+- Include tests for documented edge cases and error conditions
+- Integration tests (where applicable) should test the library as a consumer
+  would use it — import from the barrel export, not internal modules
+- Do not mock the library's own internals in integration tests
+
+### Coverage
+- All public API methods: 100% branch coverage is the target
+- Internal helpers: thorough but pragmatic — focus on the contract, not the implementation
+
+---
+
+## 6. Dependencies
+
+- Keep runtime dependencies (`dependencies`) to the absolute minimum — every
+  dependency becomes a transitive dependency for all consumers
+- Peer dependencies (`peerDependencies`) for anything consumers are expected
+  to provide (e.g. `express`, `axios`)
+- Dev-only tools (`eslint`, `jest`, `typescript`) go in `devDependencies`
+- Pin dependency versions or use tight ranges — broad ranges (`^`) can pull
+  in breaking changes for consumers
+- Audit dependencies before publishing: `npm audit`
+
+---
+
+## 7. Publishing
+
+CHS Node.js libraries are published to GitHub Packages (or npm where appropriate).
+
+```json
+{
+  "publishConfig": {
+    "registry": "https://npm.pkg.github.com"
+  }
+}
+```
+
+- The `files` field in `package.json` must include only `dist/` (and `README.md`) — do not publish `src/`, test files, or config files
+- Run `npm pack --dry-run` to verify what will be published before publishing
+- Publish from a clean, tagged commit — never publish from a dirty working tree
+
+---
+
+## 8. Local Development
+
+```bash
+npm install && npm run build && npm test
+# To test in a consumer: npm link, then in consumer: npm link @companieshouse/library-name
+```
+
+<!-- END CHS-STANDARDS -->
