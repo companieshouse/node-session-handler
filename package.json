@@ -34,7 +34,7 @@
     "@companieshouse/structured-logging-node": "^2.0.15",
     "express-async-handler": "^1.1.4",
     "ioredis": "^4.17.3",
-    "msgpack5": "^6.0.2",
+    "msgpack5": "^6.1.0",
     "on-headers": "^1.0.2"
   },
   "devDependencies": {
