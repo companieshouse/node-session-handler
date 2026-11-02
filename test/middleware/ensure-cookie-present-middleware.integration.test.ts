@@ -1,5 +1,5 @@
 import cookieParser from "cookie-parser";
-import express, { NextFunction, Request, Response } from "express";
+import express, { Request, Response } from "express";
 import { CookieConfig } from "../../src/config/CookieConfig";
 import { generateRandomBytesBase64 } from "../../src/utils/CookieUtils";
 import { EnsureSessionCookiePresentMiddleware } from "../../src/session/EnsureCookiePresentMiddleware";

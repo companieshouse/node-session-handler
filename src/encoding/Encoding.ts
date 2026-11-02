@@ -26,7 +26,7 @@ export class Encoding {
         let decoded;
         try {
             decoded = JSON.parse(msgpack5().decode(buffer));
-        } catch (error) {
+        } catch {
             decoded = msgpack5().decode(buffer);
         }
         return decoded;
