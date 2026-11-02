@@ -28,7 +28,6 @@ describe("Session middleware", () => {
     };
     const requestMetadata = { url: "/test-url", path: "/test-url", method: "GET" };
     const nextFunction = Substitute.for<NextFunction>();
-    const sessionStore = Substitute.for<SessionStore>();
 
     describe("middleware initialisation", () => {
         it("should fail when cookie name is missing", () => {

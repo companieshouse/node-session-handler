@@ -4,7 +4,6 @@ import { ISession, ISessionValue } from "./SessionInterfaces";
 import { SignInInfoKeys } from "../keys/SignInInfoKeys";
 import { AccessTokenKeys } from "../keys/AccessTokenKeys";
 import { loggerInstance } from "../../Logger";
-import { UserProfileKeys } from "../keys/UserProfileKeys";
 
 export class Session {
 
